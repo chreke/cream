@@ -78,6 +78,10 @@
   background-color: var(--cream-dark-hover);
 }
 
+.login-page {
+  background-color: var(--cream-dark);
+}
+
 .app-header {
   background-color: #fff;
   border-bottom: var(--bs-border-width) solid var(--bs-border-color);
