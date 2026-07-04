@@ -54,9 +54,16 @@ uv run python manage.py test
 
 ## Configuration
 
-Settings are read from environment variables. For local development you can
-put overrides in a `.env` file in the project root (git-ignored); it is
-loaded automatically when the `python-dotenv` dev dependency is installed.
+Settings are read from environment variables. If you want local overrides,
+put them in a `.env` file in the project root (git-ignored) and use uv's
+built-in env-file support:
+
+```sh
+uv run --env-file .env python manage.py runserver
+```
+
+To avoid typing the flag every time, set `UV_ENV_FILE=.env` in your shell
+profile and `uv run` will pick the file up automatically.
 
 The defaults work for local development without any configuration:
 

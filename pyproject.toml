@@ -6,8 +6,3 @@ dependencies = [
     "django~=5.2.0",
     "psycopg[binary]>=3.3.4",
 ]
-
-[dependency-groups]
-dev = [
-    "python-dotenv>=1.2.2",
-]
