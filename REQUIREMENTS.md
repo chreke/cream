@@ -40,6 +40,8 @@ A User can log that a Company was contacted; this updates the "Last contacted"
 timestamp to the current time. The User may also leave a Comment as part of
 logging a contact.
 
+It should be possible to create, edit and delete companies.
+
 ### Companies List
 
 It should be possible to display a list of all Companies. The following attributes
@@ -48,7 +50,7 @@ should be displayed in the list:
 - Name
 - Location
 - Industry
-- Account manager (User)
+- Assignee (User)
 - Last contacted
 
 It should be possible to sort the list by one of:
@@ -59,7 +61,7 @@ It should be possible to sort the list by one of:
 It should be possible to filter Companies using free-text search. The
 free-text search should target the Name and Location fields.
 
-It should be possible to filter Companies by Account manager.
+It should be possible to filter Companies by Assignee.
 
 ### Contacts
 
@@ -72,6 +74,8 @@ A Company may have one or more contacts. Each contact has the following info:
 - Phone number
 
 Required attributes are marked with an "\*"
+
+It should be possible to create, edit and delete contacts.
 
 ### Comments
 
@@ -93,6 +97,8 @@ A candidate has the following attributes:
 - Kind (Freelancer, Employee, Both)\*
 - Location (e.g. "Stockholm, Sweden")
 - Description (Markdown)
+
+It should be possible to create, edit and delete candidates.
 
 ### Candidate Flagging
 
@@ -148,6 +154,8 @@ attributes:
 - Stage (one of "In progress", "Quote", "Interview", "Closed")
 
 Each lead may also have multiple associated Candidates.
+
+It should be possible to create, edit and delete leads.
 
 ### Lead Pipeline
 
