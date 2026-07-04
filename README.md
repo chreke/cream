@@ -27,6 +27,9 @@ Create a user account so you can log in:
 uv run python manage.py createsuperuser
 ```
 
+Additional user accounts are created (and passwords reset) by a superuser
+in the Django admin at `/admin/`; there is no self-service signup.
+
 Dependencies are installed automatically by `uv run` on first use.
 
 ## Starting the app

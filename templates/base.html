@@ -30,11 +30,21 @@
       </nav>
       <div class="flex-grow-1 d-flex flex-column min-vh-100">
         <header class="app-header d-flex justify-content-end align-items-center px-4 py-2">
-          {# TODO: placeholder user — replace with the logged-in user once auth is implemented #}
-          <span class="d-inline-flex align-items-center gap-2">
-            <span class="app-avatar">F</span>
-            <span>felix</span>
-          </span>
+          <div class="dropdown">
+            <button type="button" class="btn d-inline-flex align-items-center gap-2 border-0"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="app-avatar">{{ user.username|first|upper }}</span>
+              <span>{{ user.username }}</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <form method="post" action="{% url 'logout' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="dropdown-item">Logga ut</button>
+                </form>
+              </li>
+            </ul>
+          </div>
         </header>
         <main class="p-4">
           {% block content %}{% endblock %}

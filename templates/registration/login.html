@@ -1,0 +1,43 @@
+{% load static %}<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Logga in · Cream</title>
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cream.css' %}">
+  </head>
+  <body>
+    <main class="min-vh-100 d-flex align-items-center justify-content-center">
+      <div class="card shadow-sm" style="width: 22rem;">
+        <div class="card-body p-4">
+          <h1 class="h4 mb-4 text-center">
+            <span class="text-primary">&#9679;</span> Cream
+          </h1>
+          {% if form.errors %}
+            <div class="alert alert-danger" role="alert">
+              Fel användarnamn eller lösenord.
+            </div>
+          {% endif %}
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.username.id_for_label }}">Användarnamn</label>
+              <input type="text" name="{{ form.username.html_name }}"
+                     id="{{ form.username.id_for_label }}" class="form-control"
+                     autofocus autocomplete="username" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.password.id_for_label }}">Lösenord</label>
+              <input type="password" name="{{ form.password.html_name }}"
+                     id="{{ form.password.id_for_label }}" class="form-control"
+                     autocomplete="current-password" required>
+            </div>
+            <input type="hidden" name="next" value="{{ next }}">
+            <button type="submit" class="btn btn-primary w-100">Logga in</button>
+          </form>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
