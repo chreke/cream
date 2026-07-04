@@ -22,7 +22,8 @@ important that this document be kept up to date.
 
 ## Testing
 
-Use test-driven development.
+- Use test-driven development.
+- Tests are written with pytest (+ pytest-django); run them with `uv run pytest`.
 
 ## Tech stack
 

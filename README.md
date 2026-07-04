@@ -49,7 +49,7 @@ uv run python manage.py migrate
 ## Running tests
 
 ```sh
-uv run python manage.py test
+uv run pytest
 ```
 
 ## Configuration

@@ -6,3 +6,13 @@ dependencies = [
     "django~=5.2.0",
     "psycopg[binary]>=3.3.4",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-django>=4.12.0",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "cream.settings"
+python_files = ["tests.py", "test_*.py"]
