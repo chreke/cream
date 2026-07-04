@@ -29,3 +29,54 @@ class Company(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Contact(models.Model):
+    company = models.ForeignKey(
+        Company, on_delete=models.CASCADE, related_name="contacts"
+    )
+    name = models.CharField(max_length=255)
+    role = models.CharField(max_length=255, blank=True)
+    linkedin_url = models.URLField(blank=True)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=50, blank=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class BaseComment(models.Model):
+    """Shared fields for comments; concrete subclasses add the target FK."""
+
+    content = models.TextField()  # Markdown
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="%(class)ss",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    edited_at = models.DateTimeField(null=True, blank=True)
+    last_edited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="edited_%(class)ss",
+    )
+
+    class Meta:
+        abstract = True
+        ordering = ["-created_at"]
+
+
+class CompanyComment(BaseComment):
+    company = models.ForeignKey(
+        Company, on_delete=models.CASCADE, related_name="comments"
+    )
+
+    def __str__(self):
+        return f"Comment on {self.company} by {self.user}"

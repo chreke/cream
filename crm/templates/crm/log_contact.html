@@ -1,0 +1,32 @@
+{% extends "crm/company_detail.html" %}
+
+{% block title %}Logga kontakt{% endblock %}
+
+{% block modal %}
+  <div class="modal d-block" tabindex="-1" role="dialog"
+       aria-labelledby="log-contact-title">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form method="post">
+          {% csrf_token %}
+          <div class="modal-header border-0">
+            <h2 class="modal-title h4" id="log-contact-title">Logga kontakt</h2>
+            <a class="btn-close" href="{% url 'company-detail' company.pk %}" aria-label="Stäng"></a>
+          </div>
+          <div class="modal-body">
+            <p>
+              Senast kontaktad sätts till nu för
+              <strong>{{ company.name }}</strong>.
+            </p>
+            <label class="form-label" for="{{ form.comment.id_for_label }}">{{ form.comment.label }}</label>
+            {{ form.comment }}
+          </div>
+          <div class="modal-footer border-0">
+            <button type="submit" class="btn btn-primary">Logga kontakt</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop show"></div>
+{% endblock %}

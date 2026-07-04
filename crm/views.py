@@ -1,16 +1,20 @@
 from django.contrib.auth import get_user_model
 from django.db.models import F, Q
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404
+from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.views.generic import (
     CreateView,
     DeleteView,
+    DetailView,
+    FormView,
     ListView,
     TemplateView,
     UpdateView,
 )
 
-from .forms import CompanyForm
-from .models import Company
+from .forms import CommentForm, CompanyForm, ContactForm, LogContactForm
+from .models import Company, CompanyComment, Contact
 
 
 class CompanyListView(ListView):
@@ -92,9 +96,131 @@ class CompanyCreateView(CompanyModalMixin, CreateView):
 class CompanyUpdateView(CompanyModalMixin, UpdateView):
     form_class = CompanyForm
 
+    def get_success_url(self):
+        return reverse("company-detail", args=[self.object.pk])
+
 
 class CompanyDeleteView(CompanyModalMixin, DeleteView):
     pass
+
+
+class CompanyDetailView(DetailView):
+    model = Company
+    context_object_name = "company"
+    extra_context = {"section": "companies"}
+    queryset = Company.objects.select_related("assignee").prefetch_related(
+        "contacts", "comments__user", "comments__last_edited_by"
+    )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.setdefault("comment_form", CommentForm())
+        return context
+
+
+class CompanyPageMixin:
+    """Views rendered as a modal or inline form on top of a company detail page."""
+
+    extra_context = {"section": "companies"}
+
+    def get_company(self):
+        return get_object_or_404(Company, pk=self.kwargs["company_pk"])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["company"] = self.get_company()
+        context.setdefault("comment_form", CommentForm())
+        return context
+
+    def get_success_url(self):
+        return reverse("company-detail", args=[self.get_company().pk])
+
+
+class ContactCreateView(CompanyPageMixin, CreateView):
+    model = Contact
+    form_class = ContactForm
+    template_name = "crm/contact_form.html"
+
+    def form_valid(self, form):
+        form.instance.company = self.get_company()
+        return super().form_valid(form)
+
+
+class ContactUpdateView(CompanyPageMixin, UpdateView):
+    model = Contact
+    form_class = ContactForm
+    template_name = "crm/contact_form.html"
+
+    def get_company(self):
+        return self.get_object().company
+
+
+class ContactDeleteView(CompanyPageMixin, DeleteView):
+    model = Contact
+
+    def get_company(self):
+        return self.get_object().company
+
+
+class LogContactView(CompanyPageMixin, FormView):
+    form_class = LogContactForm
+    template_name = "crm/log_contact.html"
+
+    def form_valid(self, form):
+        company = self.get_company()
+        company.last_contacted = timezone.now()
+        company.save()
+        if form.cleaned_data["comment"]:
+            CompanyComment.objects.create(
+                company=company,
+                user=self.request.user,
+                content=form.cleaned_data["comment"],
+            )
+        return super().form_valid(form)
+
+
+class CompanyCommentCreateView(CompanyPageMixin, CreateView):
+    model = CompanyComment
+    form_class = CommentForm
+    template_name = "crm/company_detail.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["comment_form"] = context["form"]
+        return context
+
+    def form_valid(self, form):
+        form.instance.company = self.get_company()
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+
+class CompanyCommentUpdateView(CompanyPageMixin, UpdateView):
+    model = CompanyComment
+    form_class = CommentForm
+    template_name = "crm/company_detail.html"
+
+    def get_company(self):
+        return self.get_object().company
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["editing_comment"] = self.object
+        context["comment_edit_form"] = context["form"]
+        return context
+
+    def form_valid(self, form):
+        form.instance.edited_at = timezone.now()
+        form.instance.last_edited_by = self.request.user
+        return super().form_valid(form)
+
+
+class CompanyCommentDeleteView(CompanyPageMixin, DeleteView):
+    model = CompanyComment
+    template_name = "crm/companycomment_confirm_delete.html"
+
+    def get_company(self):
+        return self.get_object().company
 
 
 class CandidateListView(TemplateView):

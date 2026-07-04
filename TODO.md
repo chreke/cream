@@ -4,7 +4,7 @@
 - [x] Create base template ([spec](specs/002-base-template.md))
 - [x] Auth ([spec](specs/003-auth.md))
 - [x] Companies phase 1: model, list, create/edit ([spec](specs/004-companies-phase-1.md))
-- [ ] Companies phase 2: detail page, contacts, log contact, comments
+- [x] Companies phase 2: detail page, contacts, log contact, comments ([spec](specs/005-companies-phase-2.md))
 - [ ] Candidates
 - [ ] Leads
 - [ ] Deployment

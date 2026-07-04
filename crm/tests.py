@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 
-from crm.models import Company
+from crm.models import Company, CompanyComment, Contact
 
 
 @pytest.fixture
@@ -213,6 +213,184 @@ def test_edit_company_via_form(auth_client):
     assert response.status_code == 302
     company.refresh_from_db()
     assert company.name == "Nytt namn"
+
+
+@pytest.fixture
+def company():
+    return Company.objects.create(name="Itancan Consulting", location="Stockholm")
+
+
+@pytest.mark.django_db
+def test_company_name_links_to_detail(auth_client, company):
+    response = auth_client.get(reverse("company-list"))
+    assert reverse("company-detail", args=[company.pk]) in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_detail_shows_fields_and_action_buttons(auth_client, company):
+    response = auth_client.get(reverse("company-detail", args=[company.pk]))
+    content = response.content.decode()
+    assert "Itancan Consulting" in content
+    assert "Stockholm" in content
+    assert "Logga kontakt" in content
+    assert reverse("company-edit", args=[company.pk]) in content
+    assert reverse("company-delete", args=[company.pk]) in content
+
+
+@pytest.mark.django_db
+def test_detail_renders_markdown_description(auth_client, company):
+    company.description = "Ett **viktigt** bolag."
+    company.save()
+    response = auth_client.get(reverse("company-detail", args=[company.pk]))
+    assert "<strong>viktigt</strong>" in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_detail_escapes_raw_html_in_description(auth_client, company):
+    company.description = "<script>alert('xss')</script>"
+    company.save()
+    content = auth_client.get(
+        reverse("company-detail", args=[company.pk])
+    ).content.decode()
+    assert "<script>" not in content
+    assert "&lt;script&gt;" in content
+
+
+@pytest.mark.django_db
+def test_contact_create_via_modal(auth_client, company):
+    response = auth_client.post(
+        reverse("contact-create", args=[company.pk]),
+        {
+            "name": "Karin Berg",
+            "role": "CTO",
+            "linkedin_url": "https://linkedin.com/in/karinberg",
+            "email": "karin@itancan.com",
+            "phone": "070-1234567",
+        },
+    )
+    assert response.status_code == 302
+    assert response.url == reverse("company-detail", args=[company.pk])
+    contact = company.contacts.get()
+    assert contact.name == "Karin Berg"
+
+
+@pytest.mark.django_db
+def test_contact_shows_on_detail_and_links_to_edit(auth_client, company):
+    contact = Contact.objects.create(company=company, name="Karin Berg")
+    content = auth_client.get(
+        reverse("company-detail", args=[company.pk])
+    ).content.decode()
+    assert "Karin Berg" in content
+    assert reverse("contact-edit", args=[contact.pk]) in content
+
+
+@pytest.mark.django_db
+def test_contact_edit_and_delete_with_confirmation(auth_client, company):
+    contact = Contact.objects.create(company=company, name="Karin Berg")
+
+    response = auth_client.post(
+        reverse("contact-edit", args=[contact.pk]), {"name": "Karin Berg-Ek"}
+    )
+    assert response.status_code == 302
+    contact.refresh_from_db()
+    assert contact.name == "Karin Berg-Ek"
+
+    response = auth_client.get(reverse("contact-delete", args=[contact.pk]))
+    assert response.status_code == 200
+    assert Contact.objects.filter(pk=contact.pk).exists()
+
+    response = auth_client.post(reverse("contact-delete", args=[contact.pk]))
+    assert response.status_code == 302
+    assert not Contact.objects.filter(pk=contact.pk).exists()
+
+
+@pytest.mark.django_db
+def test_log_contact_sets_last_contacted(auth_client, company):
+    response = auth_client.post(
+        reverse("company-log-contact", args=[company.pk]), {"comment": ""}
+    )
+    assert response.status_code == 302
+    company.refresh_from_db()
+    assert company.last_contacted is not None
+    assert company.comments.count() == 0
+
+
+@pytest.mark.django_db
+def test_log_contact_with_comment_adds_comment(auth_client, user, company):
+    auth_client.post(
+        reverse("company-log-contact", args=[company.pk]),
+        {"comment": "Ringde och bokade möte."},
+    )
+    comment = company.comments.get()
+    assert comment.content == "Ringde och bokade möte."
+    assert comment.user == user
+
+
+@pytest.mark.django_db
+def test_add_comment_inline(auth_client, user, company):
+    response = auth_client.post(
+        reverse("company-comment-create", args=[company.pk]),
+        {"content": "Bra möte idag."},
+    )
+    assert response.status_code == 302
+    comment = company.comments.get()
+    assert comment.user == user
+    assert comment.edited_at is None
+
+
+@pytest.mark.django_db
+def test_edit_comment_stamps_editor(auth_client, user, company, django_user_model):
+    author = django_user_model.objects.create_user(username="bertil", password="x")
+    comment = CompanyComment.objects.create(
+        company=company, user=author, content="Ursprunglig text"
+    )
+    response = auth_client.post(
+        reverse("company-comment-edit", args=[comment.pk]),
+        {"content": "Ändrad text"},
+    )
+    assert response.status_code == 302
+    comment.refresh_from_db()
+    assert comment.content == "Ändrad text"
+    assert comment.user == author
+    assert comment.edited_at is not None
+    assert comment.last_edited_by == user
+
+
+@pytest.mark.django_db
+def test_comment_feed_shows_author_and_editor(auth_client, user, company):
+    comment = CompanyComment.objects.create(
+        company=company,
+        user=user,
+        content="En **kommentar**.",
+        edited_at=timezone.now(),
+        last_edited_by=user,
+    )
+    content = auth_client.get(
+        reverse("company-detail", args=[company.pk])
+    ).content.decode()
+    assert "<strong>kommentar</strong>" in content
+    assert "anna" in content
+    assert "redigerad" in content
+    assert reverse("company-comment-edit", args=[comment.pk]) in content
+    assert reverse("company-comment-delete", args=[comment.pk]) in content
+
+
+@pytest.mark.django_db
+def test_delete_comment_requires_confirmation(auth_client, user, company):
+    comment = CompanyComment.objects.create(
+        company=company, user=user, content="Ska bort"
+    )
+    response = auth_client.get(
+        reverse("company-comment-delete", args=[comment.pk])
+    )
+    assert response.status_code == 200
+    assert CompanyComment.objects.filter(pk=comment.pk).exists()
+
+    response = auth_client.post(
+        reverse("company-comment-delete", args=[comment.pk])
+    )
+    assert response.status_code == 302
+    assert not CompanyComment.objects.filter(pk=comment.pk).exists()
 
 
 @pytest.mark.django_db

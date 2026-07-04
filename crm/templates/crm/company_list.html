@@ -54,7 +54,7 @@
     <tbody>
       {% for company in companies %}
         <tr>
-          <td>{{ company.name }}</td>
+          <td><a href="{% url 'company-detail' company.pk %}">{{ company.name }}</a></td>
           <td>{{ company.location|default:"–" }}</td>
           <td>{{ company.industry|default:"–" }}</td>
           <td>{{ company.assignee.username|default:"–" }}</td>
