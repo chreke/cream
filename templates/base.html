@@ -1,0 +1,46 @@
+{% load static %}<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %} · Cream</title>
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cream.css' %}">
+  </head>
+  <body>
+    <div class="d-flex">
+      <nav class="app-sidebar d-flex flex-column p-3">
+        <a class="app-brand d-block mb-4 px-2" href="/">
+          <span class="brand-mark">&#10023;</span> Functional
+        </a>
+        <ul class="nav nav-pills flex-column gap-1">
+          <li class="nav-item">
+            <a class="nav-link{% if section == 'companies' %} active{% endif %}"
+               href="{% url 'company-list' %}">Företag</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link{% if section == 'candidates' %} active{% endif %}"
+               href="{% url 'candidate-list' %}">Kandidater</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link{% if section == 'pipeline' %} active{% endif %}"
+               href="{% url 'pipeline' %}">Pipeline</a>
+          </li>
+        </ul>
+      </nav>
+      <div class="flex-grow-1 d-flex flex-column min-vh-100">
+        <header class="app-header d-flex justify-content-end align-items-center px-4 py-2">
+          {# TODO: placeholder user — replace with the logged-in user once auth is implemented #}
+          <span class="d-inline-flex align-items-center gap-2">
+            <span class="app-avatar">F</span>
+            <span>felix</span>
+          </span>
+        </header>
+        <main class="p-4">
+          {% block content %}{% endblock %}
+        </main>
+      </div>
+    </div>
+    <script src="{% static 'vendor/bootstrap.bundle.min.js' %}"></script>
+  </body>
+</html>

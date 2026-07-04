@@ -1,0 +1,96 @@
+/*
+ * Cream theme on top of vendored Bootstrap 5.3 (no build step).
+ * Colors are gleaned from the design prototype (specs/Design.png):
+ * dark navy sidebar, cream content background, magenta accent.
+ *
+ * Bootstrap components read their colors from CSS variables at runtime,
+ * so theming happens by overriding those variables here.
+ */
+
+:root,
+[data-bs-theme="light"] {
+  --cream-dark: #12141f;
+  --cream-dark-hover: #1e2130;
+  --cream-bg: #faf6f1;
+  --cream-accent: #e6127d;
+  --cream-accent-hover: #c50e6a;
+
+  --bs-body-bg: var(--cream-bg);
+  --bs-primary: var(--cream-accent);
+  --bs-primary-rgb: 230, 18, 125;
+  --bs-link-color: var(--cream-accent);
+  --bs-link-color-rgb: 230, 18, 125;
+  --bs-link-hover-color: var(--cream-accent-hover);
+  --bs-link-hover-color-rgb: 197, 14, 106;
+  --bs-focus-ring-color: rgba(230, 18, 125, 0.25);
+}
+
+/* Component-level variables don't follow --bs-primary automatically
+ * (they are baked in at Bootstrap build time), so override per component. */
+
+.btn-primary {
+  --bs-btn-bg: var(--cream-accent);
+  --bs-btn-border-color: var(--cream-accent);
+  --bs-btn-hover-bg: var(--cream-accent-hover);
+  --bs-btn-hover-border-color: var(--cream-accent-hover);
+  --bs-btn-active-bg: var(--cream-accent-hover);
+  --bs-btn-active-border-color: var(--cream-accent-hover);
+  --bs-btn-focus-shadow-rgb: 230, 18, 125;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--cream-accent);
+  box-shadow: 0 0 0 0.25rem rgba(230, 18, 125, 0.25);
+}
+
+/* Layout: fixed dark sidebar, header bar, cream content area. */
+
+.app-sidebar {
+  width: 16rem;
+  min-height: 100vh;
+  background-color: var(--cream-dark);
+  flex-shrink: 0;
+}
+
+.app-sidebar .app-brand {
+  color: #fff;
+  text-decoration: none;
+  font-size: 1.25rem;
+}
+
+.app-sidebar .app-brand .brand-mark {
+  color: var(--cream-accent);
+}
+
+.app-sidebar .nav-link {
+  color: rgba(255, 255, 255, 0.75);
+  border-radius: var(--bs-border-radius);
+}
+
+.app-sidebar .nav-link:hover {
+  color: #fff;
+  background-color: var(--cream-dark-hover);
+}
+
+.app-sidebar .nav-link.active {
+  color: #fff;
+  background-color: var(--cream-dark-hover);
+}
+
+.app-header {
+  background-color: #fff;
+  border-bottom: var(--bs-border-width) solid var(--bs-border-color);
+}
+
+.app-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: var(--cream-accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}

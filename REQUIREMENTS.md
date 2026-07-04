@@ -8,6 +8,7 @@ document describes the functional requirements for Cream.
 ## General
 
 - The site copy should be in Swedish.
+- All list views should be rendered as tables.
 
 ## Users
 
