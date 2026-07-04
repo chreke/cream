@@ -10,6 +10,11 @@ urlpatterns = [
         views.CompanyUpdateView.as_view(),
         name="company-edit",
     ),
+    path(
+        "companies/<int:pk>/delete/",
+        views.CompanyDeleteView.as_view(),
+        name="company-delete",
+    ),
     path("candidates/", views.CandidateListView.as_view(), name="candidate-list"),
     path("pipeline/", views.PipelineView.as_view(), name="pipeline"),
 ]

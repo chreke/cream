@@ -1,26 +1,68 @@
-{% extends "base.html" %}
+{% extends "crm/company_list.html" %}
 
 {% block title %}{% if form.instance.pk %}Redigera företag{% else %}Nytt företag{% endif %}{% endblock %}
 
-{% block content %}
-  <h1 class="mb-4">
-    {% if form.instance.pk %}Redigera företag{% else %}Nytt företag{% endif %}
-  </h1>
-
-  <form method="post" class="col-lg-6">
-    {% csrf_token %}
-    {% for field in form %}
-      <div class="mb-3">
-        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-        {% for error in field.errors %}
-          <div class="text-danger small mt-1">{{ error }}</div>
-        {% endfor %}
+{% block modal %}
+  <div class="modal d-block" tabindex="-1" role="dialog"
+       aria-labelledby="company-modal-title">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <form method="post">
+          {% csrf_token %}
+          <div class="modal-header border-0">
+            <h2 class="modal-title h4" id="company-modal-title">
+              {% if form.instance.pk %}Redigera företag{% else %}Nytt företag{% endif %}
+            </h2>
+            <a class="btn-close" href="{% url 'company-list' %}" aria-label="Stäng"></a>
+          </div>
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label" for="{{ form.name.id_for_label }}">{{ form.name.label }} *</label>
+                {{ form.name }}
+                {% for error in form.name.errors %}
+                  <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.location.id_for_label }}">{{ form.location.label }}</label>
+                {{ form.location }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.industry.id_for_label }}">{{ form.industry.label }}</label>
+                {{ form.industry }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.homepage.id_for_label }}">{{ form.homepage.label }}</label>
+                {{ form.homepage }}
+                {% for error in form.homepage.errors %}
+                  <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.organization_number.id_for_label }}">{{ form.organization_number.label }}</label>
+                {{ form.organization_number }}
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                {{ form.description }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.assignee.id_for_label }}">{{ form.assignee.label }}</label>
+                {{ form.assignee }}
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            {% if form.instance.pk %}
+              <a class="btn btn-outline-danger me-auto"
+                 href="{% url 'company-delete' form.instance.pk %}">Ta bort</a>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">Spara</button>
+          </div>
+        </form>
       </div>
-    {% endfor %}
-    <div class="d-flex gap-2">
-      <button type="submit" class="btn btn-primary">Spara</button>
-      <a class="btn btn-outline-secondary" href="{% url 'company-list' %}">Avbryt</a>
     </div>
-  </form>
+  </div>
+  <div class="modal-backdrop show"></div>
 {% endblock %}

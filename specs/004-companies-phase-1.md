@@ -28,9 +28,14 @@ log-contact, comments) is specced separately when we get there.
 - **Sorting by last contacted puts never/least-recently contacted first**
   (nulls first, ascending) — the CRM use case is finding companies that
   need attention.
-- **Edit/delete have no entry points in the table** (per user). Both live
-  on the detail page in phase 2; deletion (required by REQUIREMENTS.md)
-  is implemented there with a confirmation step.
+- **Create/edit happen in pop-over modals** (REQUIREMENTS.md "UI" section),
+  rendered server-side with no JavaScript: the create/edit/delete URLs
+  render the companies list with the modal already open on top. Validation
+  errors re-render with the modal open.
+- **Edit/delete have no entry points in the table** (per user). The edit
+  modal contains a "Ta bort" button, which leads to a delete-confirmation
+  modal (deletes on POST only). The edit modal's entry point arrives with
+  the phase 2 detail page.
 - **Swedish labels live on the form/templates**, not as model
   verbose_names — the admin and code stay English.
 - Assignee is `on_delete=SET_NULL` — removing a user must not delete

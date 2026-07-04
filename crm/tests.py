@@ -171,6 +171,40 @@ def test_create_company_requires_name(auth_client):
 
 
 @pytest.mark.django_db
+def test_create_modal_renders_over_company_list(auth_client):
+    Company.objects.create(name="Bakgrundsbolaget")
+    response = auth_client.get(reverse("company-create"))
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert 'class="modal' in content
+    assert "Nytt företag" in content
+    assert "Bakgrundsbolaget" in content
+
+
+@pytest.mark.django_db
+def test_edit_modal_has_delete_button(auth_client):
+    company = Company.objects.create(name="Bolaget")
+    response = auth_client.get(reverse("company-edit", args=[company.pk]))
+    content = response.content.decode()
+    assert "Redigera företag" in content
+    assert reverse("company-delete", args=[company.pk]) in content
+    assert "Ta bort" in content
+
+
+@pytest.mark.django_db
+def test_delete_shows_confirmation_and_deletes_on_post(auth_client):
+    company = Company.objects.create(name="Bolaget")
+
+    response = auth_client.get(reverse("company-delete", args=[company.pk]))
+    assert response.status_code == 200
+    assert Company.objects.filter(pk=company.pk).exists()
+
+    response = auth_client.post(reverse("company-delete", args=[company.pk]))
+    assert response.status_code == 302
+    assert not Company.objects.filter(pk=company.pk).exists()
+
+
+@pytest.mark.django_db
 def test_edit_company_via_form(auth_client):
     company = Company.objects.create(name="Gammalt namn")
     response = auth_client.post(

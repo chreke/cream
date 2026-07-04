@@ -10,6 +10,13 @@ document describes the functional requirements for Cream.
 - The site copy should be in Swedish.
 - All list views should be rendered as tables.
 
+## UI
+
+- Editing and creating objects should be done in pop-over modals (see
+  `specs/Modal.png`) rather than on separate pages.
+- When editing, the modal should include a delete button. Deleting should
+  always trigger a confirmation dialog.
+
 ## Users
 
 The system should support multiple users. There is no split between different

@@ -1,7 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.db.models import F, Q
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView, TemplateView, UpdateView
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    ListView,
+    TemplateView,
+    UpdateView,
+)
 
 from .forms import CompanyForm
 from .models import Company
@@ -54,18 +60,41 @@ class CompanyListView(ListView):
         return context
 
 
-class CompanyCreateView(CreateView):
+class CompanyModalMixin:
+    """Company modals render on top of the companies list as a backdrop.
+
+    The backdrop shows the default first page of the list; search/filter
+    state is not carried into modal URLs.
+    """
+
     model = Company
-    form_class = CompanyForm
     success_url = reverse_lazy("company-list")
     extra_context = {"section": "companies"}
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["companies"] = (
+            Company.objects.select_related("assignee").order_by("name")[:50]
+        )
+        context["users"] = get_user_model().objects.order_by("username")
+        context["current_q"] = ""
+        context["current_assignee"] = ""
+        context["current_sort"] = "name"
+        context["querystring"] = ""
+        context["sort_querystring"] = ""
+        return context
 
-class CompanyUpdateView(UpdateView):
-    model = Company
+
+class CompanyCreateView(CompanyModalMixin, CreateView):
     form_class = CompanyForm
-    success_url = reverse_lazy("company-list")
-    extra_context = {"section": "companies"}
+
+
+class CompanyUpdateView(CompanyModalMixin, UpdateView):
+    form_class = CompanyForm
+
+
+class CompanyDeleteView(CompanyModalMixin, DeleteView):
+    pass
 
 
 class CandidateListView(TemplateView):
