@@ -35,34 +35,37 @@
         <a class="btn btn-sm btn-outline-secondary"
            href="{% url 'contact-create' company.pk %}">Ny kontakt</a>
       </div>
-      <table class="table bg-white mb-4">
-        <thead>
-          <tr>
-            <th scope="col">Namn</th>
-            <th scope="col">Roll</th>
-            <th scope="col">E-post</th>
-            <th scope="col">Telefon</th>
-            <th scope="col">LinkedIn</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for contact in company.contacts.all %}
-            <tr>
-              <td><a href="{% url 'contact-edit' contact.pk %}">{{ contact.name }}</a></td>
-              <td>{{ contact.role|default:"–" }}</td>
-              <td>{% if contact.email %}<a href="mailto:{{ contact.email }}">{{ contact.email }}</a>{% else %}–{% endif %}</td>
-              <td>{{ contact.phone|default:"–" }}</td>
-              <td>{% if contact.linkedin_url %}<a href="{{ contact.linkedin_url }}">LinkedIn</a>{% else %}–{% endif %}</td>
-            </tr>
-          {% empty %}
-            <tr>
-              <td colspan="5" class="text-secondary text-center py-3">
-                Inga kontakter ännu.
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="row g-3 mb-4">
+        {% for contact in company.contacts.all %}
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-body">
+                <h3 class="h6 mb-1">
+                  <a class="text-decoration-none" href="{% url 'contact-edit' contact.pk %}">{{ contact.name }}</a>
+                </h3>
+                {% if contact.role %}
+                  <div class="text-secondary small mb-2">{{ contact.role }}</div>
+                {% endif %}
+                <ul class="list-unstyled small mb-0">
+                  {% if contact.email %}
+                    <li><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></li>
+                  {% endif %}
+                  {% if contact.phone %}
+                    <li>{{ contact.phone }}</li>
+                  {% endif %}
+                  {% if contact.linkedin_url %}
+                    <li><a href="{{ contact.linkedin_url }}">LinkedIn</a></li>
+                  {% endif %}
+                </ul>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="col-12">
+            <p class="text-secondary mb-0">Inga kontakter ännu.</p>
+          </div>
+        {% endfor %}
+      </div>
 
       <h2 class="h4 mb-3">Kommentarer</h2>
       {% for comment in company.comments.all %}

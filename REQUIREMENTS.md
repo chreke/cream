@@ -72,7 +72,9 @@ It should be possible to filter Companies by Assignee.
 
 ### Contacts
 
-A Company may have one or more contacts. Each contact has the following info:
+A Company may have one or more contacts. Contacts are displayed as cards on
+the company detail page (an exception to the lists-as-tables rule). Each
+contact has the following info:
 
 - Name\*
 - Role
