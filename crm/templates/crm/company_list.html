@@ -3,6 +3,92 @@
 {% block title %}Företag{% endblock %}
 
 {% block content %}
-  <h1>Företag</h1>
-  <p class="text-secondary">Era kunder och prospects.</p>
+  <div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <h1>Företag</h1>
+      <p class="text-secondary mb-0">Era kunder och prospects.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'company-create' %}">Nytt företag</a>
+  </div>
+
+  <form method="get" class="row g-2 mb-4">
+    {% if current_sort != 'name' %}
+      <input type="hidden" name="sort" value="{{ current_sort }}">
+    {% endif %}
+    <div class="col-md-5">
+      <input type="search" name="q" value="{{ current_q }}" class="form-control"
+             placeholder="Sök företag..." aria-label="Sök företag">
+    </div>
+    <div class="col-md-4">
+      <select name="assignee" class="form-select" aria-label="Ansvarig">
+        <option value="">Alla ansvariga</option>
+        {% for u in users %}
+          <option value="{{ u.pk }}"
+                  {% if current_assignee == u.pk|stringformat:"s" %}selected{% endif %}>
+            {{ u.username }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <button type="submit" class="btn btn-outline-secondary">Filtrera</button>
+    </div>
+  </form>
+
+  <table class="table table-hover bg-white">
+    <thead>
+      <tr>
+        <th scope="col">
+          <a class="text-decoration-none text-reset"
+             href="?{{ sort_querystring }}">Namn{% if current_sort == 'name' %} ↑{% endif %}</a>
+        </th>
+        <th scope="col">Plats</th>
+        <th scope="col">Bransch</th>
+        <th scope="col">Ansvarig</th>
+        <th scope="col">
+          <a class="text-decoration-none text-reset"
+             href="?{{ sort_querystring }}{% if sort_querystring %}&amp;{% endif %}sort=last_contacted">Senast kontaktad{% if current_sort == 'last_contacted' %} ↑{% endif %}</a>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for company in companies %}
+        <tr>
+          <td>{{ company.name }}</td>
+          <td>{{ company.location|default:"–" }}</td>
+          <td>{{ company.industry|default:"–" }}</td>
+          <td>{{ company.assignee.username|default:"–" }}</td>
+          <td>{{ company.last_contacted|date:"Y-m-d H:i"|default:"–" }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="5" class="text-secondary text-center py-4">
+            Inga företag att visa.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if is_paginated %}
+    <nav aria-label="Paginering">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?{{ querystring }}{% if querystring %}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Föregående</a>
+          </li>
+        {% endif %}
+        <li class="page-item disabled">
+          <span class="page-link">Sida {{ page_obj.number }} av {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?{{ querystring }}{% if querystring %}&amp;{% endif %}page={{ page_obj.next_page_number }}">Nästa</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
 {% endblock %}
