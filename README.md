@@ -54,8 +54,11 @@ uv run python manage.py test
 
 ## Configuration
 
-Database settings are read from environment variables, with defaults that
-work for local development:
+Settings are read from environment variables. For local development you can
+put overrides in a `.env` file in the project root (git-ignored); it is
+loaded automatically when the `python-dotenv` dev dependency is installed.
+
+The defaults work for local development without any configuration:
 
 | Variable            | Default     |
 | ------------------- | ----------- |
