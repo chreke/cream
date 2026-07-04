@@ -14,6 +14,21 @@ PATH or use the full path as shown below.
 
 ## First-time setup
 
+Configuration is read from **required** environment variables (see
+Configuration below). Create a `.env` file in the project root:
+
+```sh
+POSTGRES_DB=cream
+POSTGRES_USER=<your macOS username>
+POSTGRES_PASSWORD=
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+```
+
+Then set `UV_ENV_FILE=.env` in your shell profile so every `uv run` loads
+it automatically. (Alternatively, pass `--env-file .env` to each `uv run`
+command below.)
+
 Create the database and apply migrations:
 
 ```sh
@@ -57,23 +72,15 @@ uv run pytest
 
 ## Configuration
 
-Settings are read from environment variables. If you want local overrides,
-put them in a `.env` file in the project root (git-ignored) and use uv's
-built-in env-file support:
+Settings are read from environment variables via `os.environ[]` — they are
+**required**, and Django will refuse to start if any is missing. For local
+development, put them in a `.env` file (git-ignored) and load it with uv's
+built-in env-file support (`UV_ENV_FILE=.env` or `uv run --env-file .env`).
 
-```sh
-uv run --env-file .env python manage.py runserver
-```
-
-To avoid typing the flag every time, set `UV_ENV_FILE=.env` in your shell
-profile and `uv run` will pick the file up automatically.
-
-The defaults work for local development without any configuration:
-
-| Variable            | Default     |
-| ------------------- | ----------- |
-| `POSTGRES_DB`       | `cream`     |
-| `POSTGRES_USER`     | (OS user)   |
-| `POSTGRES_PASSWORD` | (empty)     |
-| `POSTGRES_HOST`     | `localhost` |
-| `POSTGRES_PORT`     | `5432`      |
+| Variable            | Purpose                                     |
+| ------------------- | ------------------------------------------- |
+| `POSTGRES_DB`       | Database name (`cream` locally)             |
+| `POSTGRES_USER`     | Database user (your OS user for Homebrew)   |
+| `POSTGRES_PASSWORD` | Database password (empty for local Homebrew)|
+| `POSTGRES_HOST`     | Database host (`localhost` locally)         |
+| `POSTGRES_PORT`     | Database port (`5432`)                      |
