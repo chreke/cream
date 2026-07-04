@@ -189,6 +189,9 @@ def test_edit_modal_has_delete_button(auth_client):
     assert "Redigera företag" in content
     assert reverse("company-delete", args=[company.pk]) in content
     assert "Ta bort" in content
+    # Closing the edit modal returns to the detail page, not the list.
+    detail_url = reverse("company-detail", args=[company.pk])
+    assert f'class="btn-close" href="{detail_url}"' in content
 
 
 @pytest.mark.django_db
