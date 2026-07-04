@@ -1,13 +1,16 @@
-from django.shortcuts import render
+from django.views.generic import TemplateView
 
 
-def company_list(request):
-    return render(request, "crm/company_list.html", {"section": "companies"})
+class CompanyListView(TemplateView):
+    template_name = "crm/company_list.html"
+    extra_context = {"section": "companies"}
 
 
-def candidate_list(request):
-    return render(request, "crm/candidate_list.html", {"section": "candidates"})
+class CandidateListView(TemplateView):
+    template_name = "crm/candidate_list.html"
+    extra_context = {"section": "candidates"}
 
 
-def pipeline(request):
-    return render(request, "crm/pipeline.html", {"section": "pipeline"})
+class PipelineView(TemplateView):
+    template_name = "crm/pipeline.html"
+    extra_context = {"section": "pipeline"}
