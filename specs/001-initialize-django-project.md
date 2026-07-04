@@ -18,8 +18,10 @@ Status: Done (2026-07-04)
 - **Database settings via environment variables** (`POSTGRES_DB`,
   `POSTGRES_USER`, etc.) with defaults that work for local dev: database
   `cream`, OS-user auth on localhost:5432.
-- **Locale:** `LANGUAGE_CODE = 'sv-se'`, `TIME_ZONE = 'Europe/Stockholm'`
-  (site copy is in Swedish per REQUIREMENTS.md).
+- **Locale:** `LANGUAGE_CODE = 'en-us'`, `TIME_ZONE = 'Europe/Stockholm'`.
+  Django's own locale (admin, framework messages, date formats) is English;
+  the Swedish-copy requirement applies only to user-facing text we write
+  ourselves in templates.
 
 ## Out of scope (later tasks)
 
