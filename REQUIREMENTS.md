@@ -16,6 +16,10 @@ document describes the functional requirements for Cream.
   `specs/Modal.png`) rather than on separate pages.
 - When editing, the modal should include a delete button. Deleting should
   always trigger a confirmation dialog.
+- A successful edit should redirect to the object that was edited (e.g. the
+  detail page it lives on).
+- Each comment has an anchor link; after editing a comment, redirect to the
+  comment's anchor so it is scrolled into view.
 
 ## Users
 

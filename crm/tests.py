@@ -171,37 +171,61 @@ def test_create_company_requires_name(auth_client):
 
 
 @pytest.mark.django_db
-def test_create_modal_renders_over_company_list(auth_client):
+def test_company_list_embeds_create_modal(auth_client):
     Company.objects.create(name="Bakgrundsbolaget")
-    response = auth_client.get(reverse("company-create"))
+    response = auth_client.get(reverse("company-list"))
     content = response.content.decode()
-    assert response.status_code == 200
-    assert 'class="modal' in content
-    assert "Nytt företag" in content
-    assert "Bakgrundsbolaget" in content
+    assert 'id="company-create-modal"' in content
+    assert reverse("company-create") in content
+    assert 'data-bs-target="#company-create-modal"' in content
 
 
 @pytest.mark.django_db
-def test_edit_modal_has_delete_button(auth_client):
-    company = Company.objects.create(name="Bolaget")
-    response = auth_client.get(reverse("company-edit", args=[company.pk]))
+def test_company_detail_embeds_edit_and_delete_modals(auth_client, company):
+    response = auth_client.get(reverse("company-detail", args=[company.pk]))
     content = response.content.decode()
-    assert "Redigera företag" in content
+    assert 'id="company-edit-modal"' in content
+    assert 'id="company-delete-modal"' in content
+    assert 'value="Itancan Consulting"' in content  # edit form is pre-filled
+    assert reverse("company-edit", args=[company.pk]) in content
     assert reverse("company-delete", args=[company.pk]) in content
-    assert "Ta bort" in content
-    # Closing the edit modal returns to the detail page, not the list.
-    detail_url = reverse("company-detail", args=[company.pk])
-    assert f'class="btn-close" href="{detail_url}"' in content
 
 
 @pytest.mark.django_db
-def test_delete_shows_confirmation_and_deletes_on_post(auth_client):
-    company = Company.objects.create(name="Bolaget")
-
-    response = auth_client.get(reverse("company-delete", args=[company.pk]))
-    assert response.status_code == 200
+def test_modal_form_get_urls_redirect(auth_client, company):
+    contact = Contact.objects.create(company=company, name="Karin Berg")
+    comment = CompanyComment.objects.create(company=company, content="x")
+    detail_url = reverse("company-detail", args=[company.pk])
+    assert auth_client.get(reverse("company-create")).url == reverse("company-list")
+    for url_name, args in [
+        ("company-edit", [company.pk]),
+        ("company-delete", [company.pk]),
+        ("company-log-contact", [company.pk]),
+        ("contact-create", [company.pk]),
+        ("contact-edit", [contact.pk]),
+        ("contact-delete", [contact.pk]),
+        ("company-comment-delete", [comment.pk]),
+    ]:
+        response = auth_client.get(reverse(url_name, args=args))
+        assert response.status_code == 302, url_name
+        assert response.url == detail_url, url_name
     assert Company.objects.filter(pk=company.pk).exists()
+    assert Contact.objects.filter(pk=contact.pk).exists()
+    assert CompanyComment.objects.filter(pk=comment.pk).exists()
 
+
+@pytest.mark.django_db
+def test_invalid_create_reopens_modal_with_errors(auth_client):
+    response = auth_client.post(reverse("company-create"), {"name": ""})
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert Company.objects.count() == 0
+    assert "company-create-modal" in content
+    assert "getOrCreateInstance" in content  # auto-open script rendered
+
+
+@pytest.mark.django_db
+def test_delete_company_on_post(auth_client, company):
     response = auth_client.post(reverse("company-delete", args=[company.pk]))
     assert response.status_code == 302
     assert not Company.objects.filter(pk=company.pk).exists()
@@ -278,17 +302,18 @@ def test_contact_create_via_modal(auth_client, company):
 
 
 @pytest.mark.django_db
-def test_contact_shows_on_detail_and_links_to_edit(auth_client, company):
+def test_contact_shows_on_detail_with_edit_modal(auth_client, company):
     contact = Contact.objects.create(company=company, name="Karin Berg")
     content = auth_client.get(
         reverse("company-detail", args=[company.pk])
     ).content.decode()
     assert "Karin Berg" in content
+    assert f'id="contact-edit-modal-{contact.pk}"' in content
     assert reverse("contact-edit", args=[contact.pk]) in content
 
 
 @pytest.mark.django_db
-def test_contact_edit_and_delete_with_confirmation(auth_client, company):
+def test_contact_edit_and_delete_on_post(auth_client, company):
     contact = Contact.objects.create(company=company, name="Karin Berg")
 
     response = auth_client.post(
@@ -297,10 +322,6 @@ def test_contact_edit_and_delete_with_confirmation(auth_client, company):
     assert response.status_code == 302
     contact.refresh_from_db()
     assert contact.name == "Karin Berg-Ek"
-
-    response = auth_client.get(reverse("contact-delete", args=[contact.pk]))
-    assert response.status_code == 200
-    assert Contact.objects.filter(pk=contact.pk).exists()
 
     response = auth_client.post(reverse("contact-delete", args=[contact.pk]))
     assert response.status_code == 302
@@ -352,6 +373,9 @@ def test_edit_comment_stamps_editor(auth_client, user, company, django_user_mode
         {"content": "Ändrad text"},
     )
     assert response.status_code == 302
+    # Redirects to the comment's anchor so it scrolls into view.
+    detail_url = reverse("company-detail", args=[company.pk])
+    assert response.url == f"{detail_url}#comment-{comment.pk}"
     comment.refresh_from_db()
     assert comment.content == "Ändrad text"
     assert comment.user == author
@@ -374,20 +398,20 @@ def test_comment_feed_shows_author_and_editor(auth_client, user, company):
     assert "<strong>kommentar</strong>" in content
     assert "anna" in content
     assert "redigerad" in content
+    assert f'id="comment-{comment.pk}"' in content  # anchor for scroll-into-view
     assert reverse("company-comment-edit", args=[comment.pk]) in content
     assert reverse("company-comment-delete", args=[comment.pk]) in content
 
 
 @pytest.mark.django_db
-def test_delete_comment_requires_confirmation(auth_client, user, company):
+def test_comment_feed_embeds_delete_confirmation_modal(auth_client, user, company):
     comment = CompanyComment.objects.create(
         company=company, user=user, content="Ska bort"
     )
-    response = auth_client.get(
-        reverse("company-comment-delete", args=[comment.pk])
-    )
-    assert response.status_code == 200
-    assert CompanyComment.objects.filter(pk=comment.pk).exists()
+    content = auth_client.get(
+        reverse("company-detail", args=[company.pk])
+    ).content.decode()
+    assert f'id="comment-delete-modal-{comment.pk}"' in content
 
     response = auth_client.post(
         reverse("company-comment-delete", args=[comment.pk])

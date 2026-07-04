@@ -8,7 +8,8 @@
       <h1>Företag</h1>
       <p class="text-secondary mb-0">Era kunder och prospects.</p>
     </div>
-    <a class="btn btn-primary" href="{% url 'company-create' %}">Nytt företag</a>
+    <button type="button" class="btn btn-primary"
+            data-bs-toggle="modal" data-bs-target="#company-create-modal">Nytt företag</button>
   </div>
 
   <form method="get" class="row g-2 mb-4">
@@ -70,7 +71,7 @@
     </tbody>
   </table>
 
-  {% block modal %}{% endblock %}
+  {% include "crm/_company_form_modal.html" with form=company_create_form %}
 
   {% if is_paginated %}
     <nav aria-label="Paginering">

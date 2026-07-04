@@ -14,9 +14,12 @@
       </p>
     </div>
     <div class="d-flex gap-2">
-      <a class="btn btn-outline-danger" href="{% url 'company-delete' company.pk %}">Ta bort</a>
-      <a class="btn btn-outline-secondary" href="{% url 'company-edit' company.pk %}">Redigera</a>
-      <a class="btn btn-primary" href="{% url 'company-log-contact' company.pk %}">Logga kontakt</a>
+      <button type="button" class="btn btn-outline-danger"
+              data-bs-toggle="modal" data-bs-target="#company-delete-modal">Ta bort</button>
+      <button type="button" class="btn btn-outline-secondary"
+              data-bs-toggle="modal" data-bs-target="#company-edit-modal">Redigera</button>
+      <button type="button" class="btn btn-primary"
+              data-bs-toggle="modal" data-bs-target="#log-contact-modal">Logga kontakt</button>
     </div>
   </div>
 
@@ -32,16 +35,18 @@
 
       <div class="d-flex justify-content-between align-items-center mb-2">
         <h2 class="h4 mb-0">Kontakter</h2>
-        <a class="btn btn-sm btn-outline-secondary"
-           href="{% url 'contact-create' company.pk %}">Ny kontakt</a>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                data-bs-toggle="modal" data-bs-target="#contact-create-modal">Ny kontakt</button>
       </div>
       <div class="row g-3 mb-4">
-        {% for contact in company.contacts.all %}
+        {% for contact, contact_form in contact_items %}
           <div class="col-md-6">
             <div class="card h-100">
               <div class="card-body">
                 <h3 class="h6 mb-1">
-                  <a class="text-decoration-none" href="{% url 'contact-edit' contact.pk %}">{{ contact.name }}</a>
+                  <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold"
+                          data-bs-toggle="modal"
+                          data-bs-target="#contact-edit-modal-{{ contact.pk }}">{{ contact.name }}</button>
                 </h3>
                 {% if contact.role %}
                   <div class="text-secondary small mb-2">{{ contact.role }}</div>
@@ -70,7 +75,7 @@
       <h2 class="h4 mb-3">Kommentarer</h2>
       {% for comment in company.comments.all %}
         {% if editing_comment and editing_comment.pk == comment.pk %}
-          <div class="card mb-3">
+          <div class="card mb-3" id="comment-{{ comment.pk }}">
             <div class="card-body">
               <form method="post" action="{% url 'company-comment-edit' comment.pk %}">
                 {% csrf_token %}
@@ -81,13 +86,13 @@
                 <div class="d-flex gap-2 mt-2">
                   <button type="submit" class="btn btn-sm btn-primary">Spara</button>
                   <a class="btn btn-sm btn-outline-secondary"
-                     href="{% url 'company-detail' company.pk %}">Avbryt</a>
+                     href="{% url 'company-detail' company.pk %}#comment-{{ comment.pk }}">Avbryt</a>
                 </div>
               </form>
             </div>
           </div>
         {% else %}
-          <div class="card mb-3">
+          <div class="card mb-3" id="comment-{{ comment.pk }}">
             <div class="card-body">
               {{ comment.content|markdown }}
               <div class="d-flex justify-content-between align-items-center text-secondary small">
@@ -99,13 +104,20 @@
                     {{ comment.edited_at|date:"Y-m-d H:i" }}
                   {% endif %}
                 </span>
-                <span>
+                <span class="d-inline-flex align-items-center gap-1">
                   <a class="text-secondary" href="{% url 'company-comment-edit' comment.pk %}">Redigera</a>
-                  · <a class="text-secondary" href="{% url 'company-comment-delete' comment.pk %}">Ta bort</a>
+                  ·
+                  <button type="button" class="btn btn-link btn-sm text-secondary p-0"
+                          data-bs-toggle="modal"
+                          data-bs-target="#comment-delete-modal-{{ comment.pk }}">Ta bort</button>
                 </span>
               </div>
             </div>
           </div>
+          {% url 'company-comment-delete' comment.pk as comment_delete_url %}
+          {% with comment.pk|stringformat:"s" as comment_pk %}
+            {% include "crm/_confirm_delete_modal.html" with modal_id="comment-delete-modal-"|add:comment_pk title="Ta bort kommentar" action=comment_delete_url object_label="" %}
+          {% endwith %}
         {% endif %}
       {% empty %}
         <p class="text-secondary">Inga kommentarer ännu.</p>
@@ -139,5 +151,43 @@
     </div>
   </div>
 
-  {% block modal %}{% endblock %}
+  {# --- Modals hosted on this page --- #}
+  {% include "crm/_company_form_modal.html" with form=company_form %}
+  {% url 'company-delete' company.pk as company_delete_url %}
+  {% include "crm/_confirm_delete_modal.html" with modal_id="company-delete-modal" title="Ta bort företag" action=company_delete_url object_label=company.name %}
+
+  {% include "crm/_contact_form_modal.html" with form=contact_create_form %}
+  {% for contact, contact_form in contact_items %}
+    {% include "crm/_contact_form_modal.html" with form=contact_form %}
+    {% url 'contact-delete' contact.pk as contact_delete_url %}
+    {% with contact.pk|stringformat:"s" as contact_pk %}
+      {% include "crm/_confirm_delete_modal.html" with modal_id="contact-delete-modal-"|add:contact_pk title="Ta bort kontakt" action=contact_delete_url object_label=contact.name %}
+    {% endwith %}
+  {% endfor %}
+
+  <div class="modal fade" id="log-contact-modal" tabindex="-1" aria-hidden="true"
+       aria-labelledby="log-contact-modal-title">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form method="post" action="{% url 'company-log-contact' company.pk %}">
+          {% csrf_token %}
+          <div class="modal-header border-0">
+            <h2 class="modal-title h4" id="log-contact-modal-title">Logga kontakt</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Stäng"></button>
+          </div>
+          <div class="modal-body">
+            <p>
+              Senast kontaktad sätts till nu för
+              <strong>{{ company.name }}</strong>.
+            </p>
+            <label class="form-label" for="{{ log_contact_form.comment.id_for_label }}">{{ log_contact_form.comment.label }}</label>
+            {{ log_contact_form.comment }}
+          </div>
+          <div class="modal-footer border-0">
+            <button type="submit" class="btn btn-primary">Logga kontakt</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 {% endblock %}

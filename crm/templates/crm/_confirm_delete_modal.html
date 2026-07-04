@@ -1,0 +1,27 @@
+{# Delete-confirmation modal. Expects modal_id, title, action, and
+   object_label (falls back to "kommentaren" when empty). #}
+<div class="modal fade" id="{{ modal_id }}" tabindex="-1" aria-hidden="true"
+     aria-labelledby="{{ modal_id }}-title">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h2 class="modal-title h4" id="{{ modal_id }}-title">{{ title }}</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Stäng"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">
+          Är du säker på att du vill ta bort
+          {% if object_label %}<strong>{{ object_label }}</strong>{% else %}kommentaren{% endif %}?
+          Detta går inte att ångra.
+        </p>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Avbryt</button>
+        <form method="post" action="{{ action }}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Ta bort</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

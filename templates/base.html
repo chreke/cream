@@ -52,5 +52,15 @@
       </div>
     </div>
     <script src="{% static 'vendor/bootstrap.bundle.min.js' %}"></script>
+    {% if open_modal %}
+      {# Reopen a modal after a failed POST so validation errors are visible. #}
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          bootstrap.Modal.getOrCreateInstance(
+            document.getElementById("{{ open_modal }}")
+          ).show();
+        });
+      </script>
+    {% endif %}
   </body>
 </html>
