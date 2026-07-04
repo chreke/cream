@@ -25,6 +25,11 @@
   --bs-focus-ring-color: rgba(230, 18, 125, 0.25);
 }
 
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: ui-serif, "Iowan Old Style", Georgia, serif;
+}
+
 /* Component-level variables don't follow --bs-primary automatically
  * (they are baked in at Bootstrap build time), so override per component. */
 
