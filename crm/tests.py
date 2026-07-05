@@ -217,6 +217,7 @@ def test_modal_form_get_urls_redirect(auth_client, company):
         ("contact-create", [company.pk]),
         ("contact-edit", [contact.pk]),
         ("contact-delete", [contact.pk]),
+        ("company-comment-edit", [comment.pk]),
         ("company-comment-delete", [comment.pk]),
     ]:
         response = auth_client.get(reverse(url_name, args=args))
@@ -396,9 +397,7 @@ def test_edit_comment_stamps_editor(auth_client, user, company, django_user_mode
         {"content": "Ändrad text"},
     )
     assert response.status_code == 302
-    # Redirects to the comment's anchor so it scrolls into view.
-    detail_url = reverse("company-detail", args=[company.pk])
-    assert response.url == f"{detail_url}#comment-{comment.pk}"
+    assert response.url == reverse("company-detail", args=[company.pk])
     comment.refresh_from_db()
     assert comment.content == "Ändrad text"
     assert comment.user == author
@@ -424,6 +423,33 @@ def test_comment_feed_shows_author_and_editor(auth_client, user, company):
     assert f'id="comment-{comment.pk}"' in content  # anchor for scroll-into-view
     assert reverse("company-comment-edit", args=[comment.pk]) in content
     assert reverse("company-comment-delete", args=[comment.pk]) in content
+
+
+@pytest.mark.django_db
+def test_comment_feed_embeds_edit_modal(auth_client, user, company):
+    comment = CompanyComment.objects.create(
+        company=company, user=user, content="Ursprunglig text"
+    )
+    content = auth_client.get(
+        reverse("company-detail", args=[company.pk])
+    ).content.decode()
+    assert f'id="comment-edit-modal-{comment.pk}"' in content
+    assert "Ursprunglig text" in content  # edit form is pre-filled
+
+
+@pytest.mark.django_db
+def test_invalid_comment_edit_reopens_modal_with_errors(auth_client, user, company):
+    comment = CompanyComment.objects.create(
+        company=company, user=user, content="Ursprunglig text"
+    )
+    response = auth_client.post(
+        reverse("company-comment-edit", args=[comment.pk]), {"content": ""}
+    )
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert f'getElementById("comment-edit-modal-{comment.pk}")' in content
+    comment.refresh_from_db()
+    assert comment.content == "Ursprunglig text"
 
 
 @pytest.mark.django_db

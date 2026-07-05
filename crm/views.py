@@ -46,6 +46,10 @@ def company_detail_context(company):
             for contact in company.contacts.all()
         ],
         "comment_form": CommentForm(auto_id="comment-new-%s"),
+        "comment_items": [
+            (comment, CommentForm(instance=comment, auto_id=f"comment-{comment.pk}-%s"))
+            for comment in company.comments.all()
+        ],
     }
 
 
@@ -283,32 +287,32 @@ class CompanyCommentCreateView(CompanyDetailHostedMixin, CreateView):
 
 
 class CompanyCommentUpdateView(CompanyDetailHostedMixin, UpdateView):
-    """Inline comment editing: GET renders the detail page with the
-    comment swapped for an edit form (not a modal)."""
-
     model = CompanyComment
     form_class = CommentForm
 
     def get_company(self):
         return self.get_object().company
 
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        return self.render_to_response(self.get_context_data())
+    def get_open_modal(self):
+        return f"comment-edit-modal-{self.kwargs['pk']}"
+
+    def get_form_kwargs(self):
+        return super().get_form_kwargs() | {
+            "auto_id": f"comment-{self.kwargs['pk']}-%s"
+        }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["editing_comment"] = self.object
-        context["comment_edit_form"] = context["form"]
+        context["comment_items"] = [
+            (comment, context["form"] if comment.pk == self.object.pk else form)
+            for comment, form in context["comment_items"]
+        ]
         return context
 
     def form_valid(self, form):
         form.instance.edited_at = timezone.now()
         form.instance.last_edited_by = self.request.user
         return super().form_valid(form)
-
-    def get_success_url(self):
-        return f"{super().get_success_url()}#comment-{self.object.pk}"
 
 
 class CompanyCommentDeleteView(CompanyDetailHostedMixin, DeleteView):

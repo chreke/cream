@@ -1,0 +1,27 @@
+{# Edit-comment modal. Expects `form` (CommentForm bound to a saved comment). #}
+<div class="modal fade" tabindex="-1" aria-hidden="true"
+     id="comment-edit-modal-{{ form.instance.pk }}"
+     aria-labelledby="comment-edit-modal-{{ form.instance.pk }}-title">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="post" action="{% url 'company-comment-edit' form.instance.pk %}">
+        {% csrf_token %}
+        <div class="modal-header border-0">
+          <h2 class="modal-title h4" id="comment-edit-modal-{{ form.instance.pk }}-title">
+            Redigera kommentar
+          </h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Stäng"></button>
+        </div>
+        <div class="modal-body">
+          {{ form.content }}
+          {% for error in form.content.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+        <div class="modal-footer border-0">
+          <button type="submit" class="btn btn-primary">Spara</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

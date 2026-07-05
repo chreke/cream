@@ -78,52 +78,36 @@
   </div>
 
   <h2 class="h4 mb-3 pt-3">Kommentarer</h2>
-  {% for comment in company.comments.all %}
-    {% if editing_comment and editing_comment.pk == comment.pk %}
-      <div class="card mb-3" id="comment-{{ comment.pk }}">
-        <div class="card-body">
-          <form method="post" action="{% url 'company-comment-edit' comment.pk %}">
-            {% csrf_token %}
-            {{ comment_edit_form.content }}
-            {% for error in comment_edit_form.content.errors %}
-              <div class="text-danger small mt-1">{{ error }}</div>
-            {% endfor %}
-            <div class="d-flex gap-2 mt-2">
-              <button type="submit" class="btn btn-sm btn-primary">Spara</button>
-              <a class="btn btn-sm btn-outline-secondary"
-                 href="{% url 'company-detail' company.pk %}#comment-{{ comment.pk }}">Avbryt</a>
-            </div>
-          </form>
+  {% for comment, comment_edit_form in comment_items %}
+    <div class="card mb-3" id="comment-{{ comment.pk }}">
+      <div class="card-body">
+        {{ comment.content|markdown }}
+        <div class="d-flex justify-content-between align-items-center text-secondary small">
+          <span>
+            {{ comment.user.username|default:"(borttagen användare)" }}
+            · {{ comment.created_at|date:"Y-m-d H:i" }}
+            {% if comment.edited_at %}
+              · redigerad av {{ comment.last_edited_by.username|default:"(borttagen användare)" }}
+              {{ comment.edited_at|date:"Y-m-d H:i" }}
+            {% endif %}
+          </span>
+          <span class="d-inline-flex align-items-center gap-1">
+            <button type="button" class="btn btn-link btn-sm text-secondary p-0"
+                    data-bs-toggle="modal"
+                    data-bs-target="#comment-edit-modal-{{ comment.pk }}">Redigera</button>
+            ·
+            <button type="button" class="btn btn-link btn-sm text-secondary p-0"
+                    data-bs-toggle="modal"
+                    data-bs-target="#comment-delete-modal-{{ comment.pk }}">Ta bort</button>
+          </span>
         </div>
       </div>
-    {% else %}
-      <div class="card mb-3" id="comment-{{ comment.pk }}">
-        <div class="card-body">
-          {{ comment.content|markdown }}
-          <div class="d-flex justify-content-between align-items-center text-secondary small">
-            <span>
-              {{ comment.user.username|default:"(borttagen användare)" }}
-              · {{ comment.created_at|date:"Y-m-d H:i" }}
-              {% if comment.edited_at %}
-                · redigerad av {{ comment.last_edited_by.username|default:"(borttagen användare)" }}
-                {{ comment.edited_at|date:"Y-m-d H:i" }}
-              {% endif %}
-            </span>
-            <span class="d-inline-flex align-items-center gap-1">
-              <a class="text-secondary" href="{% url 'company-comment-edit' comment.pk %}">Redigera</a>
-              ·
-              <button type="button" class="btn btn-link btn-sm text-secondary p-0"
-                      data-bs-toggle="modal"
-                      data-bs-target="#comment-delete-modal-{{ comment.pk }}">Ta bort</button>
-            </span>
-          </div>
-        </div>
-      </div>
-      {% url 'company-comment-delete' comment.pk as comment_delete_url %}
-      {% with comment.pk|stringformat:"s" as comment_pk %}
-        {% include "crm/_confirm_delete_modal.html" with modal_id="comment-delete-modal-"|add:comment_pk title="Ta bort kommentar" action=comment_delete_url object_label="" %}
-      {% endwith %}
-    {% endif %}
+    </div>
+    {% include "crm/_comment_edit_modal.html" with form=comment_edit_form %}
+    {% url 'company-comment-delete' comment.pk as comment_delete_url %}
+    {% with comment.pk|stringformat:"s" as comment_pk %}
+      {% include "crm/_confirm_delete_modal.html" with modal_id="comment-delete-modal-"|add:comment_pk title="Ta bort kommentar" action=comment_delete_url object_label="" %}
+    {% endwith %}
   {% empty %}
     <p class="text-secondary">Inga kommentarer ännu.</p>
   {% endfor %}
