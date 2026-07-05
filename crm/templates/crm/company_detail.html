@@ -34,13 +34,8 @@
     <dd class="col-sm-9 mb-0">{{ company.last_contacted|date:"Y-m-d H:i"|default:"Aldrig" }}</dd>
   </dl>
 
-  {% if company.description %}
-    <div class="card mb-4">
-      <div class="card-body">
-        {{ company.description|markdown }}
-      </div>
-    </div>
-  {% endif %}
+  <h2 class="h4 mb-3 pt-3">Beskrivning</h2>
+  <p>{{ company.description|markdown }}</p>
 
   <h2 class="h4 mb-3 pt-3">Kontakter</h2>
   <div class="row g-3 mb-4">
