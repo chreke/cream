@@ -53,8 +53,11 @@ h1, h2, h3, h4, h5, h6,
 
 .app-sidebar {
   width: 16rem;
+  --bs-offcanvas-width: 16rem;
+  --bs-offcanvas-bg: var(--cream-dark);
   min-height: 100vh;
-  background-color: var(--cream-dark);
+  /* !important needed: .offcanvas-lg forces transparent above the breakpoint. */
+  background-color: var(--cream-dark) !important;
   flex-shrink: 0;
 }
 
