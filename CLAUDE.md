@@ -39,7 +39,5 @@ important that this document be kept up to date.
   please add it to this file instead.
 - Prefer low-JS, server-rendered UI: default to multi-page / form-POST flows;
   reach for JavaScript only when it's clearly worth it.
-- Prefer capabilities built into the existing stack (uv, Django, Postgres) over
-  adding new dependencies (e.g. `uv run --env-file` instead of python-dotenv).
 - Prefer class-based views (CBVs) over function-based views.
 - Register models in the Django Admin by default.
