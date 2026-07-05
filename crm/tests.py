@@ -286,6 +286,16 @@ def test_detail_renders_markdown_description(auth_client, company):
 
 
 @pytest.mark.django_db
+def test_detail_autolinks_bare_urls_in_description(auth_client, company):
+    company.description = "Se https://example.com/om-oss för mer info."
+    company.save()
+    content = auth_client.get(
+        reverse("company-detail", args=[company.pk])
+    ).content.decode()
+    assert '<a href="https://example.com/om-oss">' in content
+
+
+@pytest.mark.django_db
 def test_detail_escapes_raw_html_in_description(auth_client, company):
     company.description = "<script>alert('xss')</script>"
     company.save()
