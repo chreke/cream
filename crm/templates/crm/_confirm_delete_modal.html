@@ -1,5 +1,7 @@
-{# Delete-confirmation modal. Expects modal_id, title, action, and
-   object_label (falls back to "kommentaren" when empty). #}
+{% comment %}
+Delete-confirmation modal. Expects modal_id, title, action, and
+object_label (falls back to "kommentaren" when empty).
+{% endcomment %}
 <div class="modal fade" id="{{ modal_id }}" tabindex="-1" aria-hidden="true"
      aria-labelledby="{{ modal_id }}-title">
   <div class="modal-dialog modal-dialog-centered">

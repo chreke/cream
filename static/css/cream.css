@@ -83,6 +83,19 @@ h1, h2, h3, h4, h5, h6,
   background-color: var(--cream-dark-hover);
 }
 
+/* "Add new" placeholder card (e.g. + Ny kontakt). */
+.card-add {
+  border: 2px dashed var(--bs-border-color);
+  background-color: transparent;
+  color: var(--bs-secondary-color);
+  font-weight: 500;
+}
+
+.card-add:hover {
+  border-color: var(--cream-accent);
+  color: var(--cream-accent);
+}
+
 .login-page {
   background-color: var(--cream-dark);
 }

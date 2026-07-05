@@ -181,6 +181,19 @@ def test_company_list_embeds_create_modal(auth_client):
 
 
 @pytest.mark.django_db
+def test_no_template_comment_leaks_into_rendered_page(auth_client, user, company):
+    Contact.objects.create(company=company, name="Karin Berg")
+    CompanyComment.objects.create(company=company, user=user, content="Hej")
+    for url in [
+        reverse("company-list"),
+        reverse("company-detail", args=[company.pk]),
+    ]:
+        content = auth_client.get(url).content.decode()
+        assert "{#" not in content, url
+        assert "#}" not in content, url
+
+
+@pytest.mark.django_db
 def test_company_detail_embeds_edit_and_delete_modals(auth_client, company):
     response = auth_client.get(reverse("company-detail", args=[company.pk]))
     content = response.content.decode()

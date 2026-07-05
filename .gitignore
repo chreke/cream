@@ -6,3 +6,4 @@ db.sqlite3
 staticfiles/
 media/
 *.sw[a-p]
+.DS_Store
