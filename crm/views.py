@@ -197,7 +197,8 @@ class ContactUpdateView(FlashFormErrorsMixin, UpdateView):
     form_class = ContactForm
 
     def get_success_url(self):
-        return reverse("company-detail", args=[self.object.company_id])
+        detail_url = reverse("company-detail", args=[self.object.company_id])
+        return f"{detail_url}#contact-{self.object.pk}"
 
     def get_failure_url(self):
         return reverse("company-detail", args=[self.get_object().company_id])
@@ -266,7 +267,8 @@ class CompanyCommentUpdateView(FlashFormErrorsMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse("company-detail", args=[self.object.company_id])
+        detail_url = reverse("company-detail", args=[self.object.company_id])
+        return f"{detail_url}#comment-{self.object.pk}"
 
     def get_failure_url(self):
         return reverse("company-detail", args=[self.get_object().company_id])
@@ -456,7 +458,8 @@ class CandidateCommentUpdateView(FlashFormErrorsMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse("candidate-detail", args=[self.object.candidate_id])
+        detail_url = reverse("candidate-detail", args=[self.object.candidate_id])
+        return f"{detail_url}#comment-{self.object.pk}"
 
     def get_failure_url(self):
         return reverse("candidate-detail", args=[self.get_object().candidate_id])

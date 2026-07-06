@@ -1,13 +1,5 @@
 # TODO
 
-## Verify manually
-
-- [ ] Edit comment redirects to the correct comment id in the URL
-- [ ] Editing companies
-- [ ] Flagging candidates
-- [ ] Editing flags
-- [ ] Unflagging candidates
-
 - [x] Initialize Django project ([spec](specs/001-initialize-django-project.md))
 - [x] Create base template ([spec](specs/002-base-template.md))
 - [x] Auth ([spec](specs/003-auth.md))
@@ -25,7 +17,7 @@
 - [x] Location inputs (companies + candidates) should autocomplete against
       existing values (via `<datalist>`; upgrade to Tom Select if the native
       UX proves too bare)
-- [ ] Editing a list item (e.g. a contact or comment) should redirect to an
+- [x] Editing a list item (e.g. a contact or comment) should redirect to an
       anchor link so the edited item is scrolled into view
 - [x] Template comments leaking into rendered HTML: fixed, noted in
       CLAUDE.md, and guarded by a test
@@ -33,3 +25,11 @@
 - [ ] Deployment
 - [x] Swedish collation: name sorting puts Å/Ä/Ö with A/A/O instead of after Z
       (fixed with `db_collation="sv-SE-x-icu"` on the name fields)
+
+## Verify manually
+
+- [ ] Edit comment redirects to the correct comment id in the URL
+- [ ] Editing companies
+- [ ] Flagging candidates
+- [ ] Editing flags
+- [ ] Unflagging candidates

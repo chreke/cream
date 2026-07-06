@@ -261,6 +261,7 @@ def test_contact_shows_on_detail_with_edit_modal(auth_client, company):
         reverse("company-detail", args=[company.pk])
     ).content.decode()
     assert "Karin Berg" in content
+    assert f'id="contact-{contact.pk}"' in content  # anchor for scroll-into-view
     assert f'id="contact-edit-modal-{contact.pk}"' in content
     assert reverse("contact-edit", args=[contact.pk]) in content
 
@@ -273,6 +274,8 @@ def test_contact_edit_and_delete_on_post(auth_client, company):
         reverse("contact-edit", args=[contact.pk]), {"name": "Karin Berg-Ek"}
     )
     assert response.status_code == 302
+    detail_url = reverse("company-detail", args=[company.pk])
+    assert response.url == f"{detail_url}#contact-{contact.pk}"
     contact.refresh_from_db()
     assert contact.name == "Karin Berg-Ek"
 
@@ -326,7 +329,8 @@ def test_edit_comment_stamps_editor(auth_client, user, company, django_user_mode
         {"content": "Ändrad text"},
     )
     assert response.status_code == 302
-    assert response.url == reverse("company-detail", args=[company.pk])
+    detail_url = reverse("company-detail", args=[company.pk])
+    assert response.url == f"{detail_url}#comment-{comment.pk}"
     comment.refresh_from_db()
     assert comment.content == "Ändrad text"
     assert comment.user == author
@@ -698,7 +702,8 @@ def test_edit_candidate_comment_stamps_editor(
         {"content": "Ändrad text"},
     )
     assert response.status_code == 302
-    assert response.url == reverse("candidate-detail", args=[candidate.pk])
+    detail_url = reverse("candidate-detail", args=[candidate.pk])
+    assert response.url == f"{detail_url}#comment-{comment.pk}"
     comment.refresh_from_db()
     assert comment.content == "Ändrad text"
     assert comment.user == author
