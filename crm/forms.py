@@ -1,6 +1,13 @@
 from django import forms
 
-from .models import Candidate, CandidateComment, Company, CompanyComment, Contact
+from .models import (
+    Candidate,
+    CandidateComment,
+    Company,
+    CompanyComment,
+    Contact,
+    Lead,
+)
 
 
 class CompanyForm(forms.ModelForm):
@@ -119,6 +126,55 @@ class ContactForm(forms.ModelForm):
             "email": forms.EmailInput(attrs={"class": "form-control"}),
             "phone": forms.TextInput(attrs={"class": "form-control"}),
         }
+
+
+class LeadCreateForm(forms.ModelForm):
+    """New leads pick a company but no contact or stage; the contact is
+    set from the edit modal (where the company is known) and the stage
+    always starts at Pågående."""
+
+    class Meta:
+        model = Lead
+        fields = ["name", "company", "expected_value", "assignee"]
+        labels = {
+            "name": "Namn",
+            "company": "Företag",
+            "expected_value": "Förväntat värde (kr)",
+            "assignee": "Ansvarig",
+        }
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "company": forms.Select(attrs={"class": "form-select"}),
+            "expected_value": forms.NumberInput(attrs={"class": "form-control"}),
+            "assignee": forms.Select(attrs={"class": "form-select"}),
+        }
+
+
+class LeadEditForm(forms.ModelForm):
+    """The company is fixed after creation; the contact dropdown only
+    offers the lead's own company's contacts."""
+
+    class Meta:
+        model = Lead
+        fields = ["name", "expected_value", "contact", "assignee", "stage"]
+        labels = {
+            "name": "Namn",
+            "expected_value": "Förväntat värde (kr)",
+            "contact": "Kontakt",
+            "assignee": "Ansvarig",
+            "stage": "Fas",
+        }
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "expected_value": forms.NumberInput(attrs={"class": "form-control"}),
+            "contact": forms.Select(attrs={"class": "form-select"}),
+            "assignee": forms.Select(attrs={"class": "form-select"}),
+            "stage": forms.Select(attrs={"class": "form-select"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["contact"].queryset = self.instance.company.contacts.all()
 
 
 class BaseCommentForm(forms.ModelForm):

@@ -1,0 +1,72 @@
+{% comment %}
+Create/edit lead modal. Expects `form`: a LeadCreateForm (create mode)
+or a LeadEditForm bound to a saved lead (edit mode). Create mode picks
+a company but no contact or stage; edit mode shows the company as fixed
+text and offers contact (own company only) and stage.
+{% endcomment %}
+{% if form.instance.pk %}
+  {% url 'lead-edit' form.instance.pk as action %}
+{% else %}
+  {% url 'lead-create' as action %}
+{% endif %}
+<div class="modal fade" tabindex="-1" aria-hidden="true"
+     id="{% if form.instance.pk %}lead-edit-modal{% else %}lead-create-modal{% endif %}"
+     aria-labelledby="{% if form.instance.pk %}lead-edit-modal{% else %}lead-create-modal{% endif %}-title">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="post" action="{{ action }}">
+        {% csrf_token %}
+        <div class="modal-header border-0">
+          <h2 class="modal-title h4"
+              id="{% if form.instance.pk %}lead-edit-modal{% else %}lead-create-modal{% endif %}-title">
+            {% if form.instance.pk %}Redigera affär{% else %}Ny affär{% endif %}
+          </h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Stäng"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label" for="{{ form.name.id_for_label }}">{{ form.name.label }} *</label>
+              {{ form.name }}
+            </div>
+            <div class="col-12">
+              {% if form.instance.pk %}
+                <label class="form-label">Företag</label>
+                <input type="text" class="form-control" value="{{ form.instance.company.name }}" disabled>
+              {% else %}
+                <label class="form-label" for="{{ form.company.id_for_label }}">{{ form.company.label }} *</label>
+                {{ form.company }}
+              {% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.expected_value.id_for_label }}">{{ form.expected_value.label }}</label>
+              {{ form.expected_value }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.assignee.id_for_label }}">{{ form.assignee.label }}</label>
+              {{ form.assignee }}
+            </div>
+            {% if form.instance.pk %}
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.contact.id_for_label }}">{{ form.contact.label }}</label>
+                {{ form.contact }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.stage.id_for_label }}">{{ form.stage.label }}</label>
+                {{ form.stage }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          {% if form.instance.pk %}
+            <button type="button" class="btn btn-outline-danger me-auto"
+                    data-bs-toggle="modal"
+                    data-bs-target="#lead-delete-modal">Ta bort</button>
+          {% endif %}
+          <button type="submit" class="btn btn-primary">Spara</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

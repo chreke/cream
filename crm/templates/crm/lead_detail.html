@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load format_extras %}
+
+{% block title %}{{ lead.name }}{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <h1>{{ lead.name }}</h1>
+      <p class="text-secondary mb-0">
+        <span class="badge text-bg-secondary">{{ lead.get_stage_display }}</span>
+        · <a href="{% url 'company-detail' lead.company.pk %}">{{ lead.company.name }}</a>
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-danger"
+              data-bs-toggle="modal" data-bs-target="#lead-delete-modal">Ta bort</button>
+      <button type="button" class="btn btn-outline-secondary"
+              data-bs-toggle="modal" data-bs-target="#lead-edit-modal">Redigera</button>
+    </div>
+  </div>
+
+  <dl class="row mb-4">
+    <dt class="col-sm-3">Förväntat värde</dt>
+    <dd class="col-sm-9">{{ lead.expected_value|sek }}</dd>
+    <dt class="col-sm-3">Kontakt</dt>
+    <dd class="col-sm-9">
+      {% if lead.contact %}
+        <a href="{% url 'company-detail' lead.company.pk %}#contact-{{ lead.contact.pk }}">{{ lead.contact.name }}</a>
+      {% else %}
+        –
+      {% endif %}
+    </dd>
+    <dt class="col-sm-3">Ansvarig</dt>
+    <dd class="col-sm-9 mb-0">{{ lead.assignee.username|default:"–" }}</dd>
+  </dl>
+
+  {# --- Modals hosted on this page --- #}
+  {% include "crm/_lead_form_modal.html" with form=lead_form %}
+  {% url 'lead-delete' lead.pk as lead_delete_url %}
+  {% include "crm/_confirm_delete_modal.html" with modal_id="lead-delete-modal" title="Ta bort affär" action=lead_delete_url object_label=lead.name %}
+{% endblock %}

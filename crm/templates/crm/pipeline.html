@@ -3,6 +3,14 @@
 {% block title %}Pipeline{% endblock %}
 
 {% block content %}
-  <h1>Pipeline</h1>
-  <p class="text-secondary">Era pågående affärer.</p>
+  <div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <h1>Pipeline</h1>
+      <p class="text-secondary mb-0">Era pågående affärer.</p>
+    </div>
+    <button type="button" class="btn btn-primary"
+            data-bs-toggle="modal" data-bs-target="#lead-create-modal">Ny affär</button>
+  </div>
+
+  {% include "crm/_lead_form_modal.html" with form=lead_create_form %}
 {% endblock %}

@@ -22,9 +22,18 @@ from .forms import (
     CompanyCommentForm,
     CompanyForm,
     ContactForm,
+    LeadCreateForm,
+    LeadEditForm,
     LogContactForm,
 )
-from .models import Candidate, CandidateComment, Company, CompanyComment, Contact
+from .models import (
+    Candidate,
+    CandidateComment,
+    Company,
+    CompanyComment,
+    Contact,
+    Lead,
+)
 
 
 def location_options():
@@ -478,3 +487,54 @@ class CandidateCommentDeleteView(FlashFormErrorsMixin, DeleteView):
 class PipelineView(TemplateView):
     template_name = "crm/pipeline.html"
     extra_context = {"section": "pipeline"}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["lead_create_form"] = LeadCreateForm(auto_id="lead-new-%s")
+        return context
+
+
+class LeadDetailView(DetailView):
+    model = Lead
+    context_object_name = "lead"
+    extra_context = {"section": "pipeline"}
+    queryset = Lead.objects.select_related("company", "contact", "assignee")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["lead_form"] = LeadEditForm(
+            instance=self.object, auto_id="lead-edit-%s"
+        )
+        return context
+
+
+class LeadCreateView(FlashFormErrorsMixin, CreateView):
+    """POST target for the create modal on the pipeline page."""
+
+    model = Lead
+    form_class = LeadCreateForm
+
+    def get_success_url(self):
+        return reverse("lead-detail", args=[self.object.pk])
+
+    def get_failure_url(self):
+        return reverse("pipeline")
+
+
+class LeadUpdateView(FlashFormErrorsMixin, UpdateView):
+    model = Lead
+    form_class = LeadEditForm
+
+    def get_success_url(self):
+        return reverse("lead-detail", args=[self.object.pk])
+
+    def get_failure_url(self):
+        return reverse("lead-detail", args=[self.kwargs["pk"]])
+
+
+class LeadDeleteView(FlashFormErrorsMixin, DeleteView):
+    model = Lead
+    success_url = reverse_lazy("pipeline")
+
+    def get_failure_url(self):
+        return reverse("lead-detail", args=[self.kwargs["pk"]])

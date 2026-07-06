@@ -24,7 +24,8 @@
 - [ ] Leads
     - [x] Models: Lead model + lead–candidate association + admin
           ([spec](specs/007-lead-models.md))
-    - [ ] CRUD: create/edit/delete modals, detail page
+    - [x] CRUD: create/edit/delete modals, detail page
+          ([spec](specs/008-lead-crud.md))
     - [ ] Candidates on a lead: attach/detach from the detail page (flag
           status visible)
     - [ ] Comments (reuse the shared comment feed partial)
@@ -46,3 +47,7 @@
 - [ ] Flagging candidates
 - [ ] Editing flags
 - [ ] Unflagging candidates
+- [ ] Creating leads ("Ny affär" on the pipeline page)
+- [ ] Editing leads (contact dropdown only shows the lead's company's
+      contacts; company not editable)
+- [ ] Deleting leads

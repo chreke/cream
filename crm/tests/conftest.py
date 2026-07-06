@@ -1,6 +1,6 @@
 import pytest
 
-from crm.models import Candidate, Company
+from crm.models import Candidate, Company, Lead
 
 
 @pytest.fixture
@@ -17,6 +17,16 @@ def auth_client(client, user):
 @pytest.fixture
 def company():
     return Company.objects.create(name="Itancan Consulting", location="Stockholm")
+
+
+@pytest.fixture
+def lead(company, user):
+    return Lead.objects.create(
+        name="Java-utvecklare",
+        company=company,
+        expected_value=100000,
+        assignee=user,
+    )
 
 
 @pytest.fixture

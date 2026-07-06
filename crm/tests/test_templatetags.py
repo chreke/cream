@@ -1,4 +1,17 @@
+from decimal import Decimal
+
+from crm.templatetags.format_extras import sek
 from crm.templatetags.markdown_extras import markdown_filter
+
+
+def test_sek_formats_with_thousand_separators():
+    assert sek(Decimal("100000.00")) == "100\xa0000 kr"
+    assert sek(Decimal("1500")) == "1\xa0500 kr"
+    assert sek(Decimal("950")) == "950 kr"
+
+
+def test_sek_empty_value_renders_dash():
+    assert sek(None) == "–"
 
 
 def test_renders_markdown():
