@@ -22,6 +22,7 @@ from .forms import (
     CompanyCommentForm,
     CompanyForm,
     ContactForm,
+    LeadCommentForm,
     LeadCreateForm,
     LeadEditForm,
     LogContactForm,
@@ -33,6 +34,7 @@ from .models import (
     CompanyComment,
     Contact,
     Lead,
+    LeadComment,
 )
 
 
@@ -484,6 +486,52 @@ class CandidateCommentDeleteView(FlashFormErrorsMixin, DeleteView):
         return reverse("candidate-detail", args=[self.get_object().candidate_id])
 
 
+class LeadCommentCreateView(FlashFormErrorsMixin, CreateView):
+    """POST target for the inline new-comment form on the detail page."""
+
+    model = LeadComment
+    form_class = LeadCommentForm
+
+    def form_valid(self, form):
+        form.instance.lead = get_object_or_404(Lead, pk=self.kwargs["lead_pk"])
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        detail_url = reverse("lead-detail", args=[self.kwargs["lead_pk"]])
+        return f"{detail_url}#comment-{self.object.pk}"
+
+    def get_failure_url(self):
+        return reverse("lead-detail", args=[self.kwargs["lead_pk"]])
+
+
+class LeadCommentUpdateView(FlashFormErrorsMixin, UpdateView):
+    model = LeadComment
+    form_class = LeadCommentForm
+
+    def form_valid(self, form):
+        form.instance.edited_at = timezone.now()
+        form.instance.last_edited_by = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        detail_url = reverse("lead-detail", args=[self.object.lead_id])
+        return f"{detail_url}#comment-{self.object.pk}"
+
+    def get_failure_url(self):
+        return reverse("lead-detail", args=[self.get_object().lead_id])
+
+
+class LeadCommentDeleteView(FlashFormErrorsMixin, DeleteView):
+    model = LeadComment
+
+    def get_success_url(self):
+        return reverse("lead-detail", args=[self.object.lead_id])
+
+    def get_failure_url(self):
+        return reverse("lead-detail", args=[self.get_object().lead_id])
+
+
 class PipelineView(TemplateView):
     template_name = "crm/pipeline.html"
     extra_context = {"section": "pipeline"}
@@ -498,13 +546,23 @@ class LeadDetailView(DetailView):
     model = Lead
     context_object_name = "lead"
     extra_context = {"section": "pipeline"}
-    queryset = Lead.objects.select_related("company", "contact", "assignee")
+    queryset = Lead.objects.select_related(
+        "company", "contact", "assignee"
+    ).prefetch_related("comments__user", "comments__last_edited_by")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["lead_form"] = LeadEditForm(
             instance=self.object, auto_id="lead-edit-%s"
         )
+        context["comment_form"] = LeadCommentForm(auto_id="comment-new-%s")
+        context["comment_items"] = [
+            (
+                comment,
+                LeadCommentForm(instance=comment, auto_id=f"comment-{comment.pk}-%s"),
+            )
+            for comment in self.object.comments.all()
+        ]
         return context
 
 

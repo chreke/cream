@@ -35,6 +35,9 @@
     <dd class="col-sm-9 mb-0">{{ lead.assignee.username|default:"–" }}</dd>
   </dl>
 
+  {% url 'lead-comment-create' lead.pk as comment_create_url %}
+  {% include "crm/_comments.html" with comment_create_url=comment_create_url edit_url_name='lead-comment-edit' delete_url_name='lead-comment-delete' %}
+
   {# --- Modals hosted on this page --- #}
   {% include "crm/_lead_form_modal.html" with form=lead_form %}
   {% url 'lead-delete' lead.pk as lead_delete_url %}

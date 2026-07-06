@@ -26,7 +26,7 @@
           ([spec](specs/007-lead-models.md))
     - [x] CRUD: create/edit/delete modals, detail page
           ([spec](specs/008-lead-crud.md))
-    - [ ] Comments (reuse the shared comment feed partial)
+    - [x] Comments (reuse the shared comment feed partial)
     - [ ] Company integration: company detail page lists its leads
     - [ ] Pipeline board: kanban view grouped by stage with per-stage sums
           of expected value (stage changes via the edit modal for now)

@@ -8,6 +8,7 @@ from .models import (
     CompanyComment,
     Contact,
     Lead,
+    LeadComment,
     User,
 )
 
@@ -54,3 +55,8 @@ class CompanyCommentAdmin(admin.ModelAdmin):
 @admin.register(CandidateComment)
 class CandidateCommentAdmin(admin.ModelAdmin):
     list_display = ["candidate", "user", "created_at", "edited_at"]
+
+
+@admin.register(LeadComment)
+class LeadCommentAdmin(admin.ModelAdmin):
+    list_display = ["lead", "user", "created_at", "edited_at"]

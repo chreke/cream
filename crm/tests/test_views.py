@@ -11,6 +11,7 @@ from crm.models import (
     CompanyComment,
     Contact,
     Lead,
+    LeadComment,
 )
 
 
@@ -946,6 +947,95 @@ def test_lead_modal_form_get_urls_redirect(auth_client, lead):
         assert response.status_code == 302, url_name
         assert response.url == detail_url, url_name
     assert Lead.objects.filter(pk=lead.pk).exists()
+
+
+@pytest.mark.django_db
+def test_add_lead_comment_redirects_to_anchor(auth_client, user, lead):
+    response = auth_client.post(
+        reverse("lead-comment-create", args=[lead.pk]),
+        {"content": "Kunden vill ha offert."},
+    )
+    assert response.status_code == 302
+    comment = lead.comments.get()
+    detail_url = reverse("lead-detail", args=[lead.pk])
+    assert response.url == f"{detail_url}#comment-{comment.pk}"
+    assert comment.user == user
+    assert comment.edited_at is None
+
+
+@pytest.mark.django_db
+def test_edit_lead_comment_stamps_editor(auth_client, user, lead, django_user_model):
+    author = django_user_model.objects.create_user(username="bertil", password="x")
+    comment = LeadComment.objects.create(
+        lead=lead, user=author, content="Ursprunglig text"
+    )
+    response = auth_client.post(
+        reverse("lead-comment-edit", args=[comment.pk]),
+        {"content": "Ändrad text"},
+    )
+    assert response.status_code == 302
+    detail_url = reverse("lead-detail", args=[lead.pk])
+    assert response.url == f"{detail_url}#comment-{comment.pk}"
+    comment.refresh_from_db()
+    assert comment.content == "Ändrad text"
+    assert comment.user == author
+    assert comment.edited_at is not None
+    assert comment.last_edited_by == user
+
+
+@pytest.mark.django_db
+def test_lead_comment_feed_embeds_modals(auth_client, user, lead):
+    comment = LeadComment.objects.create(
+        lead=lead, user=user, content="En **kommentar**."
+    )
+    content = auth_client.get(reverse("lead-detail", args=[lead.pk])).content.decode()
+    assert "<strong>kommentar</strong>" in content
+    assert f'id="comment-{comment.pk}"' in content
+    assert f'id="comment-edit-modal-{comment.pk}"' in content
+    assert f'id="comment-delete-modal-{comment.pk}"' in content
+    assert "En **kommentar**." in content  # edit form is pre-filled
+    assert reverse("lead-comment-edit", args=[comment.pk]) in content
+    assert reverse("lead-comment-delete", args=[comment.pk]) in content
+
+
+@pytest.mark.django_db
+def test_invalid_lead_comment_edit_flashes_errors(auth_client, user, lead):
+    comment = LeadComment.objects.create(
+        lead=lead, user=user, content="Ursprunglig text"
+    )
+    response = auth_client.post(
+        reverse("lead-comment-edit", args=[comment.pk]),
+        {"content": ""},
+        follow=True,
+    )
+    detail_url = reverse("lead-detail", args=[lead.pk])
+    assert response.redirect_chain == [(detail_url, 302)]
+    assert "alert-danger" in response.content.decode()
+    comment.refresh_from_db()
+    assert comment.content == "Ursprunglig text"
+
+
+@pytest.mark.django_db
+def test_delete_lead_comment_on_post(auth_client, user, lead):
+    comment = LeadComment.objects.create(lead=lead, user=user, content="Ska bort")
+    response = auth_client.post(reverse("lead-comment-delete", args=[comment.pk]))
+    assert response.status_code == 302
+    assert not LeadComment.objects.filter(pk=comment.pk).exists()
+
+
+@pytest.mark.django_db
+def test_lead_comment_get_urls_redirect(auth_client, lead):
+    comment = LeadComment.objects.create(lead=lead, content="x")
+    detail_url = reverse("lead-detail", args=[lead.pk])
+    for url_name, args in [
+        ("lead-comment-create", [lead.pk]),
+        ("lead-comment-edit", [comment.pk]),
+        ("lead-comment-delete", [comment.pk]),
+    ]:
+        response = auth_client.get(reverse(url_name, args=args))
+        assert response.status_code == 302, url_name
+        assert response.url == detail_url, url_name
+    assert LeadComment.objects.filter(pk=comment.pk).exists()
 
 
 @pytest.mark.django_db

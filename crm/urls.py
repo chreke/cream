@@ -110,4 +110,19 @@ urlpatterns = [
         views.LeadDeleteView.as_view(),
         name="lead-delete",
     ),
+    path(
+        "leads/<int:lead_pk>/comments/new/",
+        views.LeadCommentCreateView.as_view(),
+        name="lead-comment-create",
+    ),
+    path(
+        "lead-comments/<int:pk>/edit/",
+        views.LeadCommentUpdateView.as_view(),
+        name="lead-comment-edit",
+    ),
+    path(
+        "lead-comments/<int:pk>/delete/",
+        views.LeadCommentDeleteView.as_view(),
+        name="lead-comment-delete",
+    ),
 ]

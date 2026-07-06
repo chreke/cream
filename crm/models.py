@@ -204,6 +204,13 @@ class CompanyComment(BaseComment):
         return f"Comment on {self.company} by {self.user}"
 
 
+class LeadComment(BaseComment):
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name="comments")
+
+    def __str__(self):
+        return f"Comment on {self.lead} by {self.user}"
+
+
 class CandidateComment(BaseComment):
     candidate = models.ForeignKey(
         Candidate, on_delete=models.CASCADE, related_name="comments"

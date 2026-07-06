@@ -7,6 +7,7 @@ from .models import (
     CompanyComment,
     Contact,
     Lead,
+    LeadComment,
 )
 
 
@@ -202,6 +203,11 @@ class CompanyCommentForm(BaseCommentForm):
 class CandidateCommentForm(BaseCommentForm):
     class Meta(BaseCommentForm.Meta):
         model = CandidateComment
+
+
+class LeadCommentForm(BaseCommentForm):
+    class Meta(BaseCommentForm.Meta):
+        model = LeadComment
 
 
 class LogContactForm(forms.Form):
