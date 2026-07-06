@@ -189,7 +189,6 @@ attributes:
 - Name\*
 - Company\*
 - Expected value (money, SEK)
-- Expected close date
 - Contact (Contact from the Company)
 - Assignee (User)
 - Stage (one of "In progress", "Quote", "Interview", "Closed–won",

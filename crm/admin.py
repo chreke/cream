@@ -1,7 +1,15 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Candidate, CandidateComment, Company, CompanyComment, Contact, User
+from .models import (
+    Candidate,
+    CandidateComment,
+    Company,
+    CompanyComment,
+    Contact,
+    Lead,
+    User,
+)
 
 admin.site.register(User, UserAdmin)
 
@@ -29,6 +37,13 @@ class CandidateAdmin(admin.ModelAdmin):
     list_display = ["name", "kind", "location", "email", "flagged_by"]
     list_filter = ["kind"]
     search_fields = ["name", "location", "skills"]
+
+
+@admin.register(Lead)
+class LeadAdmin(admin.ModelAdmin):
+    list_display = ["name", "company", "stage", "expected_value", "assignee"]
+    list_filter = ["stage"]
+    search_fields = ["name", "company__name"]
 
 
 @admin.register(CompanyComment)

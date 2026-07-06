@@ -1,7 +1,10 @@
+from decimal import Decimal
+
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 
-from crm.models import Candidate, Company
+from crm.models import Candidate, Company, Contact, Lead
 
 
 def test_custom_user_model_is_active():
@@ -63,6 +66,76 @@ def test_candidate_skills_list_splits_and_strips():
     candidate = Candidate(skills=" Python,Django , ,SQL")
     assert candidate.skills_list == ["Python", "Django", "SQL"]
     assert Candidate(skills="").skills_list == []
+
+
+@pytest.mark.django_db
+def test_lead_requires_only_name_and_company(company):
+    lead = Lead.objects.create(name="Java-utvecklare", company=company)
+    assert lead.stage == Lead.Stage.IN_PROGRESS
+    assert lead.expected_value is None
+    assert lead.contact is None
+    assert lead.assignee is None
+    assert lead.created_at is not None
+    assert str(lead) == "Java-utvecklare"
+
+
+def test_lead_stage_choices():
+    assert set(Lead.Stage.values) == {
+        "in_progress",
+        "quote",
+        "interview",
+        "won",
+        "lost",
+    }
+
+
+@pytest.mark.django_db
+def test_lead_contact_must_belong_to_company(company):
+    other = Company.objects.create(name="Annat AB")
+    contact = Contact.objects.create(company=other, name="Karin Berg")
+    lead = Lead(name="Java-utvecklare", company=company, contact=contact)
+    with pytest.raises(ValidationError):
+        lead.full_clean()
+
+    lead.contact = Contact.objects.create(company=company, name="Bo Ek")
+    lead.full_clean()  # contact from the right company passes
+
+
+@pytest.mark.django_db
+def test_lead_expected_value_cannot_be_negative(company):
+    lead = Lead(name="Java-utvecklare", company=company, expected_value=Decimal("-1"))
+    with pytest.raises(ValidationError):
+        lead.full_clean()
+
+
+@pytest.mark.django_db
+def test_lead_candidate_association_is_symmetric_and_detachable(company, candidate):
+    lead = Lead.objects.create(name="Java-utvecklare", company=company)
+    lead.candidates.add(candidate)
+    assert list(candidate.leads.all()) == [lead]
+
+    candidate.delete()
+    lead.refresh_from_db()
+    assert lead.candidates.count() == 0
+
+
+@pytest.mark.django_db
+def test_lead_deletion_behaviors(company, user):
+    contact = Contact.objects.create(company=company, name="Karin Berg")
+    lead = Lead.objects.create(
+        name="Java-utvecklare", company=company, contact=contact, assignee=user
+    )
+
+    contact.delete()
+    lead.refresh_from_db()
+    assert lead.contact is None
+
+    user.delete()
+    lead.refresh_from_db()
+    assert lead.assignee is None
+
+    company.delete()
+    assert not Lead.objects.filter(pk=lead.pk).exists()
 
 
 @pytest.mark.django_db

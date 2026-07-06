@@ -18,8 +18,6 @@ attributes (\* = required):
 - **Name\*** — sorts with Swedish collation, like other name fields
 - **Company\*** — deleting a company deletes its leads
 - **Expected value** — money in SEK, no currency field; optional
-- **Expected close date** — optional date (shown on pipeline cards in the
-  mockup)
 - **Contact** — a Contact belonging to the same company; optional. Deleting
   the contact keeps the lead (the field is cleared)
 - **Assignee** — a User; optional. Deleting the user keeps the lead (the
@@ -49,6 +47,8 @@ and assignee; filterable by stage and searchable by name/company name.
 
 ### Out of scope
 
+- Expected close date (the pipeline mockup shows a date on the cards, but
+  we're deferring the field for now).
 - Lead comments (`LeadComment` arrives with the Comments subtask).
 - All views and templates.
 - Any changes to how candidates or companies behave.

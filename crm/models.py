@@ -2,6 +2,8 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
 
 # "simple" config: no stemming or stop words; skills, names and places
@@ -116,6 +118,56 @@ class Candidate(models.Model):
         # The reason keeps the flag alive if the flagger is deleted
         # (flagged_by is SET_NULL).
         return self.flagged_by_id is not None or bool(self.flag_reason)
+
+
+class Lead(models.Model):
+    class Stage(models.TextChoices):
+        IN_PROGRESS = "in_progress", "Pågående"
+        QUOTE = "quote", "Offert"
+        INTERVIEW = "interview", "Intervju"
+        WON = "won", "Vunnen"
+        LOST = "lost", "Förlorad"
+
+    name = models.CharField(max_length=255, db_collation="sv-SE-x-icu")
+    company = models.ForeignKey(
+        Company, on_delete=models.CASCADE, related_name="leads"
+    )
+    expected_value = models.DecimalField(  # SEK
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+    )
+    contact = models.ForeignKey(
+        Contact,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="leads",
+    )
+    assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="leads",
+    )
+    stage = models.CharField(
+        max_length=20, choices=Stage.choices, default=Stage.IN_PROGRESS
+    )
+    candidates = models.ManyToManyField(Candidate, blank=True, related_name="leads")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+    def clean(self):
+        if self.contact and self.contact.company_id != self.company_id:
+            raise ValidationError({"contact": "Kontakten tillhör inte företaget."})
 
 
 class BaseComment(models.Model):
