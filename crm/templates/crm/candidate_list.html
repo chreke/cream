@@ -45,9 +45,7 @@
           <td>
             <a href="{% url 'candidate-detail' candidate.pk %}">{{ candidate.name }}</a>
             {% if candidate.is_flagged %}
-              <span class="text-warning-emphasis ms-1" title="Flaggad">
-                {% include "icons/flag-fill.svg" %}<span class="visually-hidden">Flaggad</span>
-              </span>
+              <span class="ms-1" title="Flaggad">🚩<span class="visually-hidden">Flaggad</span></span>
             {% endif %}
           </td>
           <td>{{ candidate.location|default:"–" }}</td>

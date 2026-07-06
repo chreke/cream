@@ -28,8 +28,7 @@
     <div class="alert alert-warning d-flex justify-content-between align-items-start gap-3" role="alert">
       <div>
         <p class="fw-bold mb-1">
-          {% include "icons/flag-fill.svg" %}
-          Flaggad{% if candidate.flagged_by %} av {{ candidate.flagged_by.username }}{% endif %}
+          🚩 Flaggad{% if candidate.flagged_by %} av {{ candidate.flagged_by.username }}{% endif %}
         </p>
         <p class="mb-0">{{ candidate.flag_reason|linebreaksbr|default:"Ingen anledning angiven." }}</p>
       </div>

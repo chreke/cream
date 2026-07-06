@@ -260,8 +260,8 @@ def test_candidate_list_marks_flagged_candidates(auth_client, user, candidate):
     candidate.flagged_by = user
     candidate.save()
     content = auth_client.get(reverse("candidate-list")).content.decode()
-    # Only the flagged candidate's row gets the flag icon.
-    assert content.count("bi-flag-fill") == 1
+    # Only the flagged candidate's row gets the flag emoji.
+    assert content.count("🚩") == 1
 
 
 @pytest.mark.django_db
