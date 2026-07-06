@@ -26,8 +26,6 @@
           ([spec](specs/007-lead-models.md))
     - [x] CRUD: create/edit/delete modals, detail page
           ([spec](specs/008-lead-crud.md))
-    - [ ] Candidates on a lead: attach/detach from the detail page (flag
-          status visible)
     - [ ] Comments (reuse the shared comment feed partial)
     - [ ] Company integration: company detail page lists its leads
     - [ ] Pipeline board: kanban view grouped by stage with per-stage sums
@@ -36,6 +34,9 @@
 - [ ] Deployment
 - [x] Swedish collation: name sorting puts Å/Ä/Ö with A/A/O instead of after Z
       (fixed with `db_collation="sv-SE-x-icu"` on the name fields)
+- [ ] Candidates on a lead: attach/detach candidates, flag status visible,
+      maybe a comment on attach — picker UI needs design work, deferred
+      ([spec](specs/009-lead-candidate-picker.md))
 
 ## Verify manually
 
