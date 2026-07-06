@@ -1,5 +1,13 @@
 # TODO
 
+## Verify manually
+
+- [ ] Edit comment redirects to the correct comment id in the URL
+- [ ] Editing companies
+- [ ] Flagging candidates
+- [ ] Editing flags
+- [ ] Unflagging candidates
+
 - [x] Initialize Django project ([spec](specs/001-initialize-django-project.md))
 - [x] Create base template ([spec](specs/002-base-template.md))
 - [x] Auth ([spec](specs/003-auth.md))
