@@ -14,6 +14,8 @@
     - [ ] Comments
     - [ ] Flagging
     - [ ] Resumes: file upload, authenticated serving
+- [ ] Location inputs (companies + candidates) should autocomplete against
+      existing values, select2-style
 - [ ] Leads
 - [ ] Deployment
 - [x] Swedish collation: name sorting puts Å/Ä/Ö with A/A/O instead of after Z
