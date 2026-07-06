@@ -1,10 +1,11 @@
-{# Edit-comment modal. Expects `form` (CommentForm bound to a saved comment). #}
+{# Edit-comment modal. Expects `form` (a comment form bound to a saved
+   comment) and `edit_url_name` (url name taking the comment pk). #}
 <div class="modal fade" tabindex="-1" aria-hidden="true"
      id="comment-edit-modal-{{ form.instance.pk }}"
      aria-labelledby="comment-edit-modal-{{ form.instance.pk }}-title">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form method="post" action="{% url 'company-comment-edit' form.instance.pk %}">
+      <form method="post" action="{% url edit_url_name form.instance.pk %}">
         {% csrf_token %}
         <div class="modal-header border-0">
           <h2 class="modal-title h4" id="comment-edit-modal-{{ form.instance.pk }}-title">

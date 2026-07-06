@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Candidate, Company, CompanyComment, Contact
+from .models import Candidate, CandidateComment, Company, CompanyComment, Contact
 
 
 class CompanyForm(forms.ModelForm):
@@ -111,9 +111,10 @@ class ContactForm(forms.ModelForm):
         }
 
 
-class CommentForm(forms.ModelForm):
+class BaseCommentForm(forms.ModelForm):
+    """Shared comment form; concrete subclasses set the comment model."""
+
     class Meta:
-        model = CompanyComment
         fields = ["content"]
         labels = {"content": "Kommentar"}
         widgets = {
@@ -125,6 +126,16 @@ class CommentForm(forms.ModelForm):
                 }
             ),
         }
+
+
+class CompanyCommentForm(BaseCommentForm):
+    class Meta(BaseCommentForm.Meta):
+        model = CompanyComment
+
+
+class CandidateCommentForm(BaseCommentForm):
+    class Meta(BaseCommentForm.Meta):
+        model = CandidateComment
 
 
 class LogContactForm(forms.Form):

@@ -76,5 +76,20 @@ urlpatterns = [
         views.CandidateDeleteView.as_view(),
         name="candidate-delete",
     ),
+    path(
+        "candidates/<int:candidate_pk>/comments/new/",
+        views.CandidateCommentCreateView.as_view(),
+        name="candidate-comment-create",
+    ),
+    path(
+        "candidate-comments/<int:pk>/edit/",
+        views.CandidateCommentUpdateView.as_view(),
+        name="candidate-comment-edit",
+    ),
+    path(
+        "candidate-comments/<int:pk>/delete/",
+        views.CandidateCommentDeleteView.as_view(),
+        name="candidate-comment-delete",
+    ),
     path("pipeline/", views.PipelineView.as_view(), name="pipeline"),
 ]

@@ -50,6 +50,9 @@
   <h2 class="h4 mb-3 pt-3">Beskrivning</h2>
   <p>{{ candidate.description|markdown }}</p>
 
+  {% url 'candidate-comment-create' candidate.pk as comment_create_url %}
+  {% include "crm/_comments.html" with comment_create_url=comment_create_url edit_url_name='candidate-comment-edit' delete_url_name='candidate-comment-delete' %}
+
   {# --- Modals hosted on this page --- #}
   {% include "crm/_candidate_form_modal.html" with form=candidate_form %}
   {% url 'candidate-delete' candidate.pk as candidate_delete_url %}

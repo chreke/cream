@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Candidate, Company, CompanyComment, Contact, User
+from .models import Candidate, CandidateComment, Company, CompanyComment, Contact, User
 
 admin.site.register(User, UserAdmin)
 
@@ -34,3 +34,8 @@ class CandidateAdmin(admin.ModelAdmin):
 @admin.register(CompanyComment)
 class CompanyCommentAdmin(admin.ModelAdmin):
     list_display = ["company", "user", "created_at", "edited_at"]
+
+
+@admin.register(CandidateComment)
+class CandidateCommentAdmin(admin.ModelAdmin):
+    list_display = ["candidate", "user", "created_at", "edited_at"]

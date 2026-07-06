@@ -4,7 +4,7 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
-from crm.models import Candidate, Company, CompanyComment, Contact
+from crm.models import Candidate, CandidateComment, Company, CompanyComment, Contact
 
 
 @pytest.mark.django_db
@@ -561,6 +561,103 @@ def test_candidate_modal_form_get_urls_redirect(auth_client, candidate):
         assert response.status_code == 302, url_name
         assert response.url == detail_url, url_name
     assert Candidate.objects.filter(pk=candidate.pk).exists()
+
+
+@pytest.mark.django_db
+def test_add_candidate_comment_redirects_to_anchor(auth_client, user, candidate):
+    response = auth_client.post(
+        reverse("candidate-comment-create", args=[candidate.pk]),
+        {"content": "Bra intervju."},
+    )
+    assert response.status_code == 302
+    comment = candidate.comments.get()
+    detail_url = reverse("candidate-detail", args=[candidate.pk])
+    assert response.url == f"{detail_url}#comment-{comment.pk}"
+    assert comment.user == user
+    assert comment.edited_at is None
+
+
+@pytest.mark.django_db
+def test_edit_candidate_comment_stamps_editor(
+    auth_client, user, candidate, django_user_model
+):
+    author = django_user_model.objects.create_user(username="bertil", password="x")
+    comment = CandidateComment.objects.create(
+        candidate=candidate, user=author, content="Ursprunglig text"
+    )
+    response = auth_client.post(
+        reverse("candidate-comment-edit", args=[comment.pk]),
+        {"content": "Ändrad text"},
+    )
+    assert response.status_code == 302
+    assert response.url == reverse("candidate-detail", args=[candidate.pk])
+    comment.refresh_from_db()
+    assert comment.content == "Ändrad text"
+    assert comment.user == author
+    assert comment.edited_at is not None
+    assert comment.last_edited_by == user
+
+
+@pytest.mark.django_db
+def test_candidate_comment_feed_embeds_modals(auth_client, user, candidate):
+    comment = CandidateComment.objects.create(
+        candidate=candidate, user=user, content="En **kommentar**."
+    )
+    content = auth_client.get(
+        reverse("candidate-detail", args=[candidate.pk])
+    ).content.decode()
+    assert "<strong>kommentar</strong>" in content
+    assert "anna" in content
+    assert f'id="comment-{comment.pk}"' in content
+    assert f'id="comment-edit-modal-{comment.pk}"' in content
+    assert f'id="comment-delete-modal-{comment.pk}"' in content
+    assert "En **kommentar**." in content  # edit form is pre-filled
+    assert reverse("candidate-comment-edit", args=[comment.pk]) in content
+    assert reverse("candidate-comment-delete", args=[comment.pk]) in content
+
+
+@pytest.mark.django_db
+def test_invalid_candidate_comment_edit_reopens_modal(auth_client, user, candidate):
+    comment = CandidateComment.objects.create(
+        candidate=candidate, user=user, content="Ursprunglig text"
+    )
+    response = auth_client.post(
+        reverse("candidate-comment-edit", args=[comment.pk]), {"content": ""}
+    )
+    assert response.status_code == 200
+    assert (
+        f'getElementById("comment-edit-modal-{comment.pk}")'
+        in response.content.decode()
+    )
+    comment.refresh_from_db()
+    assert comment.content == "Ursprunglig text"
+
+
+@pytest.mark.django_db
+def test_delete_candidate_comment_on_post(auth_client, user, candidate):
+    comment = CandidateComment.objects.create(
+        candidate=candidate, user=user, content="Ska bort"
+    )
+    response = auth_client.post(
+        reverse("candidate-comment-delete", args=[comment.pk])
+    )
+    assert response.status_code == 302
+    assert not CandidateComment.objects.filter(pk=comment.pk).exists()
+
+
+@pytest.mark.django_db
+def test_candidate_comment_get_urls_redirect(auth_client, candidate):
+    comment = CandidateComment.objects.create(candidate=candidate, content="x")
+    detail_url = reverse("candidate-detail", args=[candidate.pk])
+    for url_name, args in [
+        ("candidate-comment-create", [candidate.pk]),
+        ("candidate-comment-edit", [comment.pk]),
+        ("candidate-comment-delete", [comment.pk]),
+    ]:
+        response = auth_client.get(reverse(url_name, args=args))
+        assert response.status_code == 302, url_name
+        assert response.url == detail_url, url_name
+    assert CandidateComment.objects.filter(pk=comment.pk).exists()
 
 
 @pytest.mark.django_db

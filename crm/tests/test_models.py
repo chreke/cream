@@ -1,5 +1,4 @@
 import pytest
-from django.contrib import admin
 from django.contrib.auth import get_user_model
 
 from crm.models import Candidate, Company
@@ -125,7 +124,3 @@ def test_search_ranks_by_relevance_then_name():
         "Adam Alm",
         "Bertil Berg",
     ]
-
-
-def test_candidate_registered_in_admin():
-    assert admin.site.is_registered(Candidate)

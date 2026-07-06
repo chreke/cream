@@ -11,7 +11,7 @@
     - [x] List view: table, kind filter
     - [x] Search: full-text search ranked by relevance ([spec](specs/006-candidate-search.md))
     - [x] CRUD: detail page, create/edit/delete modals
-    - [ ] Comments
+    - [x] Comments
     - [ ] Flagging
     - [ ] Resumes: file upload, authenticated serving
 - [x] Location inputs (companies + candidates) should autocomplete against

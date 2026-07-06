@@ -15,12 +15,13 @@ from django.views.generic import (
 
 from .forms import (
     CandidateForm,
-    CommentForm,
+    CandidateCommentForm,
+    CompanyCommentForm,
     CompanyForm,
     ContactForm,
     LogContactForm,
 )
-from .models import Candidate, Company, CompanyComment, Contact
+from .models import Candidate, CandidateComment, Company, CompanyComment, Contact
 
 
 def location_options():
@@ -64,9 +65,9 @@ def company_detail_context(company):
             (contact, ContactForm(instance=contact, auto_id=f"contact-{contact.pk}-%s"))
             for contact in company.contacts.all()
         ],
-        "comment_form": CommentForm(auto_id="comment-new-%s"),
+        "comment_form": CompanyCommentForm(auto_id="comment-new-%s"),
         "comment_items": [
-            (comment, CommentForm(instance=comment, auto_id=f"comment-{comment.pk}-%s"))
+            (comment, CompanyCommentForm(instance=comment, auto_id=f"comment-{comment.pk}-%s"))
             for comment in company.comments.all()
         ],
     }
@@ -289,7 +290,7 @@ class CompanyCommentCreateView(CompanyDetailHostedMixin, CreateView):
     """POST target for the inline new-comment form on the detail page."""
 
     model = CompanyComment
-    form_class = CommentForm
+    form_class = CompanyCommentForm
 
     def get_form_kwargs(self):
         return super().get_form_kwargs() | {"auto_id": "comment-new-%s"}
@@ -310,7 +311,7 @@ class CompanyCommentCreateView(CompanyDetailHostedMixin, CreateView):
 
 class CompanyCommentUpdateView(CompanyDetailHostedMixin, UpdateView):
     model = CompanyComment
-    form_class = CommentForm
+    form_class = CompanyCommentForm
 
     def get_company(self):
         return self.get_object().company
@@ -363,6 +364,16 @@ def candidate_detail_context(candidate):
         "candidate_form": CandidateForm(
             instance=candidate, auto_id="candidate-edit-%s"
         ),
+        "comment_form": CandidateCommentForm(auto_id="comment-new-%s"),
+        "comment_items": [
+            (
+                comment,
+                CandidateCommentForm(
+                    instance=comment, auto_id=f"comment-{comment.pk}-%s"
+                ),
+            )
+            for comment in candidate.comments.all()
+        ],
     }
 
 
@@ -405,6 +416,9 @@ class CandidateDetailView(DetailView):
     model = Candidate
     context_object_name = "candidate"
     extra_context = {"section": "candidates"}
+    queryset = Candidate.objects.prefetch_related(
+        "comments__user", "comments__last_edited_by"
+    )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -459,11 +473,14 @@ class CandidateDetailHostedMixin:
     def get_success_url(self):
         return reverse("candidate-detail", args=[self.get_candidate().pk])
 
+    def get_open_modal(self):
+        return self.open_modal
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         for key, value in candidate_detail_context(self.get_candidate()).items():
             context.setdefault(key, value)
-        context["open_modal"] = self.open_modal
+        context["open_modal"] = self.get_open_modal()
         return context
 
 
@@ -486,6 +503,68 @@ class CandidateDeleteView(CandidateDetailHostedMixin, DeleteView):
 
     def get_success_url(self):
         return reverse("candidate-list")
+
+
+class CandidateCommentCreateView(CandidateDetailHostedMixin, CreateView):
+    """POST target for the inline new-comment form on the detail page."""
+
+    model = CandidateComment
+    form_class = CandidateCommentForm
+
+    def get_candidate(self):
+        return get_object_or_404(Candidate, pk=self.kwargs["candidate_pk"])
+
+    def get_form_kwargs(self):
+        return super().get_form_kwargs() | {"auto_id": "comment-new-%s"}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["comment_form"] = context["form"]
+        return context
+
+    def form_valid(self, form):
+        form.instance.candidate = self.get_candidate()
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return f"{super().get_success_url()}#comment-{self.object.pk}"
+
+
+class CandidateCommentUpdateView(CandidateDetailHostedMixin, UpdateView):
+    model = CandidateComment
+    form_class = CandidateCommentForm
+
+    def get_candidate(self):
+        return self.get_object().candidate
+
+    def get_open_modal(self):
+        return f"comment-edit-modal-{self.kwargs['pk']}"
+
+    def get_form_kwargs(self):
+        return super().get_form_kwargs() | {
+            "auto_id": f"comment-{self.kwargs['pk']}-%s"
+        }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["comment_items"] = [
+            (comment, context["form"] if comment.pk == self.object.pk else form)
+            for comment, form in context["comment_items"]
+        ]
+        return context
+
+    def form_valid(self, form):
+        form.instance.edited_at = timezone.now()
+        form.instance.last_edited_by = self.request.user
+        return super().form_valid(form)
+
+
+class CandidateCommentDeleteView(CandidateDetailHostedMixin, DeleteView):
+    model = CandidateComment
+
+    def get_candidate(self):
+        return self.get_object().candidate
 
 
 class PipelineView(TemplateView):
