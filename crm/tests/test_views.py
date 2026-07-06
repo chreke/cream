@@ -564,6 +564,28 @@ def test_candidate_modal_form_get_urls_redirect(auth_client, candidate):
 
 
 @pytest.mark.django_db
+def test_location_inputs_autocomplete_from_existing_values(auth_client):
+    company = Company.objects.create(name="Öbergs Bygg", location="Göteborg")
+    candidate = Candidate.objects.create(
+        name="Sara Lind", kind=Candidate.Kind.BOTH, location="Malmö"
+    )
+    Company.objects.create(name="Tomt AB")  # blank location is excluded
+
+    for url in [
+        reverse("company-list"),
+        reverse("company-detail", args=[company.pk]),
+        reverse("candidate-list"),
+        reverse("candidate-detail", args=[candidate.pk]),
+    ]:
+        content = auth_client.get(url).content.decode()
+        assert 'list="location-options"' in content, url
+        assert '<datalist id="location-options">' in content, url
+        # Locations from both models are suggested everywhere.
+        assert '<option value="Göteborg">' in content, url
+        assert '<option value="Malmö">' in content, url
+
+
+@pytest.mark.django_db
 def test_logout_via_post(client, django_user_model):
     user = django_user_model.objects.create_user(username="anna", password="x")
     client.force_login(user)

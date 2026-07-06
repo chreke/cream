@@ -14,8 +14,9 @@
     - [ ] Comments
     - [ ] Flagging
     - [ ] Resumes: file upload, authenticated serving
-- [ ] Location inputs (companies + candidates) should autocomplete against
-      existing values, select2-style
+- [x] Location inputs (companies + candidates) should autocomplete against
+      existing values (via `<datalist>`; upgrade to Tom Select if the native
+      UX proves too bare)
 - [ ] Leads
 - [ ] Deployment
 - [x] Swedish collation: name sorting puts Å/Ä/Ö with A/A/O instead of after Z

@@ -1,0 +1,8 @@
+{# Suggestions for location inputs (list="location-options"). Included by the
+   form modal partials; only one such modal may be hosted per page, or the
+   datalist id would be duplicated. #}
+<datalist id="location-options">
+  {% for location in location_options %}
+    <option value="{{ location }}"></option>
+  {% endfor %}
+</datalist>
