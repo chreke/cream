@@ -14,7 +14,7 @@ from django.views.generic import (
 )
 
 from .forms import CommentForm, CompanyForm, ContactForm, LogContactForm
-from .models import Company, CompanyComment, Contact
+from .models import Candidate, Company, CompanyComment, Contact
 
 
 def company_list_context():
@@ -324,9 +324,31 @@ class CompanyCommentDeleteView(CompanyDetailHostedMixin, DeleteView):
         return self.get_object().company
 
 
-class CandidateListView(TemplateView):
-    template_name = "crm/candidate_list.html"
+class CandidateListView(ListView):
+    model = Candidate
+    context_object_name = "candidates"
+    paginate_by = 50
     extra_context = {"section": "candidates"}
+
+    def get_queryset(self):
+        queryset = Candidate.objects.all()
+
+        kind = self.request.GET.get("kind", "")
+        if kind in (Candidate.Kind.FREELANCER, Candidate.Kind.EMPLOYEE):
+            # "Both" candidates match either kind, so they always show.
+            queryset = queryset.filter(kind__in=[kind, Candidate.Kind.BOTH])
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["current_kind"] = self.request.GET.get("kind", "")
+
+        # Query string without "page", for pagination links.
+        params = self.request.GET.copy()
+        params.pop("page", None)
+        context["querystring"] = params.urlencode()
+        return context
 
 
 class PipelineView(TemplateView):

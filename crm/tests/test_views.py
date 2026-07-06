@@ -4,7 +4,7 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
-from crm.models import Company, CompanyComment, Contact
+from crm.models import Candidate, Company, CompanyComment, Contact
 
 
 @pytest.mark.django_db
@@ -396,6 +396,57 @@ def test_comment_feed_embeds_delete_confirmation_modal(auth_client, user, compan
     )
     assert response.status_code == 302
     assert not CompanyComment.objects.filter(pk=comment.pk).exists()
+
+
+@pytest.mark.django_db
+def test_candidate_list_shows_candidates_in_table(auth_client):
+    Candidate.objects.create(
+        name="Sara Lind",
+        kind=Candidate.Kind.FREELANCER,
+        location="Stockholm",
+        linkedin_url="https://linkedin.com/in/saralind",
+        skills="Python, Django",
+    )
+    content = auth_client.get(reverse("candidate-list")).content.decode()
+    assert "<table" in content
+    assert "Sara Lind" in content
+    assert "Stockholm" in content
+    assert "Frilansare" in content  # kind rendered as label
+    assert "Python, Django" in content
+    assert 'href="https://linkedin.com/in/saralind"' in content
+    assert "bi-linkedin" in content  # rendered as an icon, not text
+
+
+@pytest.mark.django_db
+def test_candidate_list_truncates_long_skills(auth_client):
+    Candidate.objects.create(
+        name="Sara Lind",
+        kind=Candidate.Kind.BOTH,
+        skills=", ".join(f"Kompetens {i}" for i in range(20)),
+    )
+    content = auth_client.get(reverse("candidate-list")).content.decode()
+    assert "Kompetens 19" not in content
+    assert "…" in content
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "kind_filter,expected",
+    [
+        ("", ["Anna Anställd", "Bo Båda", "Frida Frilans"]),
+        ("freelancer", ["Bo Båda", "Frida Frilans"]),
+        ("employee", ["Anna Anställd", "Bo Båda"]),
+        ("both", ["Anna Anställd", "Bo Båda", "Frida Frilans"]),  # not filterable
+    ],
+)
+def test_candidate_list_kind_filter_always_includes_both(
+    auth_client, kind_filter, expected
+):
+    Candidate.objects.create(name="Frida Frilans", kind=Candidate.Kind.FREELANCER)
+    Candidate.objects.create(name="Anna Anställd", kind=Candidate.Kind.EMPLOYEE)
+    Candidate.objects.create(name="Bo Båda", kind=Candidate.Kind.BOTH)
+    response = auth_client.get(reverse("candidate-list"), {"kind": kind_filter})
+    assert [c.name for c in response.context["candidates"]] == expected
 
 
 @pytest.mark.django_db

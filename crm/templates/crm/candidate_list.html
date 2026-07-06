@@ -3,6 +3,82 @@
 {% block title %}Kandidater{% endblock %}
 
 {% block content %}
-  <h1>Kandidater</h1>
-  <p class="text-secondary">Era kandidater.</p>
+  <div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <h1>Kandidater</h1>
+      <p class="text-secondary mb-0">Era kandidater.</p>
+    </div>
+  </div>
+
+  <form method="get" class="row g-2 mb-4">
+    <div class="col-md-4">
+      <select name="kind" class="form-select" aria-label="Typ">
+        <option value="">Alla typer</option>
+        <option value="freelancer" {% if current_kind == "freelancer" %}selected{% endif %}>Frilansare</option>
+        <option value="employee" {% if current_kind == "employee" %}selected{% endif %}>Anställd</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <button type="submit" class="btn btn-outline-secondary">Filtrera</button>
+    </div>
+  </form>
+
+  <table class="table table-hover bg-white">
+    <thead>
+      <tr>
+        <th scope="col">Namn</th>
+        <th scope="col">Plats</th>
+        <th scope="col">Typ</th>
+        <th scope="col">LinkedIn</th>
+        <th scope="col">Kompetenser</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for candidate in candidates %}
+        <tr>
+          <td>{{ candidate.name }}</td>
+          <td>{{ candidate.location|default:"–" }}</td>
+          <td>{{ candidate.get_kind_display }}</td>
+          <td>
+            {% if candidate.linkedin_url %}
+              <a href="{{ candidate.linkedin_url }}" aria-label="LinkedIn: {{ candidate.name }}">
+                {% include "icons/linkedin.svg" %}
+              </a>
+            {% else %}
+              –
+            {% endif %}
+          </td>
+          <td>{{ candidate.skills|truncatechars:60|default:"–" }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="5" class="text-secondary text-center py-4">
+            Inga kandidater att visa.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if is_paginated %}
+    <nav aria-label="Paginering">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?{{ querystring }}{% if querystring %}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Föregående</a>
+          </li>
+        {% endif %}
+        <li class="page-item disabled">
+          <span class="page-link">Sida {{ page_obj.number }} av {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?{{ querystring }}{% if querystring %}&amp;{% endif %}page={{ page_obj.next_page_number }}">Nästa</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
 {% endblock %}
