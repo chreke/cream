@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Company, CompanyComment, Contact, User
+from .models import Candidate, Company, CompanyComment, Contact, User
 
 admin.site.register(User, UserAdmin)
 
@@ -22,6 +22,13 @@ class CompanyAdmin(admin.ModelAdmin):
 class ContactAdmin(admin.ModelAdmin):
     list_display = ["name", "company", "role", "email", "phone"]
     search_fields = ["name", "company__name"]
+
+
+@admin.register(Candidate)
+class CandidateAdmin(admin.ModelAdmin):
+    list_display = ["name", "kind", "location", "email", "flagged_by"]
+    list_filter = ["kind"]
+    search_fields = ["name", "location", "skills"]
 
 
 @admin.register(CompanyComment)
