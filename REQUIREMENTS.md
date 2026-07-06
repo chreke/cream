@@ -19,6 +19,10 @@ document describes the functional requirements for Cream.
   always trigger a confirmation dialog.
 - A successful edit should redirect to the object that was edited (e.g. the
   detail page it lives on).
+- Client-side validation is the primary guard against bad input. If a form
+  submission fails server-side validation anyway, the user is redirected
+  back with the errors shown as a flash message (the submitted values are
+  not preserved).
 - Each comment has an anchor link; after adding a comment, redirect to the
   new comment's anchor so it is scrolled into view. Comments are edited in a
   modal, like other objects.

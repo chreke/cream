@@ -134,7 +134,7 @@ def test_create_company_via_form(auth_client, user):
 @pytest.mark.django_db
 def test_create_company_requires_name(auth_client):
     response = auth_client.post(reverse("company-create"), {"name": ""})
-    assert response.status_code == 200
+    assert response.status_code == 302
     assert Company.objects.count() == 0
 
 
@@ -184,13 +184,13 @@ def test_modal_form_get_urls_redirect(auth_client, company):
 
 
 @pytest.mark.django_db
-def test_invalid_create_reopens_modal_with_errors(auth_client):
-    response = auth_client.post(reverse("company-create"), {"name": ""})
-    content = response.content.decode()
-    assert response.status_code == 200
+def test_invalid_create_flashes_errors_and_redirects(auth_client):
+    response = auth_client.post(
+        reverse("company-create"), {"name": ""}, follow=True
+    )
     assert Company.objects.count() == 0
-    assert "company-create-modal" in content
-    assert "getOrCreateInstance" in content  # auto-open script rendered
+    assert response.redirect_chain == [(reverse("company-list"), 302)]
+    assert "alert-danger" in response.content.decode()
 
 
 @pytest.mark.django_db
@@ -367,16 +367,16 @@ def test_comment_feed_embeds_edit_modal(auth_client, user, company):
 
 
 @pytest.mark.django_db
-def test_invalid_comment_edit_reopens_modal_with_errors(auth_client, user, company):
+def test_invalid_comment_edit_flashes_errors_and_redirects(auth_client, user, company):
     comment = CompanyComment.objects.create(
         company=company, user=user, content="Ursprunglig text"
     )
     response = auth_client.post(
-        reverse("company-comment-edit", args=[comment.pk]), {"content": ""}
+        reverse("company-comment-edit", args=[comment.pk]), {"content": ""}, follow=True
     )
-    content = response.content.decode()
-    assert response.status_code == 200
-    assert f'getElementById("comment-edit-modal-{comment.pk}")' in content
+    detail_url = reverse("company-detail", args=[company.pk])
+    assert response.redirect_chain == [(detail_url, 302)]
+    assert "alert-danger" in response.content.decode()
     comment.refresh_from_db()
     assert comment.content == "Ursprunglig text"
 
@@ -521,12 +521,13 @@ def test_create_candidate_redirects_to_new_detail_page(auth_client):
 
 
 @pytest.mark.django_db
-def test_invalid_candidate_create_reopens_modal_with_errors(auth_client):
-    response = auth_client.post(reverse("candidate-create"), {"name": "Erik Ek"})
-    content = response.content.decode()
-    assert response.status_code == 200
+def test_invalid_candidate_create_flashes_errors_and_redirects(auth_client):
+    response = auth_client.post(
+        reverse("candidate-create"), {"name": "Erik Ek"}, follow=True
+    )
     assert Candidate.objects.count() == 0
-    assert 'getElementById("candidate-create-modal")' in content
+    assert response.redirect_chain == [(reverse("candidate-list"), 302)]
+    assert "alert-danger" in response.content.decode()
 
 
 @pytest.mark.django_db
@@ -617,18 +618,18 @@ def test_candidate_comment_feed_embeds_modals(auth_client, user, candidate):
 
 
 @pytest.mark.django_db
-def test_invalid_candidate_comment_edit_reopens_modal(auth_client, user, candidate):
+def test_invalid_candidate_comment_edit_flashes_errors(auth_client, user, candidate):
     comment = CandidateComment.objects.create(
         candidate=candidate, user=user, content="Ursprunglig text"
     )
     response = auth_client.post(
-        reverse("candidate-comment-edit", args=[comment.pk]), {"content": ""}
+        reverse("candidate-comment-edit", args=[comment.pk]),
+        {"content": ""},
+        follow=True,
     )
-    assert response.status_code == 200
-    assert (
-        f'getElementById("comment-edit-modal-{comment.pk}")'
-        in response.content.decode()
-    )
+    detail_url = reverse("candidate-detail", args=[candidate.pk])
+    assert response.redirect_chain == [(detail_url, 302)]
+    assert "alert-danger" in response.content.decode()
     comment.refresh_from_db()
     assert comment.content == "Ursprunglig text"
 
