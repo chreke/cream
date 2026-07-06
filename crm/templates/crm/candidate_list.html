@@ -11,6 +11,10 @@
   </div>
 
   <form method="get" class="row g-2 mb-4">
+    <div class="col-md-5">
+      <input type="search" name="q" value="{{ current_q }}" class="form-control"
+             placeholder="Sök kandidater..." aria-label="Sök kandidater">
+    </div>
     <div class="col-md-4">
       <select name="kind" class="form-select" aria-label="Typ">
         <option value="">Alla typer</option>

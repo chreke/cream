@@ -8,8 +8,8 @@
     - [x] Detail page, contacts, log contact, comments ([spec](specs/005-companies-phase-2.md))
 - [ ] Candidates
     - [x] Models: Candidate model + admin
-    - [ ] List view: table, kind filter
-    - [ ] Search: full-text search ranked by relevance ([spec](specs/006-candidate-search.md))
+    - [x] List view: table, kind filter
+    - [x] Search: full-text search ranked by relevance ([spec](specs/006-candidate-search.md))
     - [ ] CRUD: detail page, create/edit/delete modals
     - [ ] Comments
     - [ ] Flagging

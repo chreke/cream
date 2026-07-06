@@ -338,11 +338,16 @@ class CandidateListView(ListView):
             # "Both" candidates match either kind, so they always show.
             queryset = queryset.filter(kind__in=[kind, Candidate.Kind.BOTH])
 
+        query = self.request.GET.get("q", "").strip()
+        if query:
+            queryset = queryset.search(query)
+
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["current_kind"] = self.request.GET.get("kind", "")
+        context["current_q"] = self.request.GET.get("q", "")
 
         # Query string without "page", for pagination links.
         params = self.request.GET.copy()

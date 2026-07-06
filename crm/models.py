@@ -1,6 +1,13 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.db import models
+
+# "simple" config: no stemming or stop words; skills, names and places
+# should match literally. Must stay identical to the GinIndex expression
+# in Candidate.Meta for searches to use the index.
+CANDIDATE_SEARCH_VECTOR = SearchVector("name", "location", "skills", config="simple")
 
 
 class User(AbstractUser):
@@ -48,6 +55,24 @@ class Contact(models.Model):
         return self.name
 
 
+class CandidateQuerySet(models.QuerySet):
+    def search(self, query):
+        """Whole-word search over name/location/skills, most relevant first.
+
+        See specs/006-candidate-search.md: all words must match (AND),
+        no prefix/substring matching, ties broken by name.
+        """
+        search_query = SearchQuery(query, config="simple")
+        return (
+            self.annotate(
+                search=CANDIDATE_SEARCH_VECTOR,
+                rank=SearchRank(CANDIDATE_SEARCH_VECTOR, search_query),
+            )
+            .filter(search=search_query)
+            .order_by("-rank", "name")
+        )
+
+
 class Candidate(models.Model):
     class Kind(models.TextChoices):
         FREELANCER = "freelancer", "Frilansare"
@@ -71,8 +96,13 @@ class Candidate(models.Model):
     )
     flag_reason = models.TextField(blank=True)
 
+    objects = CandidateQuerySet.as_manager()
+
     class Meta:
         ordering = ["name"]
+        indexes = [
+            GinIndex(CANDIDATE_SEARCH_VECTOR, name="candidate_search_idx"),
+        ]
 
     def __str__(self):
         return self.name

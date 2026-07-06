@@ -450,6 +450,25 @@ def test_candidate_list_kind_filter_always_includes_both(
 
 
 @pytest.mark.django_db
+def test_candidate_list_search_combines_with_kind_filter(auth_client):
+    Candidate.objects.create(
+        name="Sara Lind", kind=Candidate.Kind.FREELANCER, skills="Java"
+    )
+    Candidate.objects.create(name="Erik Ek", kind=Candidate.Kind.EMPLOYEE, skills="Java")
+    Candidate.objects.create(
+        name="Maria Malm", kind=Candidate.Kind.EMPLOYEE, skills="JavaScript"
+    )
+    response = auth_client.get(
+        reverse("candidate-list"), {"q": "java", "kind": "employee"}
+    )
+    assert [c.name for c in response.context["candidates"]] == ["Erik Ek"]
+
+    # Blank query is ignored.
+    response = auth_client.get(reverse("candidate-list"), {"q": "   "})
+    assert len(response.context["candidates"]) == 3
+
+
+@pytest.mark.django_db
 def test_logout_via_post(client, django_user_model):
     user = django_user_model.objects.create_user(username="anna", password="x")
     client.force_login(user)
