@@ -22,6 +22,15 @@
 - [x] Template comments leaking into rendered HTML: fixed, noted in
       CLAUDE.md, and guarded by a test
 - [ ] Leads
+    - [ ] Models: Lead model + lead–candidate association + admin
+    - [ ] CRUD: create/edit/delete modals, detail page
+    - [ ] Candidates on a lead: attach/detach from the detail page (flag
+          status visible)
+    - [ ] Comments (reuse the shared comment feed partial)
+    - [ ] Company integration: company detail page lists its leads
+    - [ ] Pipeline board: kanban view grouped by stage with per-stage sums
+          of expected value (stage changes via the edit modal for now)
+    - [ ] Drag & drop: move leads between stages on the board
 - [ ] Deployment
 - [x] Swedish collation: name sorting puts Å/Ä/Ö with A/A/O instead of after Z
       (fixed with `db_collation="sv-SE-x-icu"` on the name fields)

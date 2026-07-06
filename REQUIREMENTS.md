@@ -96,6 +96,11 @@ Required attributes are marked with an "\*"
 
 It should be possible to create, edit and delete contacts.
 
+### Leads
+
+The company detail page lists the company's leads (see the "Leads" section
+below).
+
 ### Comments
 
 Users can add comments to Companies. See the "Comments" section below.
