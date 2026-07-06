@@ -23,6 +23,7 @@
       CLAUDE.md, and guarded by a test
 - [ ] Leads
     - [ ] Models: Lead model + lead–candidate association + admin
+          ([spec](specs/007-lead-models.md))
     - [ ] CRUD: create/edit/delete modals, detail page
     - [ ] Candidates on a lead: attach/detach from the detail page (flag
           status visible)
@@ -37,6 +38,9 @@
 
 ## Verify manually
 
+- [ ] Deleting companies
+- [ ] Deleting candidates
+- [ ] Deleting comments
 - [ ] Edit comment redirects to the correct comment id in the URL
 - [ ] Editing companies
 - [ ] Flagging candidates

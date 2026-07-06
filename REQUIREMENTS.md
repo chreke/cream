@@ -188,10 +188,12 @@ attributes:
 
 - Name\*
 - Company\*
-- Expected value (money)
+- Expected value (money, SEK)
+- Expected close date
 - Contact (Contact from the Company)
 - Assignee (User)
-- Stage (one of "In progress", "Quote", "Interview", "Closed")
+- Stage (one of "In progress", "Quote", "Interview", "Closed–won",
+  "Closed–lost")
 
 Each lead may also have multiple associated Candidates.
 
