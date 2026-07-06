@@ -3,12 +3,13 @@
 - [x] Initialize Django project ([spec](specs/001-initialize-django-project.md))
 - [x] Create base template ([spec](specs/002-base-template.md))
 - [x] Auth ([spec](specs/003-auth.md))
-- [x] Companies
+- [x] Companies 
     - [x] Model, list, create/edit ([spec](specs/004-companies-phase-1.md))
     - [x] Detail page, contacts, log contact, comments ([spec](specs/005-companies-phase-2.md))
 - [ ] Candidates
     - [x] Models: Candidate model + admin
-    - [ ] List view: table, free-text search, kind filter
+    - [ ] List view: table, kind filter
+    - [ ] Search: full-text search ranked by relevance ([spec](specs/006-candidate-search.md))
     - [ ] CRUD: detail page, create/edit/delete modals
     - [ ] Comments
     - [ ] Flagging
