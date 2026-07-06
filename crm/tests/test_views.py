@@ -1,36 +1,10 @@
 import datetime
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 
 from crm.models import Company, CompanyComment, Contact
-
-
-@pytest.fixture
-def user(django_user_model):
-    return django_user_model.objects.create_user(username="anna", password="x")
-
-@pytest.fixture
-def auth_client(client, user):
-    client.force_login(user)
-    return client
-
-
-def test_custom_user_model_is_active():
-    assert get_user_model()._meta.label == "crm.User"
-
-
-@pytest.mark.django_db
-def test_create_user_with_username_email_password():
-    user = get_user_model().objects.create_user(
-        username="anna", email="anna@example.com", password="hemligt123"
-    )
-    assert user.username == "anna"
-    assert user.email == "anna@example.com"
-    assert user.check_password("hemligt123")
-    assert user.password != "hemligt123"
 
 
 @pytest.mark.django_db
@@ -64,14 +38,6 @@ def test_logged_in_user_sees_pages_and_own_username(client, django_user_model):
     response = client.get(reverse("company-list"))
     assert response.status_code == 200
     assert "anna" in response.content.decode()
-
-
-@pytest.mark.django_db
-def test_company_requires_only_name():
-    company = Company.objects.create(name="Itancan Consulting")
-    assert company.assignee is None
-    assert company.last_contacted is None
-    assert str(company) == "Itancan Consulting"
 
 
 @pytest.mark.django_db
@@ -181,19 +147,6 @@ def test_company_list_embeds_create_modal(auth_client):
 
 
 @pytest.mark.django_db
-def test_no_template_comment_leaks_into_rendered_page(auth_client, user, company):
-    Contact.objects.create(company=company, name="Karin Berg")
-    CompanyComment.objects.create(company=company, user=user, content="Hej")
-    for url in [
-        reverse("company-list"),
-        reverse("company-detail", args=[company.pk]),
-    ]:
-        content = auth_client.get(url).content.decode()
-        assert "{#" not in content, url
-        assert "#}" not in content, url
-
-
-@pytest.mark.django_db
 def test_company_detail_embeds_edit_and_delete_modals(auth_client, company):
     response = auth_client.get(reverse("company-detail", args=[company.pk]))
     content = response.content.decode()
@@ -254,11 +207,6 @@ def test_edit_company_via_form(auth_client):
     assert response.status_code == 302
     company.refresh_from_db()
     assert company.name == "Nytt namn"
-
-
-@pytest.fixture
-def company():
-    return Company.objects.create(name="Itancan Consulting", location="Stockholm")
 
 
 @pytest.mark.django_db
