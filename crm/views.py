@@ -23,9 +23,21 @@ from .forms import (
 from .models import Candidate, Company, CompanyComment, Contact
 
 
+def location_options():
+    """Existing locations, suggested by the location-input <datalist>."""
+    return sorted(
+        set(Company.objects.exclude(location="").values_list("location", flat=True))
+        | set(
+            Candidate.objects.exclude(location="").values_list("location", flat=True)
+        ),
+        key=str.casefold,
+    )
+
+
 def company_list_context():
     """Context needed to render the companies list page as a modal host."""
     return {
+        "location_options": location_options(),
         "companies": Company.objects.select_related("assignee").order_by("name")[:50],
         "users": get_user_model().objects.order_by("username"),
         "current_q": "",
@@ -44,6 +56,7 @@ def company_detail_context(company):
     """
     return {
         "company": company,
+        "location_options": location_options(),
         "company_form": CompanyForm(instance=company, auto_id="company-edit-%s"),
         "log_contact_form": LogContactForm(auto_id="log-contact-%s"),
         "contact_create_form": ContactForm(auto_id="contact-new-%s"),
@@ -95,6 +108,7 @@ class CompanyListView(ListView):
         context["current_assignee"] = self.request.GET.get("assignee", "")
         context["current_sort"] = self.request.GET.get("sort", "name")
         context["company_create_form"] = CompanyForm(auto_id="company-new-%s")
+        context["location_options"] = location_options()
 
         # Query string without "page", for pagination links.
         params = self.request.GET.copy()
@@ -334,6 +348,7 @@ def candidate_list_context():
     """Context needed to render the candidates list page as a modal host."""
     return {
         "candidates": Candidate.objects.all()[:50],
+        "location_options": location_options(),
         "current_q": "",
         "current_kind": "",
         "querystring": "",
@@ -344,6 +359,7 @@ def candidate_detail_context(candidate):
     """Context needed to render the candidate detail page and its modals."""
     return {
         "candidate": candidate,
+        "location_options": location_options(),
         "candidate_form": CandidateForm(
             instance=candidate, auto_id="candidate-edit-%s"
         ),
@@ -381,6 +397,7 @@ class CandidateListView(ListView):
         context["querystring"] = params.urlencode()
 
         context["candidate_create_form"] = CandidateForm(auto_id="candidate-new-%s")
+        context["location_options"] = location_options()
         return context
 
 

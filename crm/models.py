@@ -16,7 +16,7 @@ class User(AbstractUser):
 
 class Company(models.Model):
     name = models.CharField(max_length=255, db_collation="sv-SE-x-icu")
-    location = models.CharField(max_length=255, blank=True)
+    location = models.CharField(max_length=255, blank=True, db_index=True)
     industry = models.CharField(max_length=255, blank=True)
     homepage = models.URLField(blank=True)
     organization_number = models.CharField(max_length=20, blank=True)
@@ -81,7 +81,7 @@ class Candidate(models.Model):
 
     name = models.CharField(max_length=255, db_collation="sv-SE-x-icu")
     kind = models.CharField(max_length=20, choices=Kind.choices)
-    location = models.CharField(max_length=255, blank=True)
+    location = models.CharField(max_length=255, blank=True, db_index=True)
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=50, blank=True)
     linkedin_url = models.URLField(blank=True)
