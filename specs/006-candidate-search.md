@@ -26,7 +26,7 @@ used by the company list, which cannot rank results and cannot use an index.
 ### Ranking
 
 - Search results are ordered by **relevance**, not name.
-- Field weights: a match in Name ranks highest, then Skills, then Location.
+- All three fields count equally toward relevance (no field weighting).
 - Candidates with equal relevance are ordered by name (Swedish collation).
 - Without a search query, candidates are ordered by name.
 
