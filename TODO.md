@@ -6,5 +6,11 @@
 - [x] Companies phase 1: model, list, create/edit ([spec](specs/004-companies-phase-1.md))
 - [x] Companies phase 2: detail page, contacts, log contact, comments ([spec](specs/005-companies-phase-2.md))
 - [ ] Candidates
+    - [ ] Models: Candidate model + admin
+    - [ ] List view: table, free-text search, kind filter
+    - [ ] CRUD: detail page, create/edit/delete modals
+    - [ ] Comments
+    - [ ] Flagging
+    - [ ] Resumes: file upload, authenticated serving
 - [ ] Leads
 - [ ] Deployment
