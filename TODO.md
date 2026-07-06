@@ -14,3 +14,6 @@
     - [ ] Resumes: file upload, authenticated serving
 - [ ] Leads
 - [ ] Deployment
+- [ ] Swedish collation: name sorting puts Å/Ä/Ö with A/A/O instead of after Z
+      (consider `db_collation="sv-SE-x-icu"` on name fields or a Swedish
+      database collation)
