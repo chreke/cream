@@ -15,10 +15,32 @@
     <div class="d-flex gap-2">
       <button type="button" class="btn btn-outline-danger"
               data-bs-toggle="modal" data-bs-target="#candidate-delete-modal">Ta bort</button>
+      {% if not candidate.is_flagged %}
+        <button type="button" class="btn btn-outline-secondary"
+                data-bs-toggle="modal" data-bs-target="#candidate-flag-modal">Flagga</button>
+      {% endif %}
       <button type="button" class="btn btn-outline-secondary"
               data-bs-toggle="modal" data-bs-target="#candidate-edit-modal">Redigera</button>
     </div>
   </div>
+
+  {% if candidate.is_flagged %}
+    <div class="alert alert-warning d-flex justify-content-between align-items-start gap-3" role="alert">
+      <div>
+        <p class="fw-bold mb-1">
+          {% include "icons/flag-fill.svg" %}
+          Flaggad{% if candidate.flagged_by %} av {{ candidate.flagged_by.username }}{% endif %}
+        </p>
+        <p class="mb-0">{{ candidate.flag_reason|linebreaksbr|default:"Ingen anledning angiven." }}</p>
+      </div>
+      <div class="d-flex gap-2 flex-shrink-0">
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                data-bs-toggle="modal" data-bs-target="#candidate-flag-modal">Redigera</button>
+        <button type="button" class="btn btn-sm btn-outline-danger"
+                data-bs-toggle="modal" data-bs-target="#candidate-unflag-modal">Ta bort flagga</button>
+      </div>
+    </div>
+  {% endif %}
 
   <dl class="row mb-4">
     <dt class="col-sm-3">E-post</dt>
@@ -55,6 +77,11 @@
 
   {# --- Modals hosted on this page --- #}
   {% include "crm/_candidate_form_modal.html" with form=candidate_form %}
+  {% include "crm/_candidate_flag_modal.html" with form=flag_form %}
+  {% if candidate.is_flagged %}
+    {% url 'candidate-unflag' candidate.pk as candidate_unflag_url %}
+    {% include "crm/_confirm_delete_modal.html" with modal_id="candidate-unflag-modal" title="Ta bort flagga" action=candidate_unflag_url object_label="flaggan" %}
+  {% endif %}
   {% url 'candidate-delete' candidate.pk as candidate_delete_url %}
   {% include "crm/_confirm_delete_modal.html" with modal_id="candidate-delete-modal" title="Ta bort kandidat" action=candidate_delete_url object_label=candidate.name %}
 {% endblock %}

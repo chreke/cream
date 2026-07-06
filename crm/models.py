@@ -111,6 +111,12 @@ class Candidate(models.Model):
     def skills_list(self):
         return [skill.strip() for skill in self.skills.split(",") if skill.strip()]
 
+    @property
+    def is_flagged(self):
+        # The reason keeps the flag alive if the flagger is deleted
+        # (flagged_by is SET_NULL).
+        return self.flagged_by_id is not None or bool(self.flag_reason)
+
 
 class BaseComment(models.Model):
     """Shared fields for comments; concrete subclasses add the target FK."""

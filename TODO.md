@@ -12,7 +12,7 @@
     - [x] Search: full-text search ranked by relevance ([spec](specs/006-candidate-search.md))
     - [x] CRUD: detail page, create/edit/delete modals
     - [x] Comments
-    - [ ] Flagging
+    - [x] Flagging
     - [ ] Resumes: file upload, authenticated serving
 - [x] Location inputs (companies + candidates) should autocomplete against
       existing values (via `<datalist>`; upgrade to Tom Select if the native

@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db.models import F, Q
+from django.forms import Form
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -15,6 +16,7 @@ from django.views.generic import (
 )
 
 from .forms import (
+    CandidateFlagForm,
     CandidateForm,
     CandidateCommentForm,
     CompanyCommentForm,
@@ -288,6 +290,9 @@ def candidate_detail_context(candidate):
         "candidate_form": CandidateForm(
             instance=candidate, auto_id="candidate-edit-%s"
         ),
+        "flag_form": CandidateFlagForm(
+            instance=candidate, auto_id="candidate-flag-%s"
+        ),
         "comment_form": CandidateCommentForm(auto_id="comment-new-%s"),
         "comment_items": [
             (
@@ -377,6 +382,44 @@ class CandidateUpdateView(FlashFormErrorsMixin, UpdateView):
 class CandidateDeleteView(FlashFormErrorsMixin, DeleteView):
     model = Candidate
     success_url = reverse_lazy("candidate-list")
+
+    def get_failure_url(self):
+        return reverse("candidate-detail", args=[self.kwargs["pk"]])
+
+
+class CandidateFlagView(FlashFormErrorsMixin, UpdateView):
+    """POST target for the flag/edit-reason modal on the detail page."""
+
+    model = Candidate
+    form_class = CandidateFlagForm
+
+    def form_valid(self, form):
+        # Editing the reason keeps the original flagger.
+        if form.instance.flagged_by_id is None:
+            form.instance.flagged_by = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse("candidate-detail", args=[self.object.pk])
+
+    def get_failure_url(self):
+        return reverse("candidate-detail", args=[self.kwargs["pk"]])
+
+
+class CandidateUnflagView(FlashFormErrorsMixin, FormView):
+    """POST target for the remove-flag confirmation modal."""
+
+    form_class = Form
+
+    def form_valid(self, form):
+        candidate = get_object_or_404(Candidate, pk=self.kwargs["pk"])
+        candidate.flagged_by = None
+        candidate.flag_reason = ""
+        candidate.save()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse("candidate-detail", args=[self.kwargs["pk"]])
 
     def get_failure_url(self):
         return reverse("candidate-detail", args=[self.kwargs["pk"]])

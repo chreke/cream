@@ -565,6 +565,113 @@ def test_candidate_modal_form_get_urls_redirect(auth_client, candidate):
 
 
 @pytest.mark.django_db
+def test_flag_candidate_sets_flagger_and_reason(auth_client, user, candidate):
+    response = auth_client.post(
+        reverse("candidate-flag", args=[candidate.pk]),
+        {"flag_reason": "Svarar inte på mejl."},
+    )
+    assert response.status_code == 302
+    assert response.url == reverse("candidate-detail", args=[candidate.pk])
+    candidate.refresh_from_db()
+    assert candidate.flagged_by == user
+    assert candidate.flag_reason == "Svarar inte på mejl."
+    assert candidate.is_flagged
+
+
+@pytest.mark.django_db
+def test_flag_candidate_reason_is_optional(auth_client, user, candidate):
+    auth_client.post(reverse("candidate-flag", args=[candidate.pk]), {})
+    candidate.refresh_from_db()
+    assert candidate.flagged_by == user
+    assert candidate.flag_reason == ""
+    assert candidate.is_flagged
+
+
+@pytest.mark.django_db
+def test_edit_flag_reason_keeps_original_flagger(
+    auth_client, candidate, django_user_model
+):
+    flagger = django_user_model.objects.create_user(username="bertil", password="x")
+    candidate.flagged_by = flagger
+    candidate.flag_reason = "Gammal anledning"
+    candidate.save()
+    auth_client.post(
+        reverse("candidate-flag", args=[candidate.pk]),
+        {"flag_reason": "Ny anledning"},
+    )
+    candidate.refresh_from_db()
+    assert candidate.flagged_by == flagger
+    assert candidate.flag_reason == "Ny anledning"
+
+
+@pytest.mark.django_db
+def test_unflag_clears_flagger_and_reason(auth_client, user, candidate):
+    candidate.flagged_by = user
+    candidate.flag_reason = "En anledning"
+    candidate.save()
+    response = auth_client.post(reverse("candidate-unflag", args=[candidate.pk]))
+    assert response.status_code == 302
+    assert response.url == reverse("candidate-detail", args=[candidate.pk])
+    candidate.refresh_from_db()
+    assert candidate.flagged_by is None
+    assert candidate.flag_reason == ""
+    assert not candidate.is_flagged
+
+
+@pytest.mark.django_db
+def test_flagged_candidate_detail_shows_banner_and_modals(
+    auth_client, user, candidate
+):
+    candidate.flagged_by = user
+    candidate.flag_reason = "Svarar inte på mejl."
+    candidate.save()
+    content = auth_client.get(
+        reverse("candidate-detail", args=[candidate.pk])
+    ).content.decode()
+    assert "Flaggad" in content
+    assert "anna" in content  # who flagged
+    assert "Svarar inte på mejl." in content
+    assert 'id="candidate-flag-modal"' in content  # edit-reason modal
+    assert 'id="candidate-unflag-modal"' in content  # remove confirmation
+    assert reverse("candidate-flag", args=[candidate.pk]) in content
+    assert reverse("candidate-unflag", args=[candidate.pk]) in content
+
+
+@pytest.mark.django_db
+def test_unflagged_candidate_detail_offers_flag_button(auth_client, candidate):
+    content = auth_client.get(
+        reverse("candidate-detail", args=[candidate.pk])
+    ).content.decode()
+    assert 'data-bs-target="#candidate-flag-modal"' in content
+    assert reverse("candidate-flag", args=[candidate.pk]) in content
+    assert "Flaggad" not in content
+    assert reverse("candidate-unflag", args=[candidate.pk]) not in content
+
+
+@pytest.mark.django_db
+def test_candidate_list_marks_flagged_candidates(auth_client, user, candidate):
+    Candidate.objects.create(name="Erik Ek", kind=Candidate.Kind.EMPLOYEE)
+    candidate.flagged_by = user
+    candidate.save()
+    content = auth_client.get(reverse("candidate-list")).content.decode()
+    # Only the flagged candidate's row gets the flag icon.
+    assert content.count("bi-flag-fill") == 1
+
+
+@pytest.mark.django_db
+def test_flag_modal_get_urls_redirect(auth_client, user, candidate):
+    candidate.flagged_by = user
+    candidate.save()
+    detail_url = reverse("candidate-detail", args=[candidate.pk])
+    for url_name in ["candidate-flag", "candidate-unflag"]:
+        response = auth_client.get(reverse(url_name, args=[candidate.pk]))
+        assert response.status_code == 302, url_name
+        assert response.url == detail_url, url_name
+    candidate.refresh_from_db()
+    assert candidate.is_flagged  # GET must not unflag
+
+
+@pytest.mark.django_db
 def test_add_candidate_comment_redirects_to_anchor(auth_client, user, candidate):
     response = auth_client.post(
         reverse("candidate-comment-create", args=[candidate.pk]),

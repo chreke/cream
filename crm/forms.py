@@ -86,6 +86,16 @@ class CandidateForm(forms.ModelForm):
         }
 
 
+class CandidateFlagForm(forms.ModelForm):
+    class Meta:
+        model = Candidate
+        fields = ["flag_reason"]
+        labels = {"flag_reason": "Anledning (valfritt)"}
+        widgets = {
+            "flag_reason": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        }
+
+
 class ContactForm(forms.ModelForm):
     linkedin_url = forms.URLField(
         label="LinkedIn",

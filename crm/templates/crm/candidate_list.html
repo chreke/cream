@@ -42,7 +42,14 @@
     <tbody>
       {% for candidate in candidates %}
         <tr>
-          <td><a href="{% url 'candidate-detail' candidate.pk %}">{{ candidate.name }}</a></td>
+          <td>
+            <a href="{% url 'candidate-detail' candidate.pk %}">{{ candidate.name }}</a>
+            {% if candidate.is_flagged %}
+              <span class="text-warning-emphasis ms-1" title="Flaggad">
+                {% include "icons/flag-fill.svg" %}<span class="visually-hidden">Flaggad</span>
+              </span>
+            {% endif %}
+          </td>
           <td>{{ candidate.location|default:"–" }}</td>
           <td>{{ candidate.get_kind_display }}</td>
           <td>

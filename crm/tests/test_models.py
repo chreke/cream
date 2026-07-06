@@ -47,6 +47,14 @@ def test_candidates_ordered_by_name_with_swedish_collation():
     assert [c.name for c in Candidate.objects.all()] == ["Sara", "Örjan"]
 
 
+def test_candidate_is_flagged():
+    assert Candidate(flagged_by_id=1).is_flagged
+    # The flag survives its flagger being deleted (flagged_by SET_NULL)
+    # as long as a reason remains.
+    assert Candidate(flag_reason="Svarar inte").is_flagged
+    assert not Candidate().is_flagged
+
+
 def test_candidate_kind_choices():
     assert set(Candidate.Kind.values) == {"freelancer", "employee", "both"}
 

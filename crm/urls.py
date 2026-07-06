@@ -77,6 +77,16 @@ urlpatterns = [
         name="candidate-delete",
     ),
     path(
+        "candidates/<int:pk>/flag/",
+        views.CandidateFlagView.as_view(),
+        name="candidate-flag",
+    ),
+    path(
+        "candidates/<int:pk>/unflag/",
+        views.CandidateUnflagView.as_view(),
+        name="candidate-unflag",
+    ),
+    path(
         "candidates/<int:candidate_pk>/comments/new/",
         views.CandidateCommentCreateView.as_view(),
         name="candidate-comment-create",

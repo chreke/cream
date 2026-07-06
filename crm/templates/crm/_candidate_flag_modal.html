@@ -1,0 +1,33 @@
+{# Flag / edit-flag-reason modal. Expects `form` (CandidateFlagForm) bound to the candidate. #}
+{% url 'candidate-flag' form.instance.pk as action %}
+<div class="modal fade" id="candidate-flag-modal" tabindex="-1" aria-hidden="true"
+     aria-labelledby="candidate-flag-modal-title">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="post" action="{{ action }}">
+        {% csrf_token %}
+        <div class="modal-header border-0">
+          <h2 class="modal-title h4" id="candidate-flag-modal-title">
+            {% if form.instance.is_flagged %}Redigera flagga{% else %}Flagga kandidat{% endif %}
+          </h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Stäng"></button>
+        </div>
+        <div class="modal-body">
+          {% if not form.instance.is_flagged %}
+            <p class="text-secondary">
+              En flagga markerar att särskild hänsyn krävs för kandidaten.
+            </p>
+          {% endif %}
+          <label class="form-label" for="{{ form.flag_reason.id_for_label }}">{{ form.flag_reason.label }}</label>
+          {{ form.flag_reason }}
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Avbryt</button>
+          <button type="submit" class="btn btn-warning">
+            {% if form.instance.is_flagged %}Spara{% else %}Flagga{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
