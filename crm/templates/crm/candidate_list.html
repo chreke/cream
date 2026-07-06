@@ -8,6 +8,8 @@
       <h1>Kandidater</h1>
       <p class="text-secondary mb-0">Era kandidater.</p>
     </div>
+    <button type="button" class="btn btn-primary"
+            data-bs-toggle="modal" data-bs-target="#candidate-create-modal">Ny kandidat</button>
   </div>
 
   <form method="get" class="row g-2 mb-4">
@@ -40,7 +42,7 @@
     <tbody>
       {% for candidate in candidates %}
         <tr>
-          <td>{{ candidate.name }}</td>
+          <td><a href="{% url 'candidate-detail' candidate.pk %}">{{ candidate.name }}</a></td>
           <td>{{ candidate.location|default:"–" }}</td>
           <td>{{ candidate.get_kind_display }}</td>
           <td>
@@ -63,6 +65,8 @@
       {% endfor %}
     </tbody>
   </table>
+
+  {% include "crm/_candidate_form_modal.html" with form=candidate_create_form %}
 
   {% if is_paginated %}
     <nav aria-label="Paginering">

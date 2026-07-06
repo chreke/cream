@@ -13,7 +13,13 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .forms import CommentForm, CompanyForm, ContactForm, LogContactForm
+from .forms import (
+    CandidateForm,
+    CommentForm,
+    CompanyForm,
+    ContactForm,
+    LogContactForm,
+)
 from .models import Candidate, Company, CompanyComment, Contact
 
 
@@ -324,6 +330,26 @@ class CompanyCommentDeleteView(CompanyDetailHostedMixin, DeleteView):
         return self.get_object().company
 
 
+def candidate_list_context():
+    """Context needed to render the candidates list page as a modal host."""
+    return {
+        "candidates": Candidate.objects.all()[:50],
+        "current_q": "",
+        "current_kind": "",
+        "querystring": "",
+    }
+
+
+def candidate_detail_context(candidate):
+    """Context needed to render the candidate detail page and its modals."""
+    return {
+        "candidate": candidate,
+        "candidate_form": CandidateForm(
+            instance=candidate, auto_id="candidate-edit-%s"
+        ),
+    }
+
+
 class CandidateListView(ListView):
     model = Candidate
     context_object_name = "candidates"
@@ -353,7 +379,96 @@ class CandidateListView(ListView):
         params = self.request.GET.copy()
         params.pop("page", None)
         context["querystring"] = params.urlencode()
+
+        context["candidate_create_form"] = CandidateForm(auto_id="candidate-new-%s")
         return context
+
+
+class CandidateDetailView(DetailView):
+    model = Candidate
+    context_object_name = "candidate"
+    extra_context = {"section": "candidates"}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(candidate_detail_context(self.object))
+        return context
+
+
+class CandidateCreateView(CreateView):
+    """POST target for the create modal on the candidates list page."""
+
+    model = Candidate
+    form_class = CandidateForm
+    template_name = "crm/candidate_list.html"
+    extra_context = {"section": "candidates"}
+
+    def get(self, request, *args, **kwargs):
+        return redirect("candidate-list")
+
+    def get_form_kwargs(self):
+        return super().get_form_kwargs() | {"auto_id": "candidate-new-%s"}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        for key, value in candidate_list_context().items():
+            context.setdefault(key, value)
+        context["candidate_create_form"] = context["form"]
+        context["open_modal"] = "candidate-create-modal"
+        return context
+
+    def get_success_url(self):
+        return reverse("candidate-detail", args=[self.object.pk])
+
+
+class CandidateDetailHostedMixin:
+    """Endpoints whose modal lives on the candidate detail page.
+
+    Same role as `CompanyDetailHostedMixin`: modals have no page of their
+    own, so an invalid POST re-renders the detail page with the failing
+    modal reopened via `open_modal`. GET redirects to the detail page.
+    """
+
+    template_name = "crm/candidate_detail.html"
+    extra_context = {"section": "candidates"}
+    open_modal = None
+
+    def get_candidate(self):
+        return self.get_object()
+
+    def get(self, request, *args, **kwargs):
+        return redirect("candidate-detail", pk=self.get_candidate().pk)
+
+    def get_success_url(self):
+        return reverse("candidate-detail", args=[self.get_candidate().pk])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        for key, value in candidate_detail_context(self.get_candidate()).items():
+            context.setdefault(key, value)
+        context["open_modal"] = self.open_modal
+        return context
+
+
+class CandidateUpdateView(CandidateDetailHostedMixin, UpdateView):
+    model = Candidate
+    form_class = CandidateForm
+    open_modal = "candidate-edit-modal"
+
+    def get_form_kwargs(self):
+        return super().get_form_kwargs() | {"auto_id": "candidate-edit-%s"}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["candidate_form"] = context["form"]
+        return context
+
+
+class CandidateDeleteView(CandidateDetailHostedMixin, DeleteView):
+    model = Candidate
+
+    def get_success_url(self):
+        return reverse("candidate-list")
 
 
 class PipelineView(TemplateView):

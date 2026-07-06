@@ -1,0 +1,80 @@
+{# Create/edit candidate modal. Expects `form` (CandidateForm); edit mode when the instance is saved. #}
+{% if form.instance.pk %}
+  {% url 'candidate-edit' form.instance.pk as action %}
+{% else %}
+  {% url 'candidate-create' as action %}
+{% endif %}
+<div class="modal fade" tabindex="-1" aria-hidden="true"
+     id="{% if form.instance.pk %}candidate-edit-modal{% else %}candidate-create-modal{% endif %}"
+     aria-labelledby="{% if form.instance.pk %}candidate-edit-modal{% else %}candidate-create-modal{% endif %}-title">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <form method="post" action="{{ action }}">
+        {% csrf_token %}
+        <div class="modal-header border-0">
+          <h2 class="modal-title h4"
+              id="{% if form.instance.pk %}candidate-edit-modal{% else %}candidate-create-modal{% endif %}-title">
+            {% if form.instance.pk %}Redigera kandidat{% else %}Ny kandidat{% endif %}
+          </h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Stäng"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label" for="{{ form.name.id_for_label }}">{{ form.name.label }} *</label>
+              {{ form.name }}
+              {% for error in form.name.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="{{ form.kind.id_for_label }}">{{ form.kind.label }} *</label>
+              {{ form.kind }}
+              {% for error in form.kind.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.location.id_for_label }}">{{ form.location.label }}</label>
+              {{ form.location }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.linkedin_url.id_for_label }}">{{ form.linkedin_url.label }}</label>
+              {{ form.linkedin_url }}
+              {% for error in form.linkedin_url.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+              {{ form.email }}
+              {% for error in form.email.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>
+              {{ form.phone }}
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="{{ form.skills.id_for_label }}">{{ form.skills.label }}</label>
+              {{ form.skills }}
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+              {{ form.description }}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          {% if form.instance.pk %}
+            <button type="button" class="btn btn-outline-danger me-auto"
+                    data-bs-toggle="modal"
+                    data-bs-target="#candidate-delete-modal">Ta bort</button>
+          {% endif %}
+          <button type="submit" class="btn btn-primary">Spara</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

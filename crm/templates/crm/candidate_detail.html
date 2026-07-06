@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load markdown_extras %}
+
+{% block title %}{{ candidate.name }}{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <h1>{{ candidate.name }}</h1>
+      <p class="text-secondary mb-0">
+        {{ candidate.get_kind_display }}
+        {% if candidate.location %} · {{ candidate.location }}{% endif %}
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-danger"
+              data-bs-toggle="modal" data-bs-target="#candidate-delete-modal">Ta bort</button>
+      <button type="button" class="btn btn-outline-secondary"
+              data-bs-toggle="modal" data-bs-target="#candidate-edit-modal">Redigera</button>
+    </div>
+  </div>
+
+  <dl class="row mb-4">
+    <dt class="col-sm-3">E-post</dt>
+    <dd class="col-sm-9">
+      {% if candidate.email %}<a href="mailto:{{ candidate.email }}">{{ candidate.email }}</a>{% else %}–{% endif %}
+    </dd>
+    <dt class="col-sm-3">Telefon</dt>
+    <dd class="col-sm-9">
+      {% if candidate.phone %}<a href="tel:{{ candidate.phone }}">{{ candidate.phone }}</a>{% else %}–{% endif %}
+    </dd>
+    <dt class="col-sm-3">LinkedIn</dt>
+    <dd class="col-sm-9">
+      {% if candidate.linkedin_url %}
+        <a href="{{ candidate.linkedin_url }}">{% include "icons/linkedin.svg" %} Profil</a>
+      {% else %}
+        –
+      {% endif %}
+    </dd>
+    <dt class="col-sm-3">Kompetenser</dt>
+    <dd class="col-sm-9 mb-0">
+      {% for skill in candidate.skills_list %}
+        <span class="badge text-bg-secondary">{{ skill }}</span>
+      {% empty %}
+        –
+      {% endfor %}
+    </dd>
+  </dl>
+
+  <h2 class="h4 mb-3 pt-3">Beskrivning</h2>
+  <p>{{ candidate.description|markdown }}</p>
+
+  {# --- Modals hosted on this page --- #}
+  {% include "crm/_candidate_form_modal.html" with form=candidate_form %}
+  {% url 'candidate-delete' candidate.pk as candidate_delete_url %}
+  {% include "crm/_confirm_delete_modal.html" with modal_id="candidate-delete-modal" title="Ta bort kandidat" action=candidate_delete_url object_label=candidate.name %}
+{% endblock %}

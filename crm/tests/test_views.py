@@ -469,6 +469,101 @@ def test_candidate_list_search_combines_with_kind_filter(auth_client):
 
 
 @pytest.mark.django_db
+def test_candidate_list_links_to_detail(auth_client, candidate):
+    content = auth_client.get(reverse("candidate-list")).content.decode()
+    assert reverse("candidate-detail", args=[candidate.pk]) in content
+
+
+@pytest.mark.django_db
+def test_candidate_detail_shows_fields_with_links_and_badges(auth_client, candidate):
+    content = auth_client.get(
+        reverse("candidate-detail", args=[candidate.pk])
+    ).content.decode()
+    assert "Sara Lind" in content
+    assert "Frilansare" in content
+    assert "Stockholm" in content
+    assert 'href="mailto:sara@example.com"' in content
+    assert 'href="tel:070-1234567"' in content
+    assert 'href="https://linkedin.com/in/saralind"' in content
+    assert "bi-linkedin" in content
+    assert '<span class="badge' in content  # skills as badges
+    assert "<strong>grym</strong>" in content  # Markdown description
+
+
+@pytest.mark.django_db
+def test_candidate_detail_embeds_edit_and_delete_modals(auth_client, candidate):
+    content = auth_client.get(
+        reverse("candidate-detail", args=[candidate.pk])
+    ).content.decode()
+    assert 'id="candidate-edit-modal"' in content
+    assert 'id="candidate-delete-modal"' in content
+    assert 'value="Sara Lind"' in content  # edit form is pre-filled
+    assert reverse("candidate-edit", args=[candidate.pk]) in content
+    assert reverse("candidate-delete", args=[candidate.pk]) in content
+
+
+@pytest.mark.django_db
+def test_candidate_list_embeds_create_modal(auth_client):
+    content = auth_client.get(reverse("candidate-list")).content.decode()
+    assert 'id="candidate-create-modal"' in content
+    assert reverse("candidate-create") in content
+
+
+@pytest.mark.django_db
+def test_create_candidate_redirects_to_new_detail_page(auth_client):
+    response = auth_client.post(
+        reverse("candidate-create"),
+        {"name": "Erik Ek", "kind": "employee", "skills": "Java"},
+    )
+    assert response.status_code == 302
+    candidate = Candidate.objects.get(name="Erik Ek")
+    assert response.url == reverse("candidate-detail", args=[candidate.pk])
+
+
+@pytest.mark.django_db
+def test_invalid_candidate_create_reopens_modal_with_errors(auth_client):
+    response = auth_client.post(reverse("candidate-create"), {"name": "Erik Ek"})
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert Candidate.objects.count() == 0
+    assert 'getElementById("candidate-create-modal")' in content
+
+
+@pytest.mark.django_db
+def test_edit_candidate_via_form(auth_client, candidate):
+    response = auth_client.post(
+        reverse("candidate-edit", args=[candidate.pk]),
+        {"name": "Sara Lind-Ek", "kind": "both"},
+    )
+    assert response.status_code == 302
+    assert response.url == reverse("candidate-detail", args=[candidate.pk])
+    candidate.refresh_from_db()
+    assert candidate.name == "Sara Lind-Ek"
+    assert candidate.kind == Candidate.Kind.BOTH
+
+
+@pytest.mark.django_db
+def test_delete_candidate_on_post(auth_client, candidate):
+    response = auth_client.post(reverse("candidate-delete", args=[candidate.pk]))
+    assert response.status_code == 302
+    assert response.url == reverse("candidate-list")
+    assert not Candidate.objects.filter(pk=candidate.pk).exists()
+
+
+@pytest.mark.django_db
+def test_candidate_modal_form_get_urls_redirect(auth_client, candidate):
+    detail_url = reverse("candidate-detail", args=[candidate.pk])
+    assert auth_client.get(reverse("candidate-create")).url == reverse(
+        "candidate-list"
+    )
+    for url_name in ["candidate-edit", "candidate-delete"]:
+        response = auth_client.get(reverse(url_name, args=[candidate.pk]))
+        assert response.status_code == 302, url_name
+        assert response.url == detail_url, url_name
+    assert Candidate.objects.filter(pk=candidate.pk).exists()
+
+
+@pytest.mark.django_db
 def test_logout_via_post(client, django_user_model):
     user = django_user_model.objects.create_user(username="anna", password="x")
     client.force_login(user)

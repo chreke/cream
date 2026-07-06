@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Company, CompanyComment, Contact
+from .models import Candidate, Company, CompanyComment, Contact
 
 
 class CompanyForm(forms.ModelForm):
@@ -39,6 +39,46 @@ class CompanyForm(forms.ModelForm):
             "organization_number": forms.TextInput(attrs={"class": "form-control"}),
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 6}),
             "assignee": forms.Select(attrs={"class": "form-select"}),
+        }
+
+
+class CandidateForm(forms.ModelForm):
+    linkedin_url = forms.URLField(
+        label="LinkedIn",
+        required=False,
+        assume_scheme="https",
+        widget=forms.URLInput(attrs={"class": "form-control"}),
+    )
+
+    class Meta:
+        model = Candidate
+        fields = [
+            "name",
+            "kind",
+            "location",
+            "email",
+            "phone",
+            "linkedin_url",
+            "skills",
+            "description",
+        ]
+        labels = {
+            "name": "Namn",
+            "kind": "Typ",
+            "location": "Plats",
+            "email": "E-post",
+            "phone": "Telefon",
+            "skills": "Kompetenser (kommaseparerade)",
+            "description": "Beskrivning",
+        }
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "kind": forms.Select(attrs={"class": "form-select"}),
+            "location": forms.TextInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "phone": forms.TextInput(attrs={"class": "form-control"}),
+            "skills": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 6}),
         }
 
 

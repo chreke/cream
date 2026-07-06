@@ -107,6 +107,10 @@ class Candidate(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def skills_list(self):
+        return [skill.strip() for skill in self.skills.split(",") if skill.strip()]
+
 
 class BaseComment(models.Model):
     """Shared fields for comments; concrete subclasses add the target FK."""

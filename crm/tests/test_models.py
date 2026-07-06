@@ -52,6 +52,12 @@ def test_candidate_kind_choices():
     assert set(Candidate.Kind.values) == {"freelancer", "employee", "both"}
 
 
+def test_candidate_skills_list_splits_and_strips():
+    candidate = Candidate(skills=" Python,Django , ,SQL")
+    assert candidate.skills_list == ["Python", "Django", "SQL"]
+    assert Candidate(skills="").skills_list == []
+
+
 @pytest.mark.django_db
 def test_search_matches_whole_words_case_insensitively():
     Candidate.objects.create(

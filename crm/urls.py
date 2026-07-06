@@ -56,5 +56,25 @@ urlpatterns = [
         name="company-comment-delete",
     ),
     path("candidates/", views.CandidateListView.as_view(), name="candidate-list"),
+    path(
+        "candidates/new/",
+        views.CandidateCreateView.as_view(),
+        name="candidate-create",
+    ),
+    path(
+        "candidates/<int:pk>/",
+        views.CandidateDetailView.as_view(),
+        name="candidate-detail",
+    ),
+    path(
+        "candidates/<int:pk>/edit/",
+        views.CandidateUpdateView.as_view(),
+        name="candidate-edit",
+    ),
+    path(
+        "candidates/<int:pk>/delete/",
+        views.CandidateDeleteView.as_view(),
+        name="candidate-delete",
+    ),
     path("pipeline/", views.PipelineView.as_view(), name="pipeline"),
 ]

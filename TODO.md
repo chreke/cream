@@ -10,7 +10,7 @@
     - [x] Models: Candidate model + admin
     - [x] List view: table, kind filter
     - [x] Search: full-text search ranked by relevance ([spec](specs/006-candidate-search.md))
-    - [ ] CRUD: detail page, create/edit/delete modals
+    - [x] CRUD: detail page, create/edit/delete modals
     - [ ] Comments
     - [ ] Flagging
     - [ ] Resumes: file upload, authenticated serving
