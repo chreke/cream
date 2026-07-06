@@ -41,10 +41,11 @@ def test_candidate_requires_only_name_and_kind():
 
 
 @pytest.mark.django_db
-def test_candidates_ordered_by_name():
-    Candidate.objects.create(name="Sara", kind=Candidate.Kind.BOTH)
-    Candidate.objects.create(name="Erik", kind=Candidate.Kind.EMPLOYEE)
-    assert [c.name for c in Candidate.objects.all()] == ["Erik", "Sara"]
+def test_candidates_ordered_by_name_with_swedish_collation():
+    # Ö sorts after Z in Swedish; English-style collation would put it with O.
+    Candidate.objects.create(name="Örjan", kind=Candidate.Kind.BOTH)
+    Candidate.objects.create(name="Sara", kind=Candidate.Kind.EMPLOYEE)
+    assert [c.name for c in Candidate.objects.all()] == ["Sara", "Örjan"]
 
 
 def test_candidate_kind_choices():

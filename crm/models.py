@@ -8,7 +8,7 @@ class User(AbstractUser):
 
 
 class Company(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_collation="sv-SE-x-icu")
     location = models.CharField(max_length=255, blank=True)
     industry = models.CharField(max_length=255, blank=True)
     homepage = models.URLField(blank=True)
@@ -35,7 +35,7 @@ class Contact(models.Model):
     company = models.ForeignKey(
         Company, on_delete=models.CASCADE, related_name="contacts"
     )
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_collation="sv-SE-x-icu")
     role = models.CharField(max_length=255, blank=True)
     linkedin_url = models.URLField(blank=True)
     email = models.EmailField(blank=True)
@@ -54,7 +54,7 @@ class Candidate(models.Model):
         EMPLOYEE = "employee", "Anställd"
         BOTH = "both", "Båda"
 
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_collation="sv-SE-x-icu")
     kind = models.CharField(max_length=20, choices=Kind.choices)
     location = models.CharField(max_length=255, blank=True)
     email = models.EmailField(blank=True)

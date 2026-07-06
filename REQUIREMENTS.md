@@ -9,6 +9,8 @@ document describes the functional requirements for Cream.
 
 - The site copy should be in Swedish.
 - All list views should be rendered as tables.
+- All sortable text fields must use Swedish collation (å/ä/ö sort after z),
+  e.g. via `db_collation="sv-SE-x-icu"` on the model field.
 
 ## UI
 

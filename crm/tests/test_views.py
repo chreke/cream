@@ -78,11 +78,13 @@ def test_company_filter_by_assignee(auth_client, user, django_user_model):
 
 @pytest.mark.django_db
 def test_company_list_sorts_by_name_by_default(auth_client):
+    # Swedish collation: Ö sorts after Z, not together with O.
+    Company.objects.create(name="Öbergs Bygg")
     Company.objects.create(name="Zeta")
     Company.objects.create(name="Alfa")
     response = auth_client.get(reverse("company-list"))
     companies = list(response.context["companies"])
-    assert [c.name for c in companies] == ["Alfa", "Zeta"]
+    assert [c.name for c in companies] == ["Alfa", "Zeta", "Öbergs Bygg"]
 
 
 @pytest.mark.django_db
