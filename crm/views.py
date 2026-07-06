@@ -63,20 +63,6 @@ def company_detail_context(company):
 class FlashFormErrorsMixin:
     """POST-only endpoint behind a modal: on a failed form submission,
     flash the errors and redirect instead of re-rendering the page.
-
-    Forms live in Bootstrap modals embedded in the page that links to
-    them (see the UI section of REQUIREMENTS.md), so these endpoints
-    have no page of their own. Client-side validation (`required`,
-    `type="email"`/`"url"`, ...) catches nearly all bad input before it
-    reaches the server, so we don't optimize for displaying server-side
-    errors: a rejected POST redirects back with the errors as flash
-    messages (rendered in base.html), and the submitted values are
-    lost. GET requests (stale bookmarks, back button) also redirect.
-
-    Views define `get_failure_url()` — where to land after a failed
-    POST or a GET. It is separate from `get_success_url()` because a
-    create view has no created object to build its success URL from
-    when validation fails.
     """
 
     def get(self, request, *args, **kwargs):
