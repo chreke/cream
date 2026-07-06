@@ -113,7 +113,21 @@ A candidate has the following attributes:
 - Location (e.g. "Stockholm, Sweden")
 - Description (Markdown)
 
-It should be possible to create, edit and delete candidates.
+It should be possible to create, edit and delete candidates. After creating
+a candidate, the user is redirected to the new candidate's detail page.
+
+### Candidate Detail Page
+
+Each candidate has a detail page showing all of the candidate's attributes:
+
+- Email and phone number are rendered as clickable `mailto:`/`tel:` links,
+  and LinkedIn as an icon linking to the profile.
+- Skills are rendered as badges.
+- The description is rendered as Markdown.
+
+Editing and deleting the candidate is done from the detail page (in modals,
+as per the UI section). The candidate's comments, flag status and resumes
+(see below) also live on the detail page.
 
 ### Candidate Flagging
 
