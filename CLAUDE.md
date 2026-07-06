@@ -35,6 +35,12 @@ important that this document be kept up to date.
 
 ## Misc.
 
+- Django's `{# ... #}` template comments are single-line only: a multi-line
+  `{# ... #}` is not parsed as a comment and leaks literally into the
+  rendered HTML. Use `{% comment %}...{% endcomment %}` for anything longer
+  than one line. (This is guarded by a test that scans rendered pages for
+  `{#`.)
+
 - Do *not* write memory files! If there's something you think we need to remember,
   please add it to this file instead.
 - Prefer low-JS, server-rendered UI: default to multi-page / form-POST flows;

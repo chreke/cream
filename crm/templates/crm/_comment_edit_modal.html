@@ -1,5 +1,7 @@
-{# Edit-comment modal. Expects `form` (a comment form bound to a saved
-   comment) and `edit_url_name` (url name taking the comment pk). #}
+{% comment %}
+Edit-comment modal. Expects `form` (a comment form bound to a saved
+comment) and `edit_url_name` (url name taking the comment pk).
+{% endcomment %}
 <div class="modal fade" tabindex="-1" aria-hidden="true"
      id="comment-edit-modal-{{ form.instance.pk }}"
      aria-labelledby="comment-edit-modal-{{ form.instance.pk }}-title">

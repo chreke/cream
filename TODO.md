@@ -17,6 +17,10 @@
 - [x] Location inputs (companies + candidates) should autocomplete against
       existing values (via `<datalist>`; upgrade to Tom Select if the native
       UX proves too bare)
+- [ ] Editing a list item (e.g. a contact or comment) should redirect to an
+      anchor link so the edited item is scrolled into view
+- [x] Template comments leaking into rendered HTML: fixed, noted in
+      CLAUDE.md, and guarded by a test
 - [ ] Leads
 - [ ] Deployment
 - [x] Swedish collation: name sorting puts Å/Ä/Ö with A/A/O instead of after Z

@@ -683,6 +683,21 @@ def test_location_inputs_autocomplete_from_existing_values(auth_client):
 
 
 @pytest.mark.django_db
+def test_no_template_comments_leak_into_rendered_pages(auth_client, company, candidate):
+    # Multi-line {# ... #} is not valid Django syntax and renders literally;
+    # multi-line notes must use {% comment %} blocks (see CLAUDE.md).
+    for url in [
+        reverse("company-list"),
+        reverse("company-detail", args=[company.pk]),
+        reverse("candidate-list"),
+        reverse("candidate-detail", args=[candidate.pk]),
+    ]:
+        content = auth_client.get(url).content.decode()
+        assert "{#" not in content, url
+        assert "#}" not in content, url
+
+
+@pytest.mark.django_db
 def test_logout_via_post(client, django_user_model):
     user = django_user_model.objects.create_user(username="anna", password="x")
     client.force_login(user)
