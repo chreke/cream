@@ -18,8 +18,9 @@ document describes the functional requirements for Cream.
   always trigger a confirmation dialog.
 - A successful edit should redirect to the object that was edited (e.g. the
   detail page it lives on).
-- Each comment has an anchor link; after editing a comment, redirect to the
-  comment's anchor so it is scrolled into view.
+- Each comment has an anchor link; after adding a comment, redirect to the
+  new comment's anchor so it is scrolled into view. Comments are edited in a
+  modal, like other objects.
 
 ## Users
 
