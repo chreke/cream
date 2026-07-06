@@ -142,8 +142,10 @@ class CompanyCreateView(CreateView):
 class CompanyDetailHostedMixin:
     """Endpoints whose modal lives on the company detail page.
 
-    GET redirects to the detail page; an invalid POST re-renders the
-    detail page with the relevant modal reopened via `open_modal`.
+    Needed for displaying validation errors without JavaScript: modals
+    have no page of their own, so an invalid POST re-renders the full
+    detail page with the failing modal reopened via `open_modal` and the
+    form's errors shown inside it. GET redirects to the detail page.
     """
 
     template_name = "crm/company_detail.html"
