@@ -73,6 +73,83 @@ def company_detail_context(company):
     }
 
 
+class AutoIdFormMixin:
+    """Gives the view's form a distinct `auto_id` prefix.
+
+    Pages here embed several forms at once (create modal, edit modals,
+    comment forms...), so default `id_<field>` ids would collide across
+    forms. Set `form_auto_id` to a prefix like "company-edit-%s", or
+    override `get_form_auto_id()` when the prefix depends on the URL
+    (e.g. one edit form per object on the page).
+    """
+
+    form_auto_id = None
+
+    def get_form_auto_id(self):
+        return self.form_auto_id
+
+    def get_form_kwargs(self):
+        return super().get_form_kwargs() | {"auto_id": self.get_form_auto_id()}
+
+
+class DetailHostedMixin:
+    """Base for endpoints whose form lives in a modal on a detail page.
+
+    This app has no standalone form pages: objects are created, edited
+    and deleted through Bootstrap modals embedded in a host object's
+    detail page (see the UI section of REQUIREMENTS.md), and plain
+    Create/Update/DeleteView subclasses serve as the POST targets for
+    those modals. This mixin adapts them to that setup:
+
+    - GET redirects to the host's detail page (the endpoint has no page
+      of its own; the modal markup is already there).
+    - A successful POST redirects back to the host's detail page.
+    - An invalid POST re-renders the *complete* detail page around the
+      bound form, with the failing modal reopened via the `open_modal`
+      context variable (a script in base.html opens it on load), so the
+      validation errors show up inside the modal. This keeps validation
+      server-side with no JavaScript beyond Bootstrap itself.
+
+    A subclass per host model provides the page specifics:
+
+    - `template_name` / `extra_context`: the detail page and nav section
+    - `detail_url_name`: url name of the detail page (takes the host pk)
+    - `get_host_object()`: the object whose detail page hosts the modal
+    - `get_detail_context(host)`: everything the page needs to render;
+      merged with `setdefault` so the view's own bound form wins
+
+    Views on top of that set `open_modal` to the id of their modal (or
+    override `get_open_modal()` when the id depends on the URL), and
+    override `get_host_object()` when the host is reached through the
+    edited object (e.g. `self.get_object().company`).
+    """
+
+    detail_url_name = None
+    open_modal = None
+
+    def get_host_object(self):
+        raise NotImplementedError
+
+    def get_detail_context(self, host):
+        raise NotImplementedError
+
+    def get(self, request, *args, **kwargs):
+        return redirect(self.detail_url_name, pk=self.get_host_object().pk)
+
+    def get_success_url(self):
+        return reverse(self.detail_url_name, args=[self.get_host_object().pk])
+
+    def get_open_modal(self):
+        return self.open_modal
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        for key, value in self.get_detail_context(self.get_host_object()).items():
+            context.setdefault(key, value)
+        context["open_modal"] = self.get_open_modal()
+        return context
+
+
 class CompanyListView(ListView):
     model = Company
     context_object_name = "companies"
@@ -136,7 +213,7 @@ class CompanyDetailView(DetailView):
         return context
 
 
-class CompanyCreateView(CreateView):
+class CompanyCreateView(AutoIdFormMixin, CreateView):
     """POST target for the create modal on the companies list page."""
 
     model = Company
@@ -144,12 +221,10 @@ class CompanyCreateView(CreateView):
     template_name = "crm/company_list.html"
     success_url = reverse_lazy("company-list")
     extra_context = {"section": "companies"}
+    form_auto_id = "company-new-%s"
 
     def get(self, request, *args, **kwargs):
         return redirect("company-list")
-
-    def get_form_kwargs(self):
-        return super().get_form_kwargs() | {"auto_id": "company-new-%s"}
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -160,49 +235,26 @@ class CompanyCreateView(CreateView):
         return context
 
 
-class CompanyDetailHostedMixin:
-    """Endpoints whose modal lives on the company detail page.
-
-    Needed for displaying validation errors without JavaScript: modals
-    have no page of their own, so an invalid POST re-renders the full
-    detail page with the failing modal reopened via `open_modal` and the
-    form's errors shown inside it. GET redirects to the detail page.
-    """
-
+class CompanyDetailHostedMixin(DetailHostedMixin):
     template_name = "crm/company_detail.html"
     extra_context = {"section": "companies"}
-    open_modal = None
+    detail_url_name = "company-detail"
 
-    def get_company(self):
+    def get_host_object(self):
         return get_object_or_404(Company, pk=self.kwargs["company_pk"])
 
-    def get(self, request, *args, **kwargs):
-        return redirect("company-detail", pk=self.get_company().pk)
-
-    def get_success_url(self):
-        return reverse("company-detail", args=[self.get_company().pk])
-
-    def get_open_modal(self):
-        return self.open_modal
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        for key, value in company_detail_context(self.get_company()).items():
-            context.setdefault(key, value)
-        context["open_modal"] = self.get_open_modal()
-        return context
+    def get_detail_context(self, company):
+        return company_detail_context(company)
 
 
-class CompanyUpdateView(CompanyDetailHostedMixin, UpdateView):
+class CompanyUpdateView(AutoIdFormMixin, CompanyDetailHostedMixin, UpdateView):
     model = Company
     form_class = CompanyForm
     open_modal = "company-edit-modal"
+    form_auto_id = "company-edit-%s"
 
-    def get_company(self):
+    def get_host_object(self):
         return self.get_object()
-
-    def get_form_kwargs(self):
-        return super().get_form_kwargs() | {"auto_id": "company-edit-%s"}
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -220,13 +272,11 @@ class CompanyDeleteView(DeleteView):
         return redirect("company-detail", pk=self.get_object().pk)
 
 
-class ContactCreateView(CompanyDetailHostedMixin, CreateView):
+class ContactCreateView(AutoIdFormMixin, CompanyDetailHostedMixin, CreateView):
     model = Contact
     form_class = ContactForm
     open_modal = "contact-create-modal"
-
-    def get_form_kwargs(self):
-        return super().get_form_kwargs() | {"auto_id": "contact-new-%s"}
+    form_auto_id = "contact-new-%s"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -234,24 +284,22 @@ class ContactCreateView(CompanyDetailHostedMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        form.instance.company = self.get_company()
+        form.instance.company = self.get_host_object()
         return super().form_valid(form)
 
 
-class ContactUpdateView(CompanyDetailHostedMixin, UpdateView):
+class ContactUpdateView(AutoIdFormMixin, CompanyDetailHostedMixin, UpdateView):
     model = Contact
     form_class = ContactForm
 
-    def get_company(self):
+    def get_host_object(self):
         return self.get_object().company
 
     def get_open_modal(self):
         return f"contact-edit-modal-{self.kwargs['pk']}"
 
-    def get_form_kwargs(self):
-        return super().get_form_kwargs() | {
-            "auto_id": f"contact-{self.kwargs['pk']}-%s"
-        }
+    def get_form_auto_id(self):
+        return f"contact-{self.kwargs['pk']}-%s"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -265,7 +313,7 @@ class ContactUpdateView(CompanyDetailHostedMixin, UpdateView):
 class ContactDeleteView(CompanyDetailHostedMixin, DeleteView):
     model = Contact
 
-    def get_company(self):
+    def get_host_object(self):
         return self.get_object().company
 
 
@@ -274,7 +322,7 @@ class LogContactView(CompanyDetailHostedMixin, FormView):
     open_modal = "log-contact-modal"
 
     def form_valid(self, form):
-        company = self.get_company()
+        company = self.get_host_object()
         company.last_contacted = timezone.now()
         company.save()
         if form.cleaned_data["comment"]:
@@ -286,14 +334,12 @@ class LogContactView(CompanyDetailHostedMixin, FormView):
         return super().form_valid(form)
 
 
-class CompanyCommentCreateView(CompanyDetailHostedMixin, CreateView):
+class CompanyCommentCreateView(AutoIdFormMixin, CompanyDetailHostedMixin, CreateView):
     """POST target for the inline new-comment form on the detail page."""
 
     model = CompanyComment
     form_class = CompanyCommentForm
-
-    def get_form_kwargs(self):
-        return super().get_form_kwargs() | {"auto_id": "comment-new-%s"}
+    form_auto_id = "comment-new-%s"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -301,7 +347,7 @@ class CompanyCommentCreateView(CompanyDetailHostedMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        form.instance.company = self.get_company()
+        form.instance.company = self.get_host_object()
         form.instance.user = self.request.user
         return super().form_valid(form)
 
@@ -309,20 +355,18 @@ class CompanyCommentCreateView(CompanyDetailHostedMixin, CreateView):
         return f"{super().get_success_url()}#comment-{self.object.pk}"
 
 
-class CompanyCommentUpdateView(CompanyDetailHostedMixin, UpdateView):
+class CompanyCommentUpdateView(AutoIdFormMixin, CompanyDetailHostedMixin, UpdateView):
     model = CompanyComment
     form_class = CompanyCommentForm
 
-    def get_company(self):
+    def get_host_object(self):
         return self.get_object().company
 
     def get_open_modal(self):
         return f"comment-edit-modal-{self.kwargs['pk']}"
 
-    def get_form_kwargs(self):
-        return super().get_form_kwargs() | {
-            "auto_id": f"comment-{self.kwargs['pk']}-%s"
-        }
+    def get_form_auto_id(self):
+        return f"comment-{self.kwargs['pk']}-%s"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -341,7 +385,7 @@ class CompanyCommentUpdateView(CompanyDetailHostedMixin, UpdateView):
 class CompanyCommentDeleteView(CompanyDetailHostedMixin, DeleteView):
     model = CompanyComment
 
-    def get_company(self):
+    def get_host_object(self):
         return self.get_object().company
 
 
@@ -426,19 +470,17 @@ class CandidateDetailView(DetailView):
         return context
 
 
-class CandidateCreateView(CreateView):
+class CandidateCreateView(AutoIdFormMixin, CreateView):
     """POST target for the create modal on the candidates list page."""
 
     model = Candidate
     form_class = CandidateForm
     template_name = "crm/candidate_list.html"
     extra_context = {"section": "candidates"}
+    form_auto_id = "candidate-new-%s"
 
     def get(self, request, *args, **kwargs):
         return redirect("candidate-list")
-
-    def get_form_kwargs(self):
-        return super().get_form_kwargs() | {"auto_id": "candidate-new-%s"}
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -452,45 +494,23 @@ class CandidateCreateView(CreateView):
         return reverse("candidate-detail", args=[self.object.pk])
 
 
-class CandidateDetailHostedMixin:
-    """Endpoints whose modal lives on the candidate detail page.
-
-    Same role as `CompanyDetailHostedMixin`: modals have no page of their
-    own, so an invalid POST re-renders the detail page with the failing
-    modal reopened via `open_modal`. GET redirects to the detail page.
-    """
-
+class CandidateDetailHostedMixin(DetailHostedMixin):
     template_name = "crm/candidate_detail.html"
     extra_context = {"section": "candidates"}
-    open_modal = None
+    detail_url_name = "candidate-detail"
 
-    def get_candidate(self):
+    def get_host_object(self):
         return self.get_object()
 
-    def get(self, request, *args, **kwargs):
-        return redirect("candidate-detail", pk=self.get_candidate().pk)
-
-    def get_success_url(self):
-        return reverse("candidate-detail", args=[self.get_candidate().pk])
-
-    def get_open_modal(self):
-        return self.open_modal
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        for key, value in candidate_detail_context(self.get_candidate()).items():
-            context.setdefault(key, value)
-        context["open_modal"] = self.get_open_modal()
-        return context
+    def get_detail_context(self, candidate):
+        return candidate_detail_context(candidate)
 
 
-class CandidateUpdateView(CandidateDetailHostedMixin, UpdateView):
+class CandidateUpdateView(AutoIdFormMixin, CandidateDetailHostedMixin, UpdateView):
     model = Candidate
     form_class = CandidateForm
     open_modal = "candidate-edit-modal"
-
-    def get_form_kwargs(self):
-        return super().get_form_kwargs() | {"auto_id": "candidate-edit-%s"}
+    form_auto_id = "candidate-edit-%s"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -505,17 +525,17 @@ class CandidateDeleteView(CandidateDetailHostedMixin, DeleteView):
         return reverse("candidate-list")
 
 
-class CandidateCommentCreateView(CandidateDetailHostedMixin, CreateView):
+class CandidateCommentCreateView(
+    AutoIdFormMixin, CandidateDetailHostedMixin, CreateView
+):
     """POST target for the inline new-comment form on the detail page."""
 
     model = CandidateComment
     form_class = CandidateCommentForm
+    form_auto_id = "comment-new-%s"
 
-    def get_candidate(self):
+    def get_host_object(self):
         return get_object_or_404(Candidate, pk=self.kwargs["candidate_pk"])
-
-    def get_form_kwargs(self):
-        return super().get_form_kwargs() | {"auto_id": "comment-new-%s"}
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -523,7 +543,7 @@ class CandidateCommentCreateView(CandidateDetailHostedMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        form.instance.candidate = self.get_candidate()
+        form.instance.candidate = self.get_host_object()
         form.instance.user = self.request.user
         return super().form_valid(form)
 
@@ -531,20 +551,20 @@ class CandidateCommentCreateView(CandidateDetailHostedMixin, CreateView):
         return f"{super().get_success_url()}#comment-{self.object.pk}"
 
 
-class CandidateCommentUpdateView(CandidateDetailHostedMixin, UpdateView):
+class CandidateCommentUpdateView(
+    AutoIdFormMixin, CandidateDetailHostedMixin, UpdateView
+):
     model = CandidateComment
     form_class = CandidateCommentForm
 
-    def get_candidate(self):
+    def get_host_object(self):
         return self.get_object().candidate
 
     def get_open_modal(self):
         return f"comment-edit-modal-{self.kwargs['pk']}"
 
-    def get_form_kwargs(self):
-        return super().get_form_kwargs() | {
-            "auto_id": f"comment-{self.kwargs['pk']}-%s"
-        }
+    def get_form_auto_id(self):
+        return f"comment-{self.kwargs['pk']}-%s"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -563,7 +583,7 @@ class CandidateCommentUpdateView(CandidateDetailHostedMixin, UpdateView):
 class CandidateCommentDeleteView(CandidateDetailHostedMixin, DeleteView):
     model = CandidateComment
 
-    def get_candidate(self):
+    def get_host_object(self):
         return self.get_object().candidate
 
 
