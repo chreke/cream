@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load format_extras %}
 
 {% block title %}Pipeline{% endblock %}
 
@@ -10,6 +11,32 @@
     </div>
     <button type="button" class="btn btn-primary"
             data-bs-toggle="modal" data-bs-target="#lead-create-modal">Ny affär</button>
+  </div>
+
+  <div class="d-flex flex-nowrap gap-3 overflow-x-auto align-items-start pb-3">
+    {% for column in columns %}
+      <div class="card bg-body-tertiary flex-shrink-0" id="stage-{{ column.stage }}"
+           style="width: 18rem;">
+        <div class="card-header border-0 bg-transparent pt-3">
+          <h2 class="h6 mb-1">{{ column.label }}</h2>
+          <span class="text-secondary small">{{ column.leads|length }} · {{ column.total|sek }}</span>
+        </div>
+        <div class="card-body d-flex flex-column gap-2">
+          {% for lead in column.leads %}
+            <div class="card">
+              <div class="card-body p-3">
+                <a href="{% url 'lead-detail' lead.pk %}" class="fw-bold stretched-link
+                          link-body-emphasis link-underline-opacity-0">{{ lead.name }}</a>
+                <div class="text-secondary small">{{ lead.company.name }}</div>
+                {% if lead.expected_value is not None %}
+                  <div class="small mt-2">{{ lead.expected_value|sek }}</div>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
   </div>
 
   {% include "crm/_lead_form_modal.html" with form=lead_create_form %}

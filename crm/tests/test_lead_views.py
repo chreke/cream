@@ -12,6 +12,59 @@ def test_pipeline_page_embeds_lead_create_modal(auth_client):
     assert reverse("lead-create") in content
 
 
+def column_segment(content, stage):
+    """The chunk of pipeline-page HTML belonging to one stage's column."""
+    after = content.split(f'id="stage-{stage}"', 1)[1]
+    return after.split('id="stage-', 1)[0]
+
+
+@pytest.mark.django_db
+def test_pipeline_board_shows_all_stage_columns(auth_client):
+    content = auth_client.get(reverse("pipeline")).content.decode()
+    for stage, label in Lead.Stage.choices:
+        assert f'id="stage-{stage}"' in content
+        assert label in content
+
+
+@pytest.mark.django_db
+def test_pipeline_board_groups_leads_by_stage(auth_client, company):
+    Lead.objects.create(
+        name="Java-utvecklare", company=company, stage=Lead.Stage.QUOTE
+    )
+    content = auth_client.get(reverse("pipeline")).content.decode()
+    assert "Java-utvecklare" in column_segment(content, "quote")
+    assert "Java-utvecklare" not in column_segment(content, "in_progress")
+
+
+@pytest.mark.django_db
+def test_pipeline_board_card_shows_company_value_and_detail_link(
+    auth_client, company, lead
+):
+    content = auth_client.get(reverse("pipeline")).content.decode()
+    segment = column_segment(content, "in_progress")
+    assert reverse("lead-detail", args=[lead.pk]) in segment
+    assert "Itancan Consulting" in segment
+    assert "100\xa0000 kr" in segment
+
+
+@pytest.mark.django_db
+def test_pipeline_board_sums_expected_value_per_stage(auth_client, company):
+    for name in ["Java-utvecklare", ".NET-utvecklare"]:
+        Lead.objects.create(
+            name=name,
+            company=company,
+            expected_value=100000,
+            stage=Lead.Stage.INTERVIEW,
+        )
+    # A missing value counts as a lead but adds nothing to the sum.
+    Lead.objects.create(
+        name="Projektledare", company=company, stage=Lead.Stage.INTERVIEW
+    )
+    content = auth_client.get(reverse("pipeline")).content.decode()
+    assert "3 · 200\xa0000 kr" in column_segment(content, "interview")
+    assert "0 · 0 kr" in column_segment(content, "quote")
+
+
 @pytest.mark.django_db
 def test_create_lead_redirects_to_new_detail_page(auth_client, company):
     response = auth_client.post(

@@ -591,6 +591,21 @@ class PipelineView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["lead_create_form"] = LeadCreateForm(auto_id="lead-new-%s")
+
+        leads_by_stage = {stage: [] for stage, _ in Lead.Stage.choices}
+        for lead in Lead.objects.select_related("company"):
+            leads_by_stage[lead.stage].append(lead)
+        context["columns"] = [
+            {
+                "stage": stage,
+                "label": label,
+                "leads": leads_by_stage[stage],
+                "total": sum(
+                    lead.expected_value or 0 for lead in leads_by_stage[stage]
+                ),
+            }
+            for stage, label in Lead.Stage.choices
+        ]
         return context
 
 

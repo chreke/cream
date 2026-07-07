@@ -28,8 +28,9 @@
     - [x] CRUD: create/edit/delete modals, detail page
           ([spec](specs/008-lead-crud.md))
     - [x] Comments (reuse the shared comment feed partial)
-    - [ ] Pipeline board: kanban view grouped by stage with per-stage sums
+    - [x] Pipeline board: kanban view grouped by stage with per-stage sums
           of expected value (stage changes via the edit modal for now)
+          ([spec](specs/011-pipeline-board.md))
     - [ ] Drag & drop: move leads between stages on the board
 - [ ] Deployment
 - [x] Swedish collation: name sorting puts Å/Ä/Ö with A/A/O instead of after Z
@@ -56,3 +57,5 @@
 - [ ] Uploading a resume to a candidate
 - [ ] Downloading a resume (and that /media/... URLs are *not* served)
 - [ ] Deleting a resume (file disappears from `media/`)
+- [ ] Pipeline board: columns look right, cards clickable, sums correct,
+      horizontal scroll on narrow windows
