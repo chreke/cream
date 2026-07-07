@@ -15,7 +15,7 @@ class CompanyForm(forms.ModelForm):
     homepage = forms.URLField(
         label="Hemsida",
         required=False,
-        assume_scheme="https",
+        assume_scheme="https",  # pyright: ignore[reportCallIssue]  (missing from django-types)
         widget=forms.URLInput(attrs={"class": "form-control"}),
     )
 
@@ -56,7 +56,7 @@ class CandidateForm(forms.ModelForm):
     linkedin_url = forms.URLField(
         label="LinkedIn",
         required=False,
-        assume_scheme="https",
+        assume_scheme="https",  # pyright: ignore[reportCallIssue]  (missing from django-types)
         widget=forms.URLInput(attrs={"class": "form-control"}),
     )
 
@@ -108,7 +108,7 @@ class ContactForm(forms.ModelForm):
     linkedin_url = forms.URLField(
         label="LinkedIn",
         required=False,
-        assume_scheme="https",
+        assume_scheme="https",  # pyright: ignore[reportCallIssue]  (missing from django-types)
         widget=forms.URLInput(attrs={"class": "form-control"}),
     )
 

@@ -11,6 +11,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "django-types>=0.24.0",
     "pytest>=9.1.1",
     "pytest-django>=4.12.0",
 ]
@@ -18,3 +19,11 @@ dev = [
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "cream.settings"
 python_files = ["tests.py", "test_*.py"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+# django-types can't type dynamic ORM attributes (FK `_id` fields,
+# `self.object` on unparametrized generic CBVs, QuerySet.as_manager()),
+# so this rule is all false positives here.
+reportAttributeAccessIssue = false
