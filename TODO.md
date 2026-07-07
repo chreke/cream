@@ -28,7 +28,6 @@
     - [x] CRUD: create/edit/delete modals, detail page
           ([spec](specs/008-lead-crud.md))
     - [x] Comments (reuse the shared comment feed partial)
-    - [ ] Company integration: company detail page lists its leads
     - [ ] Pipeline board: kanban view grouped by stage with per-stage sums
           of expected value (stage changes via the edit modal for now)
     - [ ] Drag & drop: move leads between stages on the board
