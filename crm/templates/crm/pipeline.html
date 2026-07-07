@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load format_extras %}
+{% load static format_extras %}
 
 {% block title %}Pipeline{% endblock %}
 
@@ -19,11 +19,12 @@
            style="width: 18rem;">
         <div class="card-header border-0 bg-transparent pt-3">
           <h2 class="h6 mb-1">{{ column.label }}</h2>
-          <span class="text-secondary small">{{ column.leads|length }} · {{ column.total|sek }}</span>
+          <span class="text-secondary small" data-stage-summary="{{ column.stage }}">{{ column.summary }}</span>
         </div>
-        <div class="card-body d-flex flex-column gap-2">
+        <div class="card-body d-flex flex-column gap-2" data-stage="{{ column.stage }}"
+             style="min-height: 4rem;">
           {% for lead in column.leads %}
-            <div class="card">
+            <div class="card" data-stage-url="{% url 'lead-stage' lead.pk %}">
               <div class="card-body p-3">
                 <a href="{% url 'lead-detail' lead.pk %}" class="fw-bold stretched-link
                           link-body-emphasis link-underline-opacity-0">{{ lead.name }}</a>
@@ -40,4 +41,9 @@
   </div>
 
   {% include "crm/_lead_form_modal.html" with form=lead_create_form %}
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'vendor/sortable.min.js' %}"></script>
+  <script src="{% static 'js/pipeline.js' %}"></script>
 {% endblock %}

@@ -120,6 +120,7 @@ urlpatterns = [
     path("leads/new/", views.LeadCreateView.as_view(), name="lead-create"),
     path("leads/<int:pk>/", views.LeadDetailView.as_view(), name="lead-detail"),
     path("leads/<int:pk>/edit/", views.LeadUpdateView.as_view(), name="lead-edit"),
+    path("leads/<int:pk>/stage/", views.LeadStageView.as_view(), name="lead-stage"),
     path(
         "leads/<int:pk>/delete/",
         views.LeadDeleteView.as_view(),

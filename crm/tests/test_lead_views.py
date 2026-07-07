@@ -66,6 +66,48 @@ def test_pipeline_board_sums_expected_value_per_stage(auth_client, company):
 
 
 @pytest.mark.django_db
+def test_pipeline_board_has_drag_and_drop_hooks(auth_client, lead):
+    content = auth_client.get(reverse("pipeline")).content.decode()
+    assert "vendor/sortable.min.js" in content
+    assert "js/pipeline.js" in content
+    assert 'data-stage="in_progress"' in content
+    assert f'data-stage-url="{reverse("lead-stage", args=[lead.pk])}"' in content
+    assert 'data-stage-summary="quote"' in content
+
+
+@pytest.mark.django_db
+def test_stage_endpoint_moves_lead_and_returns_summaries(auth_client, lead):
+    response = auth_client.post(
+        reverse("lead-stage", args=[lead.pk]), {"stage": "quote"}
+    )
+    assert response.status_code == 200
+    lead.refresh_from_db()
+    assert lead.stage == Lead.Stage.QUOTE
+    summaries = response.json()["summaries"]
+    assert summaries["quote"] == "1 · 100\xa0000 kr"
+    assert summaries["in_progress"] == "0 · 0 kr"
+    assert set(summaries) == set(Lead.Stage.values)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("payload", [{}, {"stage": "bogus"}])
+def test_stage_endpoint_rejects_bad_stage(auth_client, lead, payload):
+    response = auth_client.post(reverse("lead-stage", args=[lead.pk]), payload)
+    assert response.status_code == 400
+    lead.refresh_from_db()
+    assert lead.stage == Lead.Stage.IN_PROGRESS
+
+
+@pytest.mark.django_db
+def test_stage_endpoint_requires_login(client, lead):
+    response = client.post(reverse("lead-stage", args=[lead.pk]), {"stage": "quote"})
+    assert response.status_code == 302
+    assert response.url.startswith(reverse("login"))
+    lead.refresh_from_db()
+    assert lead.stage == Lead.Stage.IN_PROGRESS
+
+
+@pytest.mark.django_db
 def test_create_lead_redirects_to_new_detail_page(auth_client, company):
     response = auth_client.post(
         reverse("lead-create"),

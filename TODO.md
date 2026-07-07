@@ -31,7 +31,8 @@
     - [x] Pipeline board: kanban view grouped by stage with per-stage sums
           of expected value (stage changes via the edit modal for now)
           ([spec](specs/011-pipeline-board.md))
-    - [ ] Drag & drop: move leads between stages on the board
+    - [x] Drag & drop: move leads between stages on the board
+          ([spec](specs/012-pipeline-drag-drop.md))
 - [ ] Deployment
 - [x] Swedish collation: name sorting puts Å/Ä/Ö with A/A/O instead of after Z
       (fixed with `db_collation="sv-SE-x-icu"` on the name fields)
@@ -59,3 +60,6 @@
 - [ ] Deleting a resume (file disappears from `media/`)
 - [ ] Pipeline board: columns look right, cards clickable, sums correct,
       horizontal scroll on narrow windows
+- [ ] Drag & drop: card moves persist across reload, header sums update,
+      dropping in the same column is a no-op, works on touch,
+      card still clickable after a drag

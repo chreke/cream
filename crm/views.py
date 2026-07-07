@@ -1,8 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.db.models import F, Q
+from django.db.models import Count, F, Q, Sum
 from django.forms import Form
-from django.http import FileResponse
+from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -40,6 +40,7 @@ from .models import (
     LeadComment,
     Resume,
 )
+from .templatetags.format_extras import sek
 
 
 def location_options():
@@ -584,6 +585,24 @@ class LeadCommentDeleteView(FlashFormErrorsMixin, DeleteView):
         return reverse("lead-detail", args=[self.get_object().lead_id])
 
 
+def stage_summaries():
+    """Column-header text per stage, "N · X kr" — used both when rendering
+    the board and in the drag & drop endpoint's response, so the format
+    only exists here."""
+    rows = {
+        row["stage"]: row
+        for row in Lead.objects.values("stage").annotate(
+            count=Count("id"), total=Sum("expected_value")
+        )
+    }
+    return {
+        stage: f"{row['count']} · {sek(row['total'] or 0)}"
+        if (row := rows.get(stage))
+        else f"0 · {sek(0)}"
+        for stage in Lead.Stage.values
+    }
+
+
 class PipelineView(TemplateView):
     template_name = "crm/pipeline.html"
     extra_context = {"section": "pipeline"}
@@ -595,18 +614,31 @@ class PipelineView(TemplateView):
         leads_by_stage = {stage: [] for stage, _ in Lead.Stage.choices}
         for lead in Lead.objects.select_related("company"):
             leads_by_stage[lead.stage].append(lead)
+        summaries = stage_summaries()
         context["columns"] = [
             {
                 "stage": stage,
                 "label": label,
                 "leads": leads_by_stage[stage],
-                "total": sum(
-                    lead.expected_value or 0 for lead in leads_by_stage[stage]
-                ),
+                "summary": summaries[stage],
             }
             for stage, label in Lead.Stage.choices
         ]
         return context
+
+
+class LeadStageView(View):
+    """POST target for board drag & drop (specs/012). Returns fresh column
+    summaries so the client can patch the headers without a reload."""
+
+    def post(self, request, pk):
+        lead = get_object_or_404(Lead, pk=pk)
+        stage = request.POST.get("stage")
+        if stage not in Lead.Stage.values:
+            return JsonResponse({"error": "Ogiltig fas."}, status=400)
+        lead.stage = stage
+        lead.save()
+        return JsonResponse({"summaries": stage_summaries()})
 
 
 class LeadDetailView(DetailView):
