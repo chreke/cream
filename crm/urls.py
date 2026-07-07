@@ -87,6 +87,21 @@ urlpatterns = [
         name="candidate-unflag",
     ),
     path(
+        "candidates/<int:candidate_pk>/resumes/new/",
+        views.ResumeCreateView.as_view(),
+        name="resume-create",
+    ),
+    path(
+        "resumes/<int:pk>/download/",
+        views.ResumeDownloadView.as_view(),
+        name="resume-download",
+    ),
+    path(
+        "resumes/<int:pk>/delete/",
+        views.ResumeDeleteView.as_view(),
+        name="resume-delete",
+    ),
+    path(
         "candidates/<int:candidate_pk>/comments/new/",
         views.CandidateCommentCreateView.as_view(),
         name="candidate-comment-create",

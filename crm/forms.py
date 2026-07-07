@@ -210,6 +210,21 @@ class LeadCommentForm(BaseCommentForm):
         model = LeadComment
 
 
+class ResumeForm(forms.Form):
+    MAX_SIZE = 20 * 1024 * 1024  # 20 MB
+
+    file = forms.FileField(
+        label="Fil",
+        widget=forms.ClearableFileInput(attrs={"class": "form-control"}),
+    )
+
+    def clean_file(self):
+        file = self.cleaned_data["file"]
+        if file.size > self.MAX_SIZE:
+            raise forms.ValidationError("Filen är för stor (max 20 MB).")
+        return file
+
+
 class LogContactForm(forms.Form):
     comment = forms.CharField(
         label="Kommentar (valfritt)",

@@ -5,6 +5,7 @@ from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.dispatch import receiver
 
 # "simple" config: no stemming or stop words; skills, names and places
 # should match literally. Must stay identical to the GinIndex expression
@@ -118,6 +119,31 @@ class Candidate(models.Model):
         # The reason keeps the flag alive if the flagger is deleted
         # (flagged_by is SET_NULL).
         return self.flagged_by_id is not None or bool(self.flag_reason)
+
+
+class Resume(models.Model):
+    candidate = models.ForeignKey(
+        Candidate, on_delete=models.CASCADE, related_name="resumes"
+    )
+    file = models.FileField(upload_to="resumes/%Y/%m/", max_length=255)
+    # Django mangles the stored name (sanitization, dedup suffixes), so the
+    # original is kept for display and as the download filename.
+    filename = models.CharField(max_length=255)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+
+    def __str__(self):
+        return f"{self.filename} ({self.candidate})"
+
+
+@receiver(models.signals.post_delete, sender=Resume)
+def _delete_resume_file(sender, instance, **kwargs):
+    """Files are never deleted from storage by Django itself. A signal
+    (rather than a delete() override) also covers rows cascade-deleted
+    with their candidate."""
+    instance.file.delete(save=False)
 
 
 class Lead(models.Model):

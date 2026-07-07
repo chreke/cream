@@ -9,6 +9,7 @@ from .models import (
     Contact,
     Lead,
     LeadComment,
+    Resume,
     User,
 )
 
@@ -38,6 +39,12 @@ class CandidateAdmin(admin.ModelAdmin):
     list_display = ["name", "kind", "location", "email", "flagged_by"]
     list_filter = ["kind"]
     search_fields = ["name", "location", "skills"]
+
+
+@admin.register(Resume)
+class ResumeAdmin(admin.ModelAdmin):
+    list_display = ["filename", "candidate", "uploaded_at"]
+    search_fields = ["filename", "candidate__name"]
 
 
 @admin.register(Lead)

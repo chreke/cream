@@ -2,9 +2,11 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db.models import F, Q
 from django.forms import Form
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.views import View
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -26,6 +28,7 @@ from .forms import (
     LeadCreateForm,
     LeadEditForm,
     LogContactForm,
+    ResumeForm,
 )
 from .models import (
     Candidate,
@@ -35,6 +38,7 @@ from .models import (
     Contact,
     Lead,
     LeadComment,
+    Resume,
 )
 
 
@@ -316,6 +320,8 @@ def candidate_detail_context(candidate):
             )
             for comment in candidate.comments.all()
         ],
+        "resume_form": ResumeForm(auto_id="resume-new-%s"),
+        "resumes": candidate.resumes.all(),
     }
 
 
@@ -436,6 +442,52 @@ class CandidateUnflagView(FlashFormErrorsMixin, FormView):
 
     def get_failure_url(self):
         return reverse("candidate-detail", args=[self.kwargs["pk"]])
+
+
+class ResumeCreateView(FlashFormErrorsMixin, FormView):
+    """POST target for the inline upload form on the detail page."""
+
+    form_class = ResumeForm
+
+    def form_valid(self, form):
+        upload = form.cleaned_data["file"]
+        Resume.objects.create(
+            candidate=get_object_or_404(Candidate, pk=self.kwargs["candidate_pk"]),
+            file=upload,
+            filename=upload.name,
+        )
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        detail_url = reverse("candidate-detail", args=[self.kwargs["candidate_pk"]])
+        return f"{detail_url}#resumes"
+
+    def get_failure_url(self):
+        return self.get_success_url()
+
+
+class ResumeDownloadView(View):
+    """The only way to fetch an uploaded file: MEDIA_URL is not routed, so
+    resumes are only served to logged-in users (LoginRequiredMiddleware).
+    Served as an attachment; untrusted uploads must not render in our origin.
+    """
+
+    def get(self, request, pk):
+        resume = get_object_or_404(Resume, pk=pk)
+        return FileResponse(
+            resume.file.open("rb"), as_attachment=True, filename=resume.filename
+        )
+
+
+class ResumeDeleteView(FlashFormErrorsMixin, DeleteView):
+    model = Resume
+
+    def get_success_url(self):
+        detail_url = reverse("candidate-detail", args=[self.object.candidate_id])
+        return f"{detail_url}#resumes"
+
+    def get_failure_url(self):
+        return reverse("candidate-detail", args=[self.get_object().candidate_id])
 
 
 class CandidateCommentCreateView(FlashFormErrorsMixin, CreateView):

@@ -13,7 +13,8 @@
     - [x] CRUD: detail page, create/edit/delete modals
     - [x] Comments
     - [x] Flagging
-    - [ ] Resumes: file upload, authenticated serving
+    - [x] Resumes: file upload, authenticated serving
+          ([spec](specs/010-candidate-resumes.md))
 - [x] Location inputs (companies + candidates) should autocomplete against
       existing values (via `<datalist>`; upgrade to Tom Select if the native
       UX proves too bare)
@@ -37,6 +38,7 @@
 - [ ] Candidates on a lead: attach/detach candidates, flag status visible,
       maybe a comment on attach — picker UI needs design work, deferred
       ([spec](specs/009-lead-candidate-picker.md))
+- [ ] Transfer data from Candide
 
 ## Verify manually
 
@@ -52,3 +54,6 @@
 - [ ] Editing leads (contact dropdown only shows the lead's company's
       contacts; company not editable)
 - [ ] Deleting leads
+- [ ] Uploading a resume to a candidate
+- [ ] Downloading a resume (and that /media/... URLs are *not* served)
+- [ ] Deleting a resume (file disappears from `media/`)

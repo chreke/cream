@@ -157,6 +157,9 @@ It should be possible to upload one or more resumes for a given candidate. A
 resume is an arbitrary document, e.g. a PDF or a Word document. It should be
 possible to delete uploaded resumes.
 
+Resumes must only be served to logged-in users; uploaded files are never
+exposed at a public URL. See `specs/010-candidate-resumes.md` for details.
+
 ### Candidates List
 
 It should be possible to view a list of all candidates. The list should display
