@@ -36,9 +36,13 @@
 - [ ] Deployment
 - [x] Swedish collation: name sorting puts Å/Ä/Ö with A/A/O instead of after Z
       (fixed with `db_collation="sv-SE-x-icu"` on the name fields)
-- [ ] Candidates on a lead: attach/detach candidates, flag status visible,
-      maybe a comment on attach — picker UI needs design work, deferred
-      ([spec](specs/009-lead-candidate-picker.md))
+- [ ] Lead–candidate connection: Tom Select picker on the lead page,
+      leads listed on the candidate page (company name prominent),
+      soft-delete leads, real candidate counts on pipeline cards
+      ([spec](specs/013-lead-candidate-connection.md); supersedes
+      [009](specs/009-lead-candidate-picker.md))
+- [ ] Truncate long skills lists in candidate rows (e.g. on the lead
+      page's candidate section) — kept out of specs/013 on purpose
 - [ ] Transfer data from Candide
 
 ## Verify manually

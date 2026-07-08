@@ -48,7 +48,7 @@
         <th scope="col">Ansvarig</th>
         <th scope="col">
           <a class="text-decoration-none text-reset"
-             href="?{{ sort_querystring }}{% if sort_querystring %}&amp;{% endif %}sort={{ last_contacted_sort }}">Senast kontaktad{% if current_sort == 'last_contacted' %} ↑{% elif current_sort == '-last_contacted' %} ↓{% endif %}</a>
+             href="?{{ sort_querystring }}{% if sort_querystring %}&amp;{% endif %}sort={{ last_contacted_sort }}">Kontaktad{% if current_sort == 'last_contacted' %} ↑{% elif current_sort == '-last_contacted' %} ↓{% endif %}</a>
         </th>
       </tr>
     </thead>

@@ -2,9 +2,10 @@
 
 ## Status
 
-**Deferred.** We started designing this and parked it; this document
-captures the discussion so far. Nothing here is decided except that the
-naive options are ruled out.
+**Superseded by `specs/013-lead-candidate-connection.md`.** We started
+designing this and parked it; this document captures the discussion so
+far. The decisions were made in spec 013 (Tom Select with server-aided
+autocomplete, plain M2M kept, no attach comment).
 
 ## Overview
 
