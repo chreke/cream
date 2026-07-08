@@ -70,6 +70,42 @@ def test_company_list_sort_by_last_contacted_puts_never_contacted_first(auth_cli
 
 
 @pytest.mark.django_db
+def test_company_list_sort_by_name_descending(auth_client):
+    Company.objects.create(name="Öbergs Bygg")
+    Company.objects.create(name="Zeta")
+    Company.objects.create(name="Alfa")
+    response = auth_client.get(reverse("company-list"), {"sort": "-name"})
+    companies = list(response.context["companies"])
+    assert [c.name for c in companies] == ["Öbergs Bygg", "Zeta", "Alfa"]
+
+
+@pytest.mark.django_db
+def test_company_list_sort_by_last_contacted_descending_puts_never_contacted_last(
+    auth_client,
+):
+    now = timezone.now()
+    Company.objects.create(name="Nyligen", last_contacted=now)
+    Company.objects.create(name="Aldrig")
+    Company.objects.create(
+        name="Längesen", last_contacted=now - datetime.timedelta(days=30)
+    )
+    response = auth_client.get(
+        reverse("company-list"), {"sort": "-last_contacted"}
+    )
+    companies = list(response.context["companies"])
+    assert [c.name for c in companies] == ["Nyligen", "Längesen", "Aldrig"]
+
+
+@pytest.mark.django_db
+def test_company_list_unknown_sort_falls_back_to_name(auth_client):
+    Company.objects.create(name="Zeta")
+    Company.objects.create(name="Alfa")
+    response = auth_client.get(reverse("company-list"), {"sort": "bogus"})
+    companies = list(response.context["companies"])
+    assert [c.name for c in companies] == ["Alfa", "Zeta"]
+
+
+@pytest.mark.django_db
 def test_company_list_paginates_at_50(auth_client):
     for i in range(51):
         Company.objects.create(name=f"Bolag {i:03d}")

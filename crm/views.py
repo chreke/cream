@@ -115,22 +115,42 @@ class CompanyListView(ListView):
         if assignee.isdigit():
             queryset = queryset.filter(assignee=assignee)
 
-        if self.request.GET.get("sort") == "last_contacted":
+        sort = self.current_sort()
+        if sort == "last_contacted":
             # Never/least-recently contacted first: these companies need attention.
             queryset = queryset.order_by(
                 F("last_contacted").asc(nulls_first=True), "name"
             )
+        elif sort == "-last_contacted":
+            queryset = queryset.order_by(
+                F("last_contacted").desc(nulls_last=True), "name"
+            )
+        elif sort == "-name":
+            queryset = queryset.order_by("-name")
         else:
             queryset = queryset.order_by("name")
 
         return queryset
+
+    def current_sort(self):
+        sort = self.request.GET.get("sort", "name")
+        if sort not in ("name", "-name", "last_contacted", "-last_contacted"):
+            return "name"
+        return sort
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["users"] = get_user_model().objects.order_by("username")
         context["current_q"] = self.request.GET.get("q", "")
         context["current_assignee"] = self.request.GET.get("assignee", "")
-        context["current_sort"] = self.request.GET.get("sort", "name")
+        sort = self.current_sort()
+        context["current_sort"] = sort
+        # Header links: clicking the active column reverses it, clicking an
+        # inactive column applies its default direction.
+        context["name_sort"] = "-name" if sort == "name" else "name"
+        context["last_contacted_sort"] = (
+            "-last_contacted" if sort == "last_contacted" else "last_contacted"
+        )
         context["company_create_form"] = CompanyForm(auto_id="company-new-%s")
         context["location_options"] = location_options()
 

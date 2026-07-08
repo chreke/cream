@@ -75,6 +75,8 @@ It should be possible to sort the list by one of:
 - Name
 - Last contacted
 
+Both sorts can be reversed (ascending or descending).
+
 It should be possible to filter Companies using free-text search. The
 free-text search should target the Name and Location fields.
 
