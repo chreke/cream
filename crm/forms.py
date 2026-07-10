@@ -42,7 +42,7 @@ class CompanyForm(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control"}),
             "location": forms.TextInput(
-                attrs={"class": "form-control", "list": "location-options"}
+                attrs={"class": "form-control", "data-location-input": ""}
             ),
             "industry": forms.TextInput(attrs={"class": "form-control"}),
             "homepage": forms.URLInput(attrs={"class": "form-control"}),
@@ -85,7 +85,7 @@ class CandidateForm(forms.ModelForm):
             "name": forms.TextInput(attrs={"class": "form-control"}),
             "kind": forms.Select(attrs={"class": "form-select"}),
             "location": forms.TextInput(
-                attrs={"class": "form-control", "list": "location-options"}
+                attrs={"class": "form-control", "data-location-input": ""}
             ),
             "email": forms.EmailInput(attrs={"class": "form-control"}),
             "phone": forms.TextInput(attrs={"class": "form-control"}),

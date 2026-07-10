@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{% endblock %} · Cream</title>
     <link rel="stylesheet" href="{% static 'vendor/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/tom-select.bootstrap5.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/cream.css' %}">
-    {% block styles %}{% endblock %}
   </head>
   <body>
     <div class="d-flex">
@@ -70,6 +70,8 @@
       </div>
     </div>
     <script src="{% static 'vendor/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'vendor/tom-select.complete.min.js' %}"></script>
+    <script src="{% static 'js/location_inputs.js' %}"></script>
     {% block scripts %}{% endblock %}
   </body>
 </html>

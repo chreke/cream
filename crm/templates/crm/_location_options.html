@@ -1,0 +1,7 @@
+{% comment %}
+Suggestions for the Tom Select location inputs (data-location-input),
+read by js/location_inputs.js. Included by the form modal partials; only
+one such modal may be hosted per page, or the blob's id would be
+duplicated.
+{% endcomment %}
+{{ location_options|json_script:"location-options" }}

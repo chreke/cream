@@ -3,10 +3,6 @@
 
 {% block title %}{{ lead.name }}{% endblock %}
 
-{% block styles %}
-  <link rel="stylesheet" href="{% static 'vendor/tom-select.bootstrap5.min.css' %}">
-{% endblock %}
-
 {% block content %}
   {% if lead.is_deleted %}
     <div class="alert alert-warning d-flex justify-content-between align-items-center">
@@ -102,6 +98,5 @@
 {% endblock %}
 
 {% block scripts %}
-  <script src="{% static 'vendor/tom-select.complete.min.js' %}"></script>
   <script src="{% static 'js/lead_candidates.js' %}"></script>
 {% endblock %}

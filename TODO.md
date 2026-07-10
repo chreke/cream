@@ -43,7 +43,7 @@
       [009](specs/009-lead-candidate-picker.md))
 - [ ] Truncate long skills lists in candidate rows (e.g. on the lead
       page's candidate section) — kept out of specs/013 on purpose
-- [ ] Replace the current `<datalist>` usages (location inputs on
+- [x] Replace the current `<datalist>` usages (location inputs on
       companies + candidates) with Tom Select, once it's vendored for
       the lead–candidate picker (specs/013)
 - [ ] Transfer data from Candide
@@ -79,3 +79,6 @@
 - [ ] Candidate page "Affärer" table: company name shown, deleted leads
       marked "Borttagen" but still linked
 - [ ] Pipeline cards show candidate counts
+- [ ] Location inputs (company + candidate modals): Tom Select suggests
+      existing locations, typing a brand-new location still works, field
+      can be cleared, saved value round-trips into the edit modal

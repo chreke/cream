@@ -52,11 +52,17 @@ def test_location_inputs_autocomplete_from_existing_values(auth_client):
         reverse("candidate-detail", args=[candidate.pk]),
     ]:
         content = auth_client.get(url).content.decode()
-        assert 'list="location-options"' in content, url
-        assert '<datalist id="location-options">' in content, url
-        # Locations from both models are suggested everywhere.
-        assert '<option value="Göteborg">' in content, url
-        assert '<option value="Malmö">' in content, url
+        # Tom Select picks up inputs marked data-location-input and reads
+        # the suggestions from the json_script blob.
+        assert "data-location-input" in content, url
+        assert 'id="location-options" type="application/json"' in content, url
+        assert "js/location_inputs.js" in content, url
+        assert "vendor/tom-select.complete.min.js" in content, url
+        # Locations from both models are suggested everywhere. json_script
+        # writes ASCII-escaped JSON, so non-ASCII letters appear as \uXXXX.
+        assert "G\\u00f6teborg" in content, url
+        assert "Malm\\u00f6" in content, url
+        assert "<datalist" not in content, url
 
 
 @pytest.mark.django_db
