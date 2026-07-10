@@ -47,6 +47,10 @@ important that this document be kept up to date.
   reach for JavaScript only when it's clearly worth it.
 - Prefer class-based views (CBVs) over function-based views.
 - Register models in the Django Admin by default.
+- When vendoring minified CSS/JS, also vendor the `.map` files they
+  reference: in production, ManifestStaticFilesStorage rewrites
+  `sourceMappingURL` comments and collectstatic *fails* if the map file
+  is missing.
 - `requirements.txt` is generated from `uv.lock` for the production Docker
   image (pip can't read uv.lock). After adding/removing/updating
   dependencies, regenerate it and commit both files:
