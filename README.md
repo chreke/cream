@@ -97,8 +97,13 @@ env-file support (`UV_ENV_FILE=.env` or `uv run --env-file .env`). See
 Cream deploys to a single VPS as a docker compose stack — the app (gunicorn,
 with whitenoise serving static files) plus Postgres 17 — behind the host's
 existing nginx, which terminates TLS. See `specs/014-deployment.md` for the
-full picture. Uploaded resumes live on the `media` volume and are served
-through Django's authenticated views, **never** by nginx.
+full picture. Uploaded resumes live in the `data/media` bind mount and are
+served through Django's authenticated views, **never** by nginx.
+
+The compose file uses the default name (`docker-compose.yml`) so bare
+`docker compose` commands work on the server — but that also means running
+`docker compose up` in a local checkout starts the production stack, so
+don't do that by accident. Local development is not containerized.
 
 ### Prerequisites on the server
 
@@ -115,13 +120,13 @@ In the deploy directory on the server:
 2. Start the stack:
 
    ```sh
-   docker compose -f compose.prod.yml up -d --build
+   docker compose up -d --build
    ```
 
 3. Create the first user account:
 
    ```sh
-   docker compose -f compose.prod.yml exec web \
+   docker compose exec web \
      uv run --no-sync python manage.py createsuperuser
    ```
 
@@ -146,10 +151,10 @@ In the deploy directory on the server:
 ### Deploying a new version
 
 rsync the repo tree to the deploy directory — excluding at least `.git/`,
-`.env`, `media/` and caches — then rebuild:
+`.env`, `data/` and caches — then rebuild:
 
 ```sh
-docker compose -f compose.prod.yml up -d --build
+docker compose up -d --build
 ```
 
 Migrations run automatically when the app container starts. The Postgres
@@ -161,6 +166,6 @@ Deploy rsyncs and the app image must exclude `data/`.
 ### One-off management commands
 
 ```sh
-docker compose -f compose.prod.yml exec web \
+docker compose exec web \
   uv run --no-sync python manage.py <command>
 ```

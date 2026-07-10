@@ -1,7 +1,11 @@
-# Production stack (specs/014): app + Postgres behind the host's nginx.
-# Configuration comes from a `.env` file next to this file on the server;
-# see .env.example. Deploys are `docker compose -f compose.prod.yml up -d
-# --build` (migrations run on app start).
+# PRODUCTION stack (specs/014): app + Postgres behind the host's nginx.
+# Local development does not use Docker (see README) — don't `docker
+# compose up` this on your laptop unless you mean to run a prod-like
+# stack against the .env in this directory.
+#
+# Deploys are `docker compose up -d --build` (migrations run on app
+# start); configuration comes from a `.env` file next to this file on
+# the server, see .env.example.
 services:
   web:
     build: .
