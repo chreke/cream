@@ -33,7 +33,9 @@
           ([spec](specs/011-pipeline-board.md))
     - [x] Drag & drop: move leads between stages on the board
           ([spec](specs/012-pipeline-drag-drop.md))
-- [ ] Deployment
+- [ ] Deployment ([spec](specs/014-deployment.md)): Dockerfile +
+      gunicorn + whitenoise, prod compose file (app + Postgres 17),
+      env-driven prod settings, nginx server block + README deploy notes
 - [x] Swedish collation: name sorting puts Å/Ä/Ö with A/A/O instead of after Z
       (fixed with `db_collation="sv-SE-x-icu"` on the name fields)
 - [x] Lead–candidate connection: Tom Select picker on the lead page,
