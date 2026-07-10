@@ -20,11 +20,25 @@ def column_segment(content, stage):
 
 
 @pytest.mark.django_db
-def test_pipeline_board_shows_all_stage_columns(auth_client):
+def test_pipeline_board_shows_all_stage_columns_except_lost(auth_client):
     content = auth_client.get(reverse("pipeline")).content.decode()
     for stage, label in Lead.Stage.choices:
+        if stage == Lead.Stage.LOST:
+            continue
         assert f'id="stage-{stage}"' in content
         assert label in content
+    # Lost is a terminal state and gets no column (keeps the board narrow
+    # enough for laptops); lost leads stay reachable via their detail page.
+    assert 'id="stage-lost"' not in content
+
+
+@pytest.mark.django_db
+def test_lost_leads_are_not_on_the_board(auth_client, company):
+    Lead.objects.create(
+        name="Förlorad affär", company=company, stage=Lead.Stage.LOST
+    )
+    content = auth_client.get(reverse("pipeline")).content.decode()
+    assert "Förlorad affär" not in content
 
 
 @pytest.mark.django_db

@@ -226,6 +226,11 @@ rejected candidate).
 It should be possible to view a pipeline of leads, as a Kanban-board like
 view where a Lead can be drag & dropped to different stages.
 
+The board shows a column per stage *except* "Closed–lost": lost is a
+terminal state, and omitting its column keeps the board narrow enough for
+laptop screens. Leads are marked as lost via the edit modal and then leave
+the board; they remain reachable from company and candidate pages.
+
 Each stage in the lead pipeline should also display a sum of the Expected
 value of the leads in that stage.
 

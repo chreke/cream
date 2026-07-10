@@ -637,9 +637,17 @@ class PipelineView(TemplateView):
         context = super().get_context_data(**kwargs)
         context["lead_create_form"] = LeadCreateForm(auto_id="lead-new-%s")
 
-        leads_by_stage = {stage: [] for stage, _ in Lead.Stage.choices}
+        # Lost is a terminal state and gets no column, keeping the board
+        # narrow; lost leads are still reachable from lead/candidate pages.
+        board_stages = [
+            (stage, label)
+            for stage, label in Lead.Stage.choices
+            if stage != Lead.Stage.LOST
+        ]
+        leads_by_stage = {stage: [] for stage, _ in board_stages}
         for lead in (
             Lead.objects.active()
+            .exclude(stage=Lead.Stage.LOST)
             .select_related("company")
             .annotate(candidate_count=Count("candidates"))
         ):
@@ -652,7 +660,7 @@ class PipelineView(TemplateView):
                 "leads": leads_by_stage[stage],
                 "summary": summaries[stage],
             }
-            for stage, label in Lead.Stage.choices
+            for stage, label in board_stages
         ]
         return context
 
