@@ -1,6 +1,4 @@
-# Production image (specs/014): gunicorn + whitenoise.
-#
-# Dependencies come from requirements.txt, which is *generated* from
+# NB: Dependencies come from requirements.txt, which is *generated* from
 # uv.lock — regenerate it after changing dependencies:
 #
 #     uv export --no-dev --no-emit-project -o requirements.txt
