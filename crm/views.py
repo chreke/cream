@@ -343,6 +343,11 @@ def candidate_detail_context(candidate):
         ],
         "resume_form": ResumeForm(auto_id="resume-new-%s"),
         "resumes": candidate.resumes.all(),
+        # Includes soft-deleted leads on purpose: the point is to see that
+        # the candidate has been sent to a company before (specs/013).
+        "candidate_leads": candidate.leads.select_related("company").order_by(
+            "-created_at"
+        ),
     }
 
 
@@ -632,7 +637,11 @@ class PipelineView(TemplateView):
         context["lead_create_form"] = LeadCreateForm(auto_id="lead-new-%s")
 
         leads_by_stage = {stage: [] for stage, _ in Lead.Stage.choices}
-        for lead in Lead.objects.active().select_related("company"):
+        for lead in (
+            Lead.objects.active()
+            .select_related("company")
+            .annotate(candidate_count=Count("candidates"))
+        ):
             leads_by_stage[lead.stage].append(lead)
         summaries = stage_summaries()
         context["columns"] = [

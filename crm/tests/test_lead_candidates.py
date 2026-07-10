@@ -3,6 +3,7 @@ page, attach/detach endpoints, and the picker's autocomplete endpoint."""
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from crm.models import Candidate
 
@@ -135,6 +136,47 @@ def test_candidate_search_caps_results_at_ten(auth_client, lead):
 def test_candidate_search_empty_query(auth_client, lead):
     response = auth_client.get(reverse("lead-candidate-search", args=[lead.pk]))
     assert response.json()["results"] == []
+
+
+@pytest.mark.django_db
+def test_candidate_page_lists_leads_with_company(auth_client, lead, candidate):
+    lead.candidates.add(candidate)
+    content = auth_client.get(
+        reverse("candidate-detail", args=[candidate.pk])
+    ).content.decode()
+    assert "Affärer" in content
+    assert "Itancan Consulting" in content  # company name, the key signal
+    assert reverse("lead-detail", args=[lead.pk]) in content
+    assert lead.get_stage_display() in content
+
+
+@pytest.mark.django_db
+def test_candidate_page_marks_deleted_leads(auth_client, lead, candidate):
+    lead.candidates.add(candidate)
+    lead.deleted_at = timezone.now()
+    lead.save()
+    content = auth_client.get(
+        reverse("candidate-detail", args=[candidate.pk])
+    ).content.decode()
+    # Still listed and linked, but visibly marked.
+    assert reverse("lead-detail", args=[lead.pk]) in content
+    assert "Borttagen" in content
+
+
+@pytest.mark.django_db
+def test_candidate_page_leads_empty_state(auth_client, candidate):
+    content = auth_client.get(
+        reverse("candidate-detail", args=[candidate.pk])
+    ).content.decode()
+    assert "Affärer" in content
+    assert "inte kopplad till några affärer" in content
+
+
+@pytest.mark.django_db
+def test_pipeline_card_shows_candidate_count(auth_client, lead, candidate):
+    lead.candidates.add(candidate)
+    content = auth_client.get(reverse("pipeline")).content.decode()
+    assert "1 kandidat" in content
 
 
 @pytest.mark.django_db

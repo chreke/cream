@@ -201,7 +201,25 @@ attributes:
 
 Each lead may also have multiple associated Candidates.
 
-It should be possible to create, edit and delete leads.
+It should be possible to create, edit and delete leads. Deleting a lead is
+a *soft delete*: the lead disappears from the pipeline and other listings,
+but its detail page remains reachable (marked as deleted, with a restore
+action) so that candidate pages can keep linking to it. Hard deletion is
+only possible via the Django admin.
+
+### Candidates on a lead
+
+The lead detail page lists the lead's candidates (name, location, skills)
+and allows detaching them. Candidates are attached via an autocomplete
+picker backed by the ranked candidate search; options show enough context
+(location, skills) to tell candidates with the same name apart, and
+already-attached candidates are excluded from the results.
+
+Conversely, the candidate detail page lists every lead the candidate is
+attached to — including soft-deleted ones, visibly marked — with the
+company name prominent, so it is easy to see that a candidate has already
+been sent to a given company (e.g. to avoid re-sending a previously
+rejected candidate).
 
 ### Lead Pipeline
 
@@ -210,6 +228,8 @@ view where a Lead can be drag & dropped to different stages.
 
 Each stage in the lead pipeline should also display a sum of the Expected
 value of the leads in that stage.
+
+Each card on the board shows the lead's candidate count.
 
 ### Comments
 

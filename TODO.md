@@ -36,7 +36,7 @@
 - [ ] Deployment
 - [x] Swedish collation: name sorting puts Å/Ä/Ö with A/A/O instead of after Z
       (fixed with `db_collation="sv-SE-x-icu"` on the name fields)
-- [ ] Lead–candidate connection: Tom Select picker on the lead page,
+- [x] Lead–candidate connection: Tom Select picker on the lead page,
       leads listed on the candidate page (company name prominent),
       soft-delete leads, real candidate counts on pipeline cards
       ([spec](specs/013-lead-candidate-connection.md); supersedes
@@ -70,3 +70,12 @@
 - [ ] Drag & drop: card moves persist across reload, header sums update,
       dropping in the same column is a no-op, works on touch,
       card still clickable after a drag
+- [ ] Candidate picker on the lead page: autocomplete shows name +
+      location/skills while typing, picking + "Lägg till" attaches,
+      attached candidates no longer suggested
+- [ ] Detaching a candidate from a lead (candidate itself survives)
+- [ ] Deleting a lead: gone from the pipeline, banner + "Återställ" on
+      its detail page, restore puts it back in its stage
+- [ ] Candidate page "Affärer" table: company name shown, deleted leads
+      marked "Borttagen" but still linked
+- [ ] Pipeline cards show candidate counts

@@ -32,6 +32,7 @@
                 {% if lead.expected_value is not None %}
                   <div class="small mt-2">{{ lead.expected_value|sek }}</div>
                 {% endif %}
+                <div class="text-secondary small mt-1">{{ lead.candidate_count }} kandidat{{ lead.candidate_count|pluralize:"er" }}</div>
               </div>
             </div>
           {% endfor %}
