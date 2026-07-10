@@ -23,7 +23,10 @@ POSTGRES_USER=<your macOS username>
 POSTGRES_PASSWORD=
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
+DEBUG=1
 ```
+
+(`.env.example` in the repo root is a commented template for this file.)
 
 Then set `UV_ENV_FILE=.env` in your shell profile so every `uv run` loads
 it automatically. (Alternatively, pass `--env-file .env` to each `uv run`
@@ -72,15 +75,90 @@ uv run pytest
 
 ## Configuration
 
-Settings are read from environment variables via `os.environ[]` — they are
-**required**, and Django will refuse to start if any is missing. For local
-development, put them in a `.env` file (git-ignored) and load it with uv's
-built-in env-file support (`UV_ENV_FILE=.env` or `uv run --env-file .env`).
+Settings are read from environment variables. For local development, put
+them in a `.env` file (git-ignored) and load it with uv's built-in
+env-file support (`UV_ENV_FILE=.env` or `uv run --env-file .env`). See
+`.env.example` for a commented template.
 
-| Variable            | Purpose                                     |
-| ------------------- | ------------------------------------------- |
-| `POSTGRES_DB`       | Database name (`cream` locally)             |
-| `POSTGRES_USER`     | Database user (your OS user for Homebrew)   |
-| `POSTGRES_PASSWORD` | Database password (empty for local Homebrew)|
-| `POSTGRES_HOST`     | Database host (`localhost` locally)         |
-| `POSTGRES_PORT`     | Database port (`5432`)                      |
+| Variable              | Purpose                                        |
+| --------------------- | ---------------------------------------------- |
+| `POSTGRES_DB`         | Database name (`cream` locally). Required.     |
+| `POSTGRES_USER`       | Database user (your OS user for Homebrew). Required. |
+| `POSTGRES_PASSWORD`   | Database password (empty for local Homebrew). Required. |
+| `POSTGRES_HOST`       | Database host (`localhost` locally). Required. |
+| `POSTGRES_PORT`       | Database port (`5432`). Required.              |
+| `DEBUG`               | `1` enables debug mode. Set it in dev; leave unset in production. |
+| `SECRET_KEY`          | Django secret key. Required in production (when `DEBUG` is unset). |
+| `ALLOWED_HOSTS`       | Comma-separated hostnames. Required in production. |
+| `CSRF_TRUSTED_ORIGINS`| Comma-separated origins with scheme (`https://…`). Required in production. |
+
+## Deployment
+
+Cream deploys to a single VPS as a docker compose stack — the app (gunicorn,
+with whitenoise serving static files) plus Postgres 17 — behind the host's
+existing nginx, which terminates TLS. See `specs/014-deployment.md` for the
+full picture. Uploaded resumes live on the `media` volume and are served
+through Django's authenticated views, **never** by nginx.
+
+### Prerequisites on the server
+
+- Docker with the compose plugin
+- nginx with certbot already set up (Cream is one more server block)
+
+### First-time setup
+
+In the deploy directory on the server:
+
+1. Copy `.env.example` to `.env` and fill in the production values
+   (`SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `POSTGRES_*`;
+   leave `DEBUG` unset).
+2. Start the stack:
+
+   ```sh
+   docker compose -f compose.prod.yml up -d --build
+   ```
+
+3. Create the first user account:
+
+   ```sh
+   docker compose -f compose.prod.yml exec web \
+     uv run --no-sync python manage.py createsuperuser
+   ```
+
+4. Add an nginx server block (adjust the hostname; certbot manages the
+   TLS parts):
+
+   ```nginx
+   server {
+       server_name cream.example.com;
+
+       # 25m fits resume uploads; nginx's default 1m does not.
+       client_max_body_size 25m;
+
+       location / {
+           proxy_pass http://127.0.0.1:8000;
+           proxy_set_header Host $host;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+   }
+   ```
+
+### Deploying a new version
+
+rsync the repo tree to the deploy directory — excluding at least `.git/`,
+`.env`, `media/` and caches — then rebuild:
+
+```sh
+docker compose -f compose.prod.yml up -d --build
+```
+
+Migrations run automatically when the app container starts. The Postgres
+data and uploaded resumes live on named volumes (`pgdata`, `media`) and
+survive rebuilds; backups are handled by the VPS's native backup solution.
+
+### One-off management commands
+
+```sh
+docker compose -f compose.prod.yml exec web \
+  uv run --no-sync python manage.py <command>
+```

@@ -1,0 +1,9 @@
+.git
+.venv
+.env
+__pycache__
+*.py[cod]
+media
+staticfiles
+db.sqlite3
+.DS_Store

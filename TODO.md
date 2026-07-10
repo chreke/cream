@@ -33,7 +33,7 @@
           ([spec](specs/011-pipeline-board.md))
     - [x] Drag & drop: move leads between stages on the board
           ([spec](specs/012-pipeline-drag-drop.md))
-- [ ] Deployment ([spec](specs/014-deployment.md)): Dockerfile +
+- [x] Deployment ([spec](specs/014-deployment.md)): Dockerfile +
       gunicorn + whitenoise, prod compose file (app + Postgres 17),
       env-driven prod settings, nginx server block + README deploy notes
 - [x] Swedish collation: name sorting puts Å/Ä/Ö with A/A/O instead of after Z
@@ -84,3 +84,8 @@
 - [ ] Location inputs (company + candidate modals): Tom Select suggests
       existing locations, typing a brand-new location still works, field
       can be cleared, saved value round-trips into the edit modal
+- [ ] Deployment (specs/014): `docker build` succeeds, compose stack
+      comes up with a prod-style .env, site works behind nginx over
+      HTTPS (login, static assets, resume upload/download >1 MB),
+      migrations run on container start, media + pgdata survive
+      `compose down` + rebuild, `/media/...` URLs are not served

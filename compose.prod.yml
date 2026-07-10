@@ -1,0 +1,41 @@
+# Production stack (specs/014): app + Postgres behind the host's nginx.
+# Configuration comes from a `.env` file next to this file on the server;
+# see .env.example. Deploys are `docker compose -f compose.prod.yml up -d
+# --build` (migrations run on app start).
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # The database always lives in the db service; override whatever
+      # the env file says.
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+    ports:
+      # localhost only: nginx is the sole public entry.
+      - "127.0.0.1:8000:8000"
+    volumes:
+      # Uploaded resumes; served through Django auth, never by nginx.
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    # Official image; ICU-enabled, as required by the sv-SE-x-icu
+    # collation on the name fields.
+    image: postgres:17
+    restart: unless-stopped
+    env_file: .env  # POSTGRES_DB / POSTGRES_USER / POSTGRES_PASSWORD
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  media:
+  pgdata:

@@ -17,16 +17,41 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# Configuration comes from environment variables (see README). Safe by
+# default: DEBUG is off unless explicitly enabled, and production
+# (DEBUG off) requires a real SECRET_KEY.
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-fi9%-ns4$mioc)ec$%+hmjc6cde&2l$n-sd)8qj@5&9(trsc_*'
+DEBUG = os.environ.get('DEBUG') == '1'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if DEBUG:
+    SECRET_KEY = os.environ.get(
+        'SECRET_KEY',
+        'django-insecure-fi9%-ns4$mioc)ec$%+hmjc6cde&2l$n-sd)8qj@5&9(trsc_*',
+    )
+else:
+    SECRET_KEY = os.environ['SECRET_KEY']
 
-ALLOWED_HOSTS = []
+# Comma-separated, e.g. ALLOWED_HOSTS=cream.example.com
+ALLOWED_HOSTS = [
+    host for host in os.environ.get('ALLOWED_HOSTS', '').split(',') if host
+]
+
+# Comma-separated with scheme, e.g. CSRF_TRUSTED_ORIGINS=https://cream.example.com
+CSRF_TRUSTED_ORIGINS = [
+    origin
+    for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+    if origin
+]
+
+if not DEBUG:
+    # nginx terminates TLS and proxies over plain HTTP (specs/014).
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 365
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 
 # Application definition
@@ -57,6 +82,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if not DEBUG:
+    # whitenoise serves the collected static files in production; dev
+    # uses runserver's static handling.
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 ROOT_URLCONF = 'cream.urls'
 
@@ -130,6 +160,21 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# collectstatic target; baked into the Docker image and served by
+# whitenoise (specs/014). Not used in development.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+if not DEBUG:
+    STORAGES = {
+        # Resumes use the default storage; keep it when overriding.
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
 
 # Uploaded files (candidate resumes). MEDIA_URL is deliberately not routed
 # anywhere: uploads may only be fetched through authenticated views (see
