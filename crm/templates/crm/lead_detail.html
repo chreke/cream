@@ -4,6 +4,15 @@
 {% block title %}{{ lead.name }}{% endblock %}
 
 {% block content %}
+  {% if lead.is_deleted %}
+    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+      <span>Den här affären är borttagen och visas inte i pipelinen.</span>
+      <form method="post" action="{% url 'lead-restore' lead.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-secondary">Återställ</button>
+      </form>
+    </div>
+  {% endif %}
   <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
       <h1>{{ lead.name }}</h1>

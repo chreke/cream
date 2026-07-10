@@ -122,6 +122,11 @@ urlpatterns = [
     path("leads/<int:pk>/edit/", views.LeadUpdateView.as_view(), name="lead-edit"),
     path("leads/<int:pk>/stage/", views.LeadStageView.as_view(), name="lead-stage"),
     path(
+        "leads/<int:pk>/restore/",
+        views.LeadRestoreView.as_view(),
+        name="lead-restore",
+    ),
+    path(
         "leads/<int:pk>/delete/",
         views.LeadDeleteView.as_view(),
         name="lead-delete",

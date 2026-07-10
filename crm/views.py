@@ -611,7 +611,7 @@ def stage_summaries():
     only exists here."""
     rows = {
         row["stage"]: row
-        for row in Lead.objects.values("stage").annotate(
+        for row in Lead.objects.active().values("stage").annotate(
             count=Count("id"), total=Sum("expected_value")
         )
     }
@@ -632,7 +632,7 @@ class PipelineView(TemplateView):
         context["lead_create_form"] = LeadCreateForm(auto_id="lead-new-%s")
 
         leads_by_stage = {stage: [] for stage, _ in Lead.Stage.choices}
-        for lead in Lead.objects.select_related("company"):
+        for lead in Lead.objects.active().select_related("company"):
             leads_by_stage[lead.stage].append(lead)
         summaries = stage_summaries()
         context["columns"] = [
@@ -710,8 +710,24 @@ class LeadUpdateView(FlashFormErrorsMixin, UpdateView):
 
 
 class LeadDeleteView(FlashFormErrorsMixin, DeleteView):
+    """Soft delete (specs/013): the lead disappears from the pipeline but
+    stays reachable, so candidate pages can keep linking to it."""
+
     model = Lead
     success_url = reverse_lazy("pipeline")
 
+    def form_valid(self, form):
+        self.object.deleted_at = timezone.now()
+        self.object.save()
+        return redirect(self.success_url)
+
     def get_failure_url(self):
         return reverse("lead-detail", args=[self.kwargs["pk"]])
+
+
+class LeadRestoreView(View):
+    def post(self, request, pk):
+        lead = get_object_or_404(Lead, pk=pk)
+        lead.deleted_at = None
+        lead.save()
+        return redirect("lead-detail", pk=pk)

@@ -1,5 +1,6 @@
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from crm.models import Company, Contact, Lead, LeadComment
 
@@ -208,11 +209,66 @@ def test_lead_contact_options_limited_to_own_company(auth_client, company, lead)
 
 
 @pytest.mark.django_db
-def test_delete_lead_on_post(auth_client, lead):
+def test_delete_lead_soft_deletes(auth_client, lead):
     response = auth_client.post(reverse("lead-delete", args=[lead.pk]))
     assert response.status_code == 302
     assert response.url == reverse("pipeline")
-    assert not Lead.objects.filter(pk=lead.pk).exists()
+    lead.refresh_from_db()
+    assert lead.deleted_at is not None
+
+
+@pytest.mark.django_db
+def test_deleted_lead_hidden_from_pipeline_and_summaries(auth_client, company):
+    Lead.objects.create(
+        name="Borttagen affär",
+        company=company,
+        expected_value=1000,
+        deleted_at=timezone.now(),
+    )
+    content = auth_client.get(reverse("pipeline")).content.decode()
+    assert "Borttagen affär" not in content
+    assert "0 · 0 kr" in column_segment(content, "in_progress")
+
+
+@pytest.mark.django_db
+def test_deleted_lead_detail_shows_banner_and_restore(auth_client, lead):
+    lead.deleted_at = timezone.now()
+    lead.save()
+    response = auth_client.get(reverse("lead-detail", args=[lead.pk]))
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "borttagen" in content
+    assert reverse("lead-restore", args=[lead.pk]) in content
+
+
+@pytest.mark.django_db
+def test_active_lead_detail_has_no_restore(auth_client, lead):
+    content = auth_client.get(reverse("lead-detail", args=[lead.pk])).content.decode()
+    assert reverse("lead-restore", args=[lead.pk]) not in content
+
+
+@pytest.mark.django_db
+def test_restore_lead(auth_client, lead):
+    lead.deleted_at = timezone.now()
+    lead.save()
+    response = auth_client.post(reverse("lead-restore", args=[lead.pk]))
+    assert response.status_code == 302
+    assert response.url == reverse("lead-detail", args=[lead.pk])
+    lead.refresh_from_db()
+    assert lead.deleted_at is None
+    content = auth_client.get(reverse("pipeline")).content.decode()
+    assert lead.name in content
+
+
+@pytest.mark.django_db
+def test_restore_requires_login(client, lead):
+    lead.deleted_at = timezone.now()
+    lead.save()
+    response = client.post(reverse("lead-restore", args=[lead.pk]))
+    assert response.status_code == 302
+    assert response.url.startswith(reverse("login"))
+    lead.refresh_from_db()
+    assert lead.deleted_at is not None
 
 
 @pytest.mark.django_db

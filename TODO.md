@@ -43,6 +43,9 @@
       [009](specs/009-lead-candidate-picker.md))
 - [ ] Truncate long skills lists in candidate rows (e.g. on the lead
       page's candidate section) — kept out of specs/013 on purpose
+- [ ] Replace the current `<datalist>` usages (location inputs on
+      companies + candidates) with Tom Select, once it's vendored for
+      the lead–candidate picker (specs/013)
 - [ ] Transfer data from Candide
 
 ## Verify manually

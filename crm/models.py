@@ -146,6 +146,11 @@ def _delete_resume_file(sender, instance, **kwargs):
     instance.file.delete(save=False)
 
 
+class LeadQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(deleted_at__isnull=True)
+
+
 class Lead(models.Model):
     class Stage(models.TextChoices):
         IN_PROGRESS = "in_progress", "Pågående"
@@ -184,9 +189,18 @@ class Lead(models.Model):
     )
     candidates = models.ManyToManyField(Candidate, blank=True, related_name="leads")
     created_at = models.DateTimeField(auto_now_add=True)
+    # Soft delete (specs/013): hidden from the pipeline but kept so that
+    # candidate pages can still show which companies a candidate was sent to.
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    objects = LeadQuerySet.as_manager()
 
     class Meta:
         ordering = ["name"]
+
+    @property
+    def is_deleted(self):
+        return self.deleted_at is not None
 
     def __str__(self):
         return self.name
