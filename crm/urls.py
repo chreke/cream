@@ -127,6 +127,21 @@ urlpatterns = [
         name="lead-restore",
     ),
     path(
+        "leads/<int:pk>/candidates/attach/",
+        views.LeadCandidateAttachView.as_view(),
+        name="lead-candidate-attach",
+    ),
+    path(
+        "leads/<int:pk>/candidates/detach/",
+        views.LeadCandidateDetachView.as_view(),
+        name="lead-candidate-detach",
+    ),
+    path(
+        "leads/<int:pk>/candidates/search/",
+        views.LeadCandidateSearchView.as_view(),
+        name="lead-candidate-search",
+    ),
+    path(
         "leads/<int:pk>/delete/",
         views.LeadDeleteView.as_view(),
         name="lead-delete",

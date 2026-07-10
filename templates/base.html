@@ -6,6 +6,7 @@
     <title>{% block title %}{% endblock %} · Cream</title>
     <link rel="stylesheet" href="{% static 'vendor/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/cream.css' %}">
+    {% block styles %}{% endblock %}
   </head>
   <body>
     <div class="d-flex">

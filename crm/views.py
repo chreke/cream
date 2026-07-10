@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db.models import Count, F, Q, Sum
 from django.forms import Form
-from django.http import FileResponse, JsonResponse
+from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -667,7 +667,7 @@ class LeadDetailView(DetailView):
     extra_context = {"section": "pipeline"}
     queryset = Lead.objects.select_related(
         "company", "contact", "assignee"
-    ).prefetch_related("comments__user", "comments__last_edited_by")
+    ).prefetch_related("candidates", "comments__user", "comments__last_edited_by")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -731,3 +731,50 @@ class LeadRestoreView(View):
         lead.deleted_at = None
         lead.save()
         return redirect("lead-detail", pk=pk)
+
+
+def _posted_candidate(request):
+    candidate_id = request.POST.get("candidate", "")
+    if not candidate_id.isdigit():
+        raise Http404
+    return get_object_or_404(Candidate, pk=candidate_id)
+
+
+class LeadCandidateAttachView(View):
+    def post(self, request, pk):
+        lead = get_object_or_404(Lead, pk=pk)
+        lead.candidates.add(_posted_candidate(request))  # add() is idempotent
+        return redirect("lead-detail", pk=pk)
+
+
+class LeadCandidateDetachView(View):
+    def post(self, request, pk):
+        lead = get_object_or_404(Lead, pk=pk)
+        lead.candidates.remove(_posted_candidate(request))
+        return redirect("lead-detail", pk=pk)
+
+
+class LeadCandidateSearchView(View):
+    """Autocomplete backend for the Tom Select candidate picker on the
+    lead page (specs/013). Top matches only; already-attached candidates
+    are excluded."""
+
+    def get(self, request, pk):
+        lead = get_object_or_404(Lead, pk=pk)
+        query = request.GET.get("q", "").strip()
+        if not query:
+            return JsonResponse({"results": []})
+        candidates = Candidate.objects.search(query).exclude(leads=lead)[:10]
+        return JsonResponse(
+            {
+                "results": [
+                    {
+                        "id": candidate.pk,
+                        "name": candidate.name,
+                        "location": candidate.location,
+                        "skills": candidate.skills,
+                    }
+                    for candidate in candidates
+                ]
+            }
+        )
