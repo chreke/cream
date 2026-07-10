@@ -153,8 +153,10 @@ docker compose -f compose.prod.yml up -d --build
 ```
 
 Migrations run automatically when the app container starts. The Postgres
-data and uploaded resumes live on named volumes (`pgdata`, `media`) and
-survive rebuilds; backups are handled by the VPS's native backup solution.
+data and uploaded resumes live in `data/` inside the deploy directory
+(bind mounts: `data/postgres`, `data/media`) and survive rebuilds; keeping
+them there puts all state where the VPS's native backup solution sees it.
+Deploy rsyncs and the app image must exclude `data/`.
 
 ### One-off management commands
 

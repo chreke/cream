@@ -17,7 +17,10 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       # Uploaded resumes; served through Django auth, never by nginx.
-      - media:/app/media
+      # Bind mounts under ./data keep all state in the deploy directory,
+      # where the VPS's native backup can see it (and deploy rsyncs must
+      # exclude it).
+      - ./data/media:/app/media
     depends_on:
       db:
         condition: service_healthy
@@ -29,13 +32,9 @@ services:
     restart: unless-stopped
     env_file: .env  # POSTGRES_DB / POSTGRES_USER / POSTGRES_PASSWORD
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 10
-
-volumes:
-  media:
-  pgdata:

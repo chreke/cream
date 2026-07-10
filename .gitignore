@@ -7,3 +7,4 @@ staticfiles/
 media/
 *.sw[a-p]
 .DS_Store
+data/
