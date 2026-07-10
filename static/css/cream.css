@@ -52,8 +52,10 @@ h1, h2, h3, h4, h5, h6,
 /* Layout: fixed dark sidebar, header bar, cream content area. */
 
 .app-sidebar {
-  width: 16rem;
-  --bs-offcanvas-width: 16rem;
+  /* Keep width and --bs-offcanvas-width in sync: the first sizes the
+     docked desktop sidebar, the second the mobile drawer. */
+  width: 12rem;
+  --bs-offcanvas-width: 12rem;
   --bs-offcanvas-bg: var(--cream-dark);
   min-height: 100vh;
   /* !important needed: .offcanvas-lg forces transparent above the breakpoint. */
