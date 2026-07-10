@@ -6,7 +6,7 @@
 - [x] Companies 
     - [x] Model, list, create/edit ([spec](specs/004-companies-phase-1.md))
     - [x] Detail page, contacts, log contact, comments ([spec](specs/005-companies-phase-2.md))
-- [ ] Candidates
+- [x] Candidates
     - [x] Models: Candidate model + admin
     - [x] List view: table, kind filter
     - [x] Search: full-text search ranked by relevance ([spec](specs/006-candidate-search.md))
@@ -22,7 +22,7 @@
       anchor link so the edited item is scrolled into view
 - [x] Template comments leaking into rendered HTML: fixed, noted in
       CLAUDE.md, and guarded by a test
-- [ ] Leads
+- [x] Leads
     - [x] Models: Lead model + lead–candidate association + admin
           ([spec](specs/007-lead-models.md))
     - [x] CRUD: create/edit/delete modals, detail page
@@ -41,7 +41,7 @@
       soft-delete leads, real candidate counts on pipeline cards
       ([spec](specs/013-lead-candidate-connection.md); supersedes
       [009](specs/009-lead-candidate-picker.md))
-- [ ] Truncate long skills lists in candidate rows (e.g. on the lead
+- [x] Truncate long skills lists in candidate rows (e.g. on the lead
       page's candidate section) — kept out of specs/013 on purpose
 - [x] Replace the current `<datalist>` usages (location inputs on
       companies + candidates) with Tom Select, once it's vendored for

@@ -6,6 +6,7 @@ from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.text import Truncator
 from django.views import View
 from django.views.generic import (
     CreateView,
@@ -781,7 +782,10 @@ class LeadCandidateSearchView(View):
                         "id": candidate.pk,
                         "name": candidate.name,
                         "location": candidate.location,
-                        "skills": candidate.skills,
+                        # Same cap as the skills columns (truncatewords:10).
+                        "skills": Truncator(candidate.skills).words(
+                            10, truncate=" …"
+                        ),
                     }
                     for candidate in candidates
                 ]

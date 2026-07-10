@@ -60,7 +60,7 @@
           <tr>
             <td><a href="{% url 'candidate-detail' candidate.pk %}">{{ candidate.name }}</a></td>
             <td>{{ candidate.location|default:"–" }}</td>
-            <td>{{ candidate.skills|default:"–" }}</td>
+            <td>{{ candidate.skills|truncatewords:10|default:"–" }}</td>
             <td class="text-end">
               <form method="post" action="{% url 'lead-candidate-detach' lead.pk %}">
                 {% csrf_token %}
