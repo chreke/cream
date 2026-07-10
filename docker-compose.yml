@@ -9,8 +9,9 @@ services:
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
     ports:
-      # localhost only: nginx is the sole public entry.
-      - "127.0.0.1:8000:8000"
+      # localhost only: nginx is the sole public entry. PORT (from
+      # .env, default 8000) is the host port nginx proxies to.
+      - "127.0.0.1:${PORT:-8000}:8000"
     volumes:
       # Uploaded resumes; served through Django auth, never by nginx.
       # Bind mounts under ./data keep all state in the deploy directory,

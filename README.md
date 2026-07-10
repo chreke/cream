@@ -91,6 +91,7 @@ env-file support (`UV_ENV_FILE=.env` or `uv run --env-file .env`). See
 | `SECRET_KEY`          | Django secret key. Required in production (when `DEBUG` is unset). |
 | `ALLOWED_HOSTS`       | Comma-separated hostnames. Required in production. |
 | `CSRF_TRUSTED_ORIGINS`| Comma-separated origins with scheme (`https://…`). Required in production. |
+| `PORT`                | Host port the app is published on behind nginx (production compose only, default `8000`). |
 
 ## Deployment
 
@@ -140,6 +141,7 @@ In the deploy directory on the server:
        client_max_body_size 25m;
 
        location / {
+           # Must match PORT in the deploy directory's .env (default 8000).
            proxy_pass http://127.0.0.1:8000;
            proxy_set_header Host $host;
            proxy_set_header X-Forwarded-Proto $scheme;
