@@ -47,3 +47,7 @@ important that this document be kept up to date.
   reach for JavaScript only when it's clearly worth it.
 - Prefer class-based views (CBVs) over function-based views.
 - Register models in the Django Admin by default.
+- `requirements.txt` is generated from `uv.lock` for the production Docker
+  image (pip can't read uv.lock). After adding/removing/updating
+  dependencies, regenerate it and commit both files:
+  `uv export --no-dev --no-emit-project -o requirements.txt`

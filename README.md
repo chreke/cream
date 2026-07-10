@@ -126,8 +126,7 @@ In the deploy directory on the server:
 3. Create the first user account:
 
    ```sh
-   docker compose exec web \
-     uv run --no-sync python manage.py createsuperuser
+   docker compose exec web python manage.py createsuperuser
    ```
 
 4. Add an nginx server block (adjust the hostname; certbot manages the
@@ -157,6 +156,14 @@ rsync the repo tree to the deploy directory — excluding at least `.git/`,
 docker compose up -d --build
 ```
 
+The image installs dependencies with pip from `requirements.txt`, which is
+**generated** from `uv.lock` — after changing dependencies, regenerate it
+and commit both:
+
+```sh
+uv export --no-dev --no-emit-project -o requirements.txt
+```
+
 Migrations run automatically when the app container starts. The Postgres
 data and uploaded resumes live in `data/` inside the deploy directory
 (bind mounts: `data/postgres`, `data/media`) and survive rebuilds; keeping
@@ -166,6 +173,5 @@ Deploy rsyncs and the app image must exclude `data/`.
 ### One-off management commands
 
 ```sh
-docker compose exec web \
-  uv run --no-sync python manage.py <command>
+docker compose exec web python manage.py <command>
 ```
