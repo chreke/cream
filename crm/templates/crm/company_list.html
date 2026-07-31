@@ -33,8 +33,7 @@
     </div>
     <div class="col-md-3">
       <select name="tags" class="form-select" multiple data-tag-filter
-              data-placeholder="Taggar (alla måste matcha)"
-              aria-label="Taggar (alla måste matcha)">
+              data-placeholder="Taggar" aria-label="Taggar">
         {% for tag in tags %}
           <option value="{{ tag.pk }}"
                   {% if tag.pk|stringformat:"s" in current_tags %}selected{% endif %}>{{ tag.name }}</option>

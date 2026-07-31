@@ -310,7 +310,7 @@ def test_company_list_renders_tag_filter(auth_client):
     assert 'name="tags"' in content
     assert "data-tag-filter" in content
     assert re.search(rf'<option value="{python.pk}"\s+selected>', content)
-    assert "alla måste matcha" in content
+    assert 'data-placeholder="Taggar"' in content
 
 
 @pytest.mark.django_db
