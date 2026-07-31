@@ -52,6 +52,9 @@
       `import_candide` management command — dumpdata JSON + copied media,
       one-time cutover; candidates + CVs + comments, all comments/flags
       attributed to a single import user
+- [ ] Add a favicon (see favicon-draft.png)
+- [ ] Add "tech stack" or tags to companies
+- [ ] "Contact" header should not be serif
 
 ## Verify manually
 
