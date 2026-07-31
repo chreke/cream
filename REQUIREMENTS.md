@@ -23,6 +23,9 @@ document describes the functional requirements for Cream.
   submission fails server-side validation anyway, the user is redirected
   back with the errors shown as a flash message (the submitted values are
   not preserved).
+- Company and candidate list filters submit automatically when a select value
+  changes. Search text is submitted by pressing Enter; the filter button
+  remains available for explicit submission and no-JavaScript use.
 - List items (comments, contacts) have anchor links; after adding or editing
   one, redirect to its anchor so it is scrolled into view. Comments are
   edited in a modal, like other objects.

@@ -12,7 +12,7 @@
             data-bs-toggle="modal" data-bs-target="#company-create-modal">Nytt företag</button>
   </div>
 
-  <form method="get" class="row g-2 mb-4">
+  <form method="get" class="row g-2 mb-4" data-auto-submit>
     {% if current_sort != 'name' %}
       <input type="hidden" name="sort" value="{{ current_sort }}">
     {% endif %}
