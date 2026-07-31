@@ -20,14 +20,16 @@ important that this document be kept up to date.
     - Feel free to track work and add tasks to `TODO.md` at will.
 - Commit your work after you have finished a task.
 - Run tests and verify that they all pass before committing.
-- `uv` is used for local development. Important! Environment variables are
-  sourced from an `.env` file, so you may need to run `uv` with `uv run
-  --env-file .env`
+- `uv` is used for local development. Environment variables are
+  sourced from an `.env` file, but they should be picked up automatically. If
+  not, you may need to invoke `uv` with `uv run --env-file .env`
 
 ## Testing
 
 - Use test-driven development.
 - Tests are written with pytest (+ pytest-django); run them with `uv run pytest`.
+- Don't write tests for frontend functionality; prefer doing a one-off browser
+  test instead to verify the implementation.
 
 ## Browser testing
 
@@ -78,3 +80,4 @@ important that this document be kept up to date.
   image (pip can't read uv.lock). After adding/removing/updating
   dependencies, regenerate it and commit both files:
   `uv export --no-dev --no-emit-project -o requirements.txt`
+- Please add yourself as co-author when writing a commit message.
