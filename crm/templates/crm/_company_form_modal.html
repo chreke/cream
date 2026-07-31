@@ -35,6 +35,13 @@
               <label class="form-label" for="{{ form.industry.id_for_label }}">{{ form.industry.label }}</label>
               {{ form.industry }}
             </div>
+            <div class="col-12">
+              <label class="form-label" for="{{ form.tag_names.id_for_label }}">{{ form.tag_names.label }}</label>
+              {{ form.tag_names }}
+              {% for error in form.tag_names.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
             <div class="col-md-6">
               <label class="form-label" for="{{ form.homepage.id_for_label }}">{{ form.homepage.label }}</label>
               {{ form.homepage }}

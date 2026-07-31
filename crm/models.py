@@ -5,6 +5,7 @@ from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models.functions import Lower
 from django.dispatch import receiver
 
 # "simple" config: no stemming or stop words; skills, names and places
@@ -15,6 +16,25 @@ CANDIDATE_SEARCH_VECTOR = SearchVector("name", "location", "skills", config="sim
 
 class User(AbstractUser):
     pass
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=100, db_collation="sv-SE-x-icu")
+
+    class Meta:
+        ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(Lower("name"), name="unique_tag_name_ci"),
+        ]
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.strip()
+        if not self.name:
+            raise ValidationError({"name": "Taggens namn får inte vara tomt."})
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
 
 
 class Company(models.Model):
@@ -32,6 +52,7 @@ class Company(models.Model):
         related_name="companies",
     )
     last_contacted = models.DateTimeField(null=True, blank=True)
+    tags = models.ManyToManyField(Tag, blank=True, related_name="companies")
 
     class Meta:
         ordering = ["name"]

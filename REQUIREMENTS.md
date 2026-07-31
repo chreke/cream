@@ -50,6 +50,7 @@ A Company has the following information:
 - Description (Markdown)
 - Assignee (User)
 - Last contacted (timestamp)
+- Tags (zero or more reusable, user-defined labels)
 
 Required attributes are marked with an "\*"
 
@@ -65,6 +66,7 @@ It should be possible to display a list of all Companies. The following attribut
 should be displayed in the list:
 
 - Name
+- Tags (displayed beneath the name)
 - Location
 - Industry
 - Assignee (User)
@@ -81,6 +83,20 @@ It should be possible to filter Companies using free-text search. The
 free-text search should target the Name and Location fields.
 
 It should be possible to filter Companies by Assignee.
+
+It should be possible to filter Companies by one or more Tags. When several
+Tags are selected, a Company must have all of them to match. Tag filtering can
+be combined with the free-text and Assignee filters.
+
+### Tags
+
+Tags are reusable labels shared by Companies. Users can select existing Tags
+or create new ones while creating or editing a Company. Tag names are unique
+case-insensitively while preserving their display capitalization.
+
+Tags are displayed as pink, rounded pills with white text beneath the Company
+name on list and detail pages. Tags can be renamed or deleted through Django
+Admin; removing a Tag from a Company does not delete the Tag itself.
 
 ### Contacts
 

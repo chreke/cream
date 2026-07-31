@@ -1,4 +1,5 @@
 from django import forms
+from django.db import IntegrityError, transaction
 
 from .models import (
     Candidate,
@@ -8,10 +9,29 @@ from .models import (
     Contact,
     Lead,
     LeadComment,
+    Tag,
 )
 
 
+class TagNamesField(forms.MultipleChoiceField):
+    """An open multiple-choice field: Tom Select may submit new names."""
+
+    def validate(self, value):
+        if self.required and not value:
+            raise forms.ValidationError(
+                self.error_messages["required"], code="required"
+            )
+
+
 class CompanyForm(forms.ModelForm):
+    tag_names = TagNamesField(
+        label="Taggar",
+        required=False,
+        choices=(),
+        widget=forms.SelectMultiple(
+            attrs={"class": "form-select", "data-tag-input": ""}
+        ),
+    )
     homepage = forms.URLField(
         label="Hemsida",
         required=False,
@@ -50,6 +70,69 @@ class CompanyForm(forms.ModelForm):
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 6}),
             "assignee": forms.Select(attrs={"class": "form-select"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["tag_names"].choices = [
+            (tag.name, tag.name) for tag in Tag.objects.all()
+        ]
+        if self.instance.pk:
+            self.initial["tag_names"] = list(
+                self.instance.tags.values_list("name", flat=True)
+            )
+
+    def clean_tag_names(self):
+        names = []
+        seen = set()
+        max_length = Tag._meta.get_field("name").max_length
+        for raw_name in self.cleaned_data["tag_names"]:
+            name = raw_name.strip()
+            if not name:
+                continue
+            if len(name) > max_length:
+                raise forms.ValidationError(
+                    f"Taggar får vara högst {max_length} tecken långa."
+                )
+            key = name.casefold()
+            if key not in seen:
+                seen.add(key)
+                names.append(name)
+        return names
+
+    def save(self, commit=True):
+        company = super().save(commit=commit)
+        if commit:
+            self._save_tags()
+        else:
+            original_save_m2m = self.save_m2m
+
+            def save_m2m():
+                original_save_m2m()
+                self._save_tags()
+
+            self.save_m2m = save_m2m
+        return company
+
+    def _save_tags(self):
+        tags = [
+            self._get_or_create_tag(name)
+            for name in self.cleaned_data["tag_names"]
+        ]
+        self.instance.tags.set(tags)
+
+    @staticmethod
+    def _get_or_create_tag(name):
+        tag = Tag.objects.filter(name__iexact=name).first()
+        if tag is not None:
+            return tag
+
+        # The database constraint is the final guard against two users
+        # concurrently creating differently-cased versions of the same tag.
+        try:
+            with transaction.atomic():
+                return Tag.objects.create(name=name)
+        except IntegrityError:
+            return Tag.objects.get(name__iexact=name)
 
 
 class CandidateForm(forms.ModelForm):

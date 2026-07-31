@@ -12,6 +12,7 @@
         {% if company.industry and company.location %} · {% endif %}
         {% if company.location %}{{ company.location }}{% endif %}
       </p>
+      {% include "crm/_tag_pills.html" with tags=company.tags.all %}
     </div>
     <div class="d-flex gap-2">
       <button type="button" class="btn btn-outline-danger"

@@ -1,10 +1,11 @@
 import datetime
+import re
 
 import pytest
 from django.urls import reverse
 from django.utils import timezone
 
-from crm.models import Company, CompanyComment, Contact
+from crm.models import Company, CompanyComment, Contact, Tag
 
 
 @pytest.mark.django_db
@@ -41,6 +42,93 @@ def test_company_filter_by_assignee(auth_client, user, django_user_model):
     response = auth_client.get(reverse("company-list"), {"assignee": user.pk})
     companies = list(response.context["companies"])
     assert [c.name for c in companies] == ["Annas bolag"]
+
+
+@pytest.mark.django_db
+def test_company_filter_by_multiple_tags_uses_and_semantics(auth_client):
+    python = Tag.objects.create(name="Python")
+    aws = Tag.objects.create(name="AWS")
+    both = Company.objects.create(name="Båda AB")
+    both.tags.add(python, aws)
+    python_only = Company.objects.create(name="Python AB")
+    python_only.tags.add(python)
+    aws_only = Company.objects.create(name="AWS AB")
+    aws_only.tags.add(aws)
+
+    response = auth_client.get(
+        reverse("company-list"), {"tags": [python.pk, aws.pk]}
+    )
+
+    assert [company.name for company in response.context["companies"]] == [
+        "Båda AB"
+    ]
+
+
+@pytest.mark.django_db
+def test_tag_filter_combines_with_search_and_assignee(auth_client, user):
+    python = Tag.objects.create(name="Python")
+    matching = Company.objects.create(
+        name="Matchande konsultbolag", location="Stockholm", assignee=user
+    )
+    matching.tags.add(python)
+    wrong_search = Company.objects.create(name="Annan verksamhet", assignee=user)
+    wrong_search.tags.add(python)
+    wrong_assignee = Company.objects.create(name="Konsultbolag utan ansvarig")
+    wrong_assignee.tags.add(python)
+    Company.objects.create(name="Konsultbolag utan Python", assignee=user)
+
+    response = auth_client.get(
+        reverse("company-list"),
+        {"q": "konsultbolag", "assignee": user.pk, "tags": [python.pk]},
+    )
+
+    assert list(response.context["companies"]) == [matching]
+
+
+@pytest.mark.django_db
+def test_invalid_tag_filter_ids_are_ignored(auth_client):
+    python = Tag.objects.create(name="Python")
+    tagged = Company.objects.create(name="Taggat AB")
+    tagged.tags.add(python)
+    Company.objects.create(name="Utan tagg AB")
+
+    response = auth_client.get(
+        reverse("company-list"),
+        {"tags": [str(python.pk), "not-an-id", "999999"]},
+    )
+
+    assert list(response.context["companies"]) == [tagged]
+    assert response.context["current_tags"] == [str(python.pk)]
+
+
+@pytest.mark.django_db
+def test_company_free_text_search_does_not_search_tag_names(auth_client):
+    python = Tag.objects.create(name="Python")
+    company = Company.objects.create(name="Kodbolaget")
+    company.tags.add(python)
+
+    response = auth_client.get(reverse("company-list"), {"q": "Python"})
+
+    assert list(response.context["companies"]) == []
+
+
+@pytest.mark.django_db
+def test_tag_parameters_survive_sort_and_pagination_links(auth_client):
+    python = Tag.objects.create(name="Python")
+    hot = Tag.objects.create(name="Hot")
+
+    response = auth_client.get(
+        reverse("company-list"),
+        {"tags": [python.pk, hot.pk], "sort": "-name", "page": 1},
+    )
+
+    assert f"tags={python.pk}" in response.context["querystring"]
+    assert f"tags={hot.pk}" in response.context["querystring"]
+    assert "sort=-name" in response.context["querystring"]
+    assert "page=" not in response.context["querystring"]
+    assert f"tags={python.pk}" in response.context["sort_querystring"]
+    assert f"tags={hot.pk}" in response.context["sort_querystring"]
+    assert "sort=" not in response.context["sort_querystring"]
 
 
 @pytest.mark.django_db
@@ -135,6 +223,33 @@ def test_create_company_via_form(auth_client, user):
 
 
 @pytest.mark.django_db
+def test_create_company_with_existing_and_new_tags(auth_client):
+    existing = Tag.objects.create(name="Python")
+
+    response = auth_client.post(
+        reverse("company-create"),
+        {
+            "name": "Taggat AB",
+            "tag_names": [existing.name, " Hot ", "python"],
+        },
+    )
+
+    assert response.status_code == 302
+    company = Company.objects.get(name="Taggat AB")
+    assert list(company.tags.values_list("name", flat=True)) == ["Hot", "Python"]
+    assert Tag.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_invalid_company_does_not_create_tags(auth_client):
+    auth_client.post(
+        reverse("company-create"), {"name": "", "tag_names": ["Orphan"]}
+    )
+
+    assert not Tag.objects.filter(name="Orphan").exists()
+
+
+@pytest.mark.django_db
 def test_create_company_requires_name(auth_client):
     response = auth_client.post(reverse("company-create"), {"name": ""})
     assert response.status_code == 302
@@ -149,6 +264,53 @@ def test_company_list_embeds_create_modal(auth_client):
     assert 'id="company-create-modal"' in content
     assert reverse("company-create") in content
     assert 'data-bs-target="#company-create-modal"' in content
+
+
+@pytest.mark.django_db
+def test_company_forms_render_tag_editor(auth_client, company):
+    tag = Tag.objects.create(name="React")
+    company.tags.add(tag)
+
+    list_content = auth_client.get(reverse("company-list")).content.decode()
+    detail_content = auth_client.get(
+        reverse("company-detail", args=[company.pk])
+    ).content.decode()
+
+    assert "data-tag-input" in list_content
+    assert "js/company_tags.js" in list_content
+    assert "data-tag-input" in detail_content
+    assert f'<option value="{tag.name}" selected>' in detail_content
+
+
+@pytest.mark.django_db
+def test_company_list_and_detail_render_tag_pills(auth_client, company):
+    python = Tag.objects.create(name="Python")
+    hot = Tag.objects.create(name="Hot")
+    company.tags.add(python, hot)
+
+    for url in [
+        reverse("company-list"),
+        reverse("company-detail", args=[company.pk]),
+    ]:
+        content = auth_client.get(url).content.decode()
+        assert 'class="badge rounded-pill tag-pill"' in content
+        hot_pill = '<span class="badge rounded-pill tag-pill">Hot</span>'
+        python_pill = '<span class="badge rounded-pill tag-pill">Python</span>'
+        assert content.index(hot_pill) < content.index(python_pill)
+
+
+@pytest.mark.django_db
+def test_company_list_renders_tag_filter(auth_client):
+    python = Tag.objects.create(name="Python")
+
+    content = auth_client.get(
+        reverse("company-list"), {"tags": [python.pk]}
+    ).content.decode()
+
+    assert 'name="tags"' in content
+    assert "data-tag-filter" in content
+    assert re.search(rf'<option value="{python.pk}"\s+selected>', content)
+    assert "alla måste matcha" in content
 
 
 @pytest.mark.django_db
@@ -212,6 +374,23 @@ def test_edit_company_via_form(auth_client):
     assert response.status_code == 302
     company.refresh_from_db()
     assert company.name == "Nytt namn"
+
+
+@pytest.mark.django_db
+def test_edit_company_replaces_tags(auth_client):
+    old = Tag.objects.create(name="Gammal")
+    retained = Tag.objects.create(name="React")
+    company = Company.objects.create(name="Taggat AB")
+    company.tags.add(old, retained)
+
+    response = auth_client.post(
+        reverse("company-edit", args=[company.pk]),
+        {"name": company.name, "tag_names": ["react", "Ny"]},
+    )
+
+    assert response.status_code == 302
+    assert list(company.tags.values_list("name", flat=True)) == ["Ny", "React"]
+    assert Tag.objects.filter(name="Gammal").exists()  # detached, not deleted
 
 
 @pytest.mark.django_db

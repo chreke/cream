@@ -121,3 +121,8 @@ h1, h2, h3, h4, h5, h6,
   justify-content: center;
   font-weight: 600;
 }
+
+.tag-pill {
+  background-color: var(--cream-accent-hover);
+  color: #fff;
+}

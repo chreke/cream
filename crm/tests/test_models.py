@@ -3,8 +3,9 @@ from decimal import Decimal
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 
-from crm.models import Candidate, Company, Contact, Lead
+from crm.models import Candidate, Company, Contact, Lead, Tag
 
 
 def test_custom_user_model_is_active():
@@ -28,6 +29,50 @@ def test_company_requires_only_name():
     assert company.assignee is None
     assert company.last_contacted is None
     assert str(company) == "Itancan Consulting"
+
+
+@pytest.mark.django_db
+def test_tag_names_are_trimmed_and_unique_case_insensitively():
+    tag = Tag.objects.create(name=" React ")
+    assert tag.name == "React"
+    assert str(tag) == "React"
+
+    with pytest.raises(IntegrityError), transaction.atomic():
+        Tag.objects.create(name="react")
+
+
+@pytest.mark.django_db
+def test_tag_rejects_blank_name():
+    with pytest.raises(ValidationError):
+        Tag.objects.create(name="   ")
+
+
+@pytest.mark.django_db
+def test_tags_are_reusable_across_companies():
+    python = Tag.objects.create(name="Python")
+    first = Company.objects.create(name="Första AB")
+    second = Company.objects.create(name="Andra AB")
+
+    first.tags.add(python)
+    second.tags.add(python)
+
+    assert list(python.companies.order_by("name")) == [second, first]
+
+    python.delete()
+    assert Company.objects.filter(pk__in=[first.pk, second.pk]).count() == 2
+
+
+@pytest.mark.django_db
+def test_tags_are_ordered_with_swedish_collation():
+    Tag.objects.create(name="Öppen")
+    Tag.objects.create(name="Zebra")
+    Tag.objects.create(name="Alfa")
+
+    assert list(Tag.objects.values_list("name", flat=True)) == [
+        "Alfa",
+        "Zebra",
+        "Öppen",
+    ]
 
 
 @pytest.mark.django_db

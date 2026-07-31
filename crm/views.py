@@ -40,6 +40,7 @@ from .models import (
     Lead,
     LeadComment,
     Resume,
+    Tag,
 )
 from .templatetags.format_extras import sek
 
@@ -104,7 +105,9 @@ class CompanyListView(ListView):
     extra_context = {"section": "companies"}
 
     def get_queryset(self):
-        queryset = Company.objects.select_related("assignee")
+        queryset = Company.objects.select_related("assignee").prefetch_related(
+            "tags"
+        )
 
         query = self.request.GET.get("q", "").strip()
         if query:
@@ -115,6 +118,13 @@ class CompanyListView(ListView):
         assignee = self.request.GET.get("assignee", "")
         if assignee.isdigit():
             queryset = queryset.filter(assignee=assignee)
+
+        for tag_id in self.current_tag_ids():
+            # Successive filters intentionally create separate joins: the
+            # company must be related to every selected tag (AND semantics).
+            queryset = queryset.filter(tags=tag_id)
+        if self.current_tag_ids():
+            queryset = queryset.distinct()
 
         sort = self.current_sort()
         if sort == "last_contacted":
@@ -133,6 +143,22 @@ class CompanyListView(ListView):
 
         return queryset
 
+    def current_tag_ids(self):
+        if hasattr(self, "_current_tag_ids"):
+            return self._current_tag_ids
+
+        requested = []
+        for value in self.request.GET.getlist("tags"):
+            if value.isdigit() and value not in requested:
+                requested.append(value)
+        existing = set(
+            Tag.objects.filter(pk__in=requested).values_list("pk", flat=True)
+        )
+        self._current_tag_ids = [
+            value for value in requested if int(value) in existing
+        ]
+        return self._current_tag_ids
+
     def current_sort(self):
         sort = self.request.GET.get("sort", "name")
         if sort not in ("name", "-name", "last_contacted", "-last_contacted"):
@@ -142,8 +168,10 @@ class CompanyListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["users"] = get_user_model().objects.order_by("username")
+        context["tags"] = Tag.objects.all()
         context["current_q"] = self.request.GET.get("q", "")
         context["current_assignee"] = self.request.GET.get("assignee", "")
+        context["current_tags"] = self.current_tag_ids()
         sort = self.current_sort()
         context["current_sort"] = sort
         # Header links: clicking the active column reverses it, clicking an
@@ -171,7 +199,7 @@ class CompanyDetailView(DetailView):
     context_object_name = "company"
     extra_context = {"section": "companies"}
     queryset = Company.objects.select_related("assignee").prefetch_related(
-        "contacts", "comments__user", "comments__last_edited_by"
+        "tags", "contacts", "comments__user", "comments__last_edited_by"
     )
 
     def get_context_data(self, **kwargs):

@@ -53,7 +53,9 @@
       one-time cutover; candidates + CVs + comments, all comments/flags
       attributed to a single import user
 - [x] Add a favicon
-- [ ] Add "tech stack" or tags to companies
+- [x] Add reusable tags to companies, with creation in company forms,
+      brand-colored pills, and AND filtering on the company list
+      ([spec](specs/016-company-tags.md))
 - [ ] "Contact" header should not be serif
 
 ## Verify manually

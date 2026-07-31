@@ -10,6 +10,7 @@ from .models import (
     Lead,
     LeadComment,
     Resume,
+    Tag,
     User,
 )
 
@@ -24,8 +25,15 @@ class ContactInline(admin.TabularInline):
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ["name", "location", "industry", "assignee", "last_contacted"]
+    list_filter = ["tags"]
     search_fields = ["name", "location"]
+    filter_horizontal = ["tags"]
     inlines = [ContactInline]
+
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    search_fields = ["name"]
 
 
 @admin.register(Contact)
