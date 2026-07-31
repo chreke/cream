@@ -96,10 +96,9 @@ Tags are reusable labels shared by Companies. Users can select existing Tags
 or create new ones while creating or editing a Company. Tag names are unique
 case-insensitively while preserving their display capitalization.
 
-Tags are displayed as pink, rounded pills with white text in their own column
-on the Company list and beneath the Company name on its detail page. Tags can
-be renamed or deleted through Django Admin; removing a Tag from a Company does
-not delete the Tag itself.
+Tags are displayed on Company list and detail pages. Tags can be renamed or
+deleted through Django Admin; removing a Tag from a Company does not delete the
+Tag itself.
 
 ### Contacts
 

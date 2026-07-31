@@ -51,15 +51,7 @@ shared `Tag` rows.
 
 ## Display
 
-- Show a company's tags in a dedicated `Taggar` column on the company list,
-  replacing the `Bransch` column.
-- Show the same tags near the company name on the company detail page.
-- Render tags as compact, rounded pills with `--cream-accent-hover` as the
-  background and white text.
-- Order pills alphabetically and allow them to wrap. Initially show every tag;
-  truncation can be added later if real data makes rows too tall.
-- Render nothing when a company has no tags—no empty-state text is needed in
-  the table or page header.
+- Show a company's tags on the company list and company detail page.
 
 ## Company-list filtering
 
@@ -85,8 +77,7 @@ shared `Tag` rows.
 - Creating and editing companies attaches existing tags, creates new tags, and
   removes omitted associations.
 - Submitting a case variant of an existing tag reuses it.
-- Company list and detail pages render tags with the pill styling hook; the
-  list uses its dedicated `Taggar` column.
+- Company list and detail pages render their associated tags.
 - Filtering by one tag works.
 - Filtering by multiple tags uses AND semantics.
 - Tag filtering combines with search and assignee filters.
@@ -100,14 +91,12 @@ shared `Tag` rows.
 - Editing a company round-trips its selected tags correctly.
 - Case and whitespace variants do not create duplicate tags.
 - Selecting multiple list filters returns only companies carrying all of them.
-- Tag pills use the darker brand pink with white text and wrap cleanly on both
-  desktop and narrow layouts.
 - Search, assignee, tag filters, sorting, and pagination retain one another's
   query parameters.
 
 ## Out of scope
 
-- Tag colors, icons, descriptions, categories, or per-tag presentation.
+- Tag descriptions or categories.
 - A dedicated tag-management page outside Django Admin.
 - OR/any-tag filtering or an AND/OR toggle.
 - Adding tag names to free-text company search.
