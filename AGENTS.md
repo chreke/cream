@@ -20,6 +20,9 @@ important that this document be kept up to date.
     - Feel free to track work and add tasks to `TODO.md` at will.
 - Commit your work after you have finished a task.
 - Run tests and verify that they all pass before committing.
+- `uv` is used for local development. Important! Environment variables are
+  sourced from an `.env` file, so you may need to run `uv` with `uv run
+  --env-file .env`
 
 ## Testing
 
