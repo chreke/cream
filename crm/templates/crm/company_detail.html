@@ -43,11 +43,11 @@
       <div class="col-md-6 col-lg-4 col-xxl-3">
         <div class="card h-100" id="contact-{{ contact.pk }}">
           <div class="card-body">
-            <h3 class="h6 mb-1">
+            <div class="small mb-0">
               <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold"
                       data-bs-toggle="modal"
                       data-bs-target="#contact-edit-modal-{{ contact.pk }}">{{ contact.name }}</button>
-            </h3>
+            </div>
             {% if contact.role %}
               <div class="text-secondary small mb-2">{{ contact.role }}</div>
             {% endif %}
