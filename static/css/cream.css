@@ -125,4 +125,5 @@ h1, h2, h3, h4, h5, h6,
 .tag-pill {
   background-color: var(--cream-accent-hover);
   color: #fff;
+  font-weight: 400;
 }
