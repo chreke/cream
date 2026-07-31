@@ -29,6 +29,33 @@ important that this document be kept up to date.
 - Use test-driven development.
 - Tests are written with pytest (+ pytest-django); run them with `uv run pytest`.
 
+## Browser testing
+
+- Start the local development server with `uv run manage.py runserver`. If it
+  is already running, reuse it; if port 8000 is occupied, verify that the
+  running site is Cream before proceeding.
+- Confirm the site is running on localhost before logging in with the local
+  development credentials `admin` / `admin`.
+- Reload the page after code changes so the current implementation is being
+  tested.
+- Feel free to create and edit test data. Prefer editing data created during
+  the current test, and avoid deleting existing data.
+- When deletion itself must be tested, create a disposable record and delete
+  only that record.
+- Make a best-effort cleanup of test data. Only remove records known to have
+  been created by the test; remove shared records such as tags only if they
+  were created during the test and are no longer associated with anything.
+- Verify user-visible outcomes rather than implementation hooks: resulting URL
+  parameters, visible results, state persisted after reload, and computed
+  styling when relevant. Do not substitute shallow template assertions for
+  browser testing of interactive behavior.
+- Check the browser console for warnings and errors after testing JavaScript.
+- Test narrow layouts when the change affects responsive behavior.
+- Report what was browser-tested and whether any test data could not be
+  cleaned up.
+- Browser testing complements pytest; it does not replace server-side model,
+  form, view, and filtering tests.
+
 ## Tech stack
 
 - Django
