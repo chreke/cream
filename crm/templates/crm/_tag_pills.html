@@ -1,5 +1,5 @@
 {% if tags %}
-  <div class="d-flex flex-wrap gap-1 mt-1">
+  <div class="d-flex flex-wrap gap-1{% if extra_classes %} {{ extra_classes }}{% endif %}">
     {% for tag in tags %}
       <span class="badge rounded-pill tag-pill">{{ tag.name }}</span>
     {% endfor %}

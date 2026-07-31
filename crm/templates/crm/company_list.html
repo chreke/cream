@@ -53,7 +53,7 @@
              href="?{{ sort_querystring }}{% if sort_querystring %}&amp;{% endif %}sort={{ name_sort }}">Namn{% if current_sort == 'name' %} ↑{% elif current_sort == '-name' %} ↓{% endif %}</a>
         </th>
         <th scope="col">Plats</th>
-        <th scope="col">Bransch</th>
+        <th scope="col">Taggar</th>
         <th scope="col">Ansvarig</th>
         <th scope="col">
           <a class="text-decoration-none text-reset"
@@ -66,10 +66,9 @@
         <tr>
           <td>
             <a href="{% url 'company-detail' company.pk %}">{{ company.name }}</a>
-            {% include "crm/_tag_pills.html" with tags=company.tags.all %}
           </td>
           <td>{{ company.location|default:"–" }}</td>
-          <td>{{ company.industry|default:"–" }}</td>
+          <td>{% include "crm/_tag_pills.html" with tags=company.tags.all %}</td>
           <td>{{ company.assignee.username|default:"–" }}</td>
           <td>{{ company.last_contacted|date:"Y-m-d H:i"|default:"–" }}</td>
         </tr>

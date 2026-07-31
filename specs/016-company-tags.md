@@ -51,8 +51,8 @@ shared `Tag` rows.
 
 ## Display
 
-- Show a company's tags beneath its name on the company list, inside the
-  existing name cell. Do not add another table column.
+- Show a company's tags in a dedicated `Taggar` column on the company list,
+  replacing the `Bransch` column.
 - Show the same tags near the company name on the company detail page.
 - Render tags as compact, rounded pills with `--cream-accent-hover` as the
   background and white text.
@@ -85,8 +85,8 @@ shared `Tag` rows.
 - Creating and editing companies attaches existing tags, creates new tags, and
   removes omitted associations.
 - Submitting a case variant of an existing tag reuses it.
-- Company list and detail pages render tags beneath the company name with the
-  pill styling hook.
+- Company list and detail pages render tags with the pill styling hook; the
+  list uses its dedicated `Taggar` column.
 - Filtering by one tag works.
 - Filtering by multiple tags uses AND semantics.
 - Tag filtering combines with search and assignee filters.
