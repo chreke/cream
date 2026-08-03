@@ -6,10 +6,10 @@ files, and their comments. See `TODO.md` → "Transfer data from Candide".
 
 ## Approach
 
-A **dumpdata JSON fixture** exported from Candide, plus a copy of Candide's
-media directory, loaded by a custom management command in Cream. Chosen over a
-direct DB-to-DB connection so the export is a decoupled, auditable artifact and
-Cream never needs live access to Candide's database.
+A **dumpdata JSON fixture** exported from Candide, plus Candide's media
+directory copied manually into Cream, loaded by a custom management command in
+Cream. Chosen over a direct DB-to-DB connection so the export is a decoupled,
+auditable artifact and Cream never needs live access to Candide's database.
 
 This is a **one-time cutover**, not an idempotent sync: run once against a
 fresh Cream candidate table. The command therefore **aborts if candidates
@@ -51,18 +51,27 @@ auditable source artifacts for the migration.
 
 ### Import into Cream (Docker Compose)
 
-Run the import from Cream's Compose directory while its database is running.
-Replace both `/absolute/path/to/...` values with absolute **host** paths. The
-temporary one-off container mounts the Candide artifacts read-only, while
-Cream's normal media bind mount remains available at `/app/media` for the
-copied CV files.
+Before running the command, manually copy the **contents** of Candide's media
+directory into Cream's host-side `data/media/` directory. Preserve the paths
+from the fixture: a Candide file stored as `resumes/foo.pdf` must end up at
+`<Cream Compose directory>/data/media/resumes/foo.pdf`.
+
+For example, from Cream's Compose directory (the trailing slashes matter):
+
+```sh
+rsync -a /absolute/path/to/candide/media/ ./data/media/
+```
+
+Then run the import from Cream's Compose directory while its database is
+running. Replace `/absolute/path/to/candide/candide.json` with the fixture's
+absolute **host** path. The temporary one-off container mounts only the JSON
+fixture read-only; Cream's normal media bind mount exposes the manually copied
+files at `/app/media`.
 
 ```sh
 docker compose run --rm --no-deps \
     -v /absolute/path/to/candide/candide.json:/candide-import/candide.json:ro \
-    -v /absolute/path/to/candide/media:/candide-import/media:ro \
     web python manage.py import_candide /candide-import/candide.json \
-    --media /candide-import/media \
     --user <username>
 ```
 
@@ -118,10 +127,10 @@ upload name, used for display and as the download filename).
 
 - The fixture's `file` value is a stored relative path like `resumes/foo.pdf`.
   Both systems root resume storage at `resumes/…`, so the path is copied
-  **unchanged**: the file's bytes are copied from
-  `<--media>/<file>` to `<Cream MEDIA_ROOT>/<file>`, and Cream's
-  `Resume.file` is set to that same relative path. (`upload_to` only governs
-  *new* uploads; setting `.file` to an existing path directly is fine.)
+  **unchanged** into Cream's `Resume.file`. The file's bytes must already have
+  been copied manually to `<Cream MEDIA_ROOT>/<file>`. (`upload_to` only
+  governs *new* uploads; setting `.file` to an existing path directly is
+  fine.)
 - `filename` ← `os.path.basename(file)`.
 - `uploaded_at`: Candide's value is preserved. (`auto_now_add` ignores values
   on normal saves, so the command sets it explicitly / via an update after
@@ -160,8 +169,7 @@ comment and flag in the source already belongs to that same person. Point
 
 ## Command behaviour
 
-`import_candide <fixture.json> --media <dir> --user <username>
-[--allow-nonempty]`
+`import_candide <fixture.json> --user <username> [--allow-nonempty]`
 
 1. Resolve the import user; error if missing.
 2. Unless `--allow-nonempty`, abort if `Candidate.objects.exists()`.
@@ -171,27 +179,29 @@ comment and flag in the source already belongs to that same person. Point
 4. In a single `transaction.atomic()` block:
    - Create candidates, building an `old_pk → new Candidate` map.
    - Create resumes and comments, resolving their `candidate` FK through the
-     map. Copy each resume's file (see missing-file handling).
+     map. Create a resume row only when its file already exists in Cream's
+     `MEDIA_ROOT` (see missing-file handling).
 5. Print a summary: N candidates, N resumes (M skipped for missing files), N
    comments.
 
 Notes:
-- **File copies are not transactional.** DB rows roll back on error; already-
-  copied files may remain on disk. Harmless for a one-time cutover (a re-run
-  after fixing the cause overwrites them), but worth stating.
+- **The manual file transfer is not transactional.** DB rows roll back on
+  error, but the pre-copied files remain on disk. This is harmless for a
+  one-time cutover.
 - Candidate PKs are **remapped**, not forced, so the command doesn't depend on
   Cream's candidate table being empty at the DB level (only the `--allow-
   nonempty` guard enforces the intended fresh-cutover workflow).
 
 ## Tests
 
-**No automated tests.** This is a throwaway, one-time migration script that
-runs once at cutover and is then dead code; the cost of a pytest suite isn't
-warranted. Correctness is instead protected by the command's fail-loud
-behaviour — unknown `employment_type`, missing `--user`, and the non-empty
-guard all abort — plus the printed summary (candidate / resume / comment
-counts, and skipped-file count) for a manual sanity check after the run. Do a
-trial run against a scratch Cream database before the real cutover.
+A focused automated test verifies that the command creates a resume row for a
+file already present in Cream's `MEDIA_ROOT` without modifying the file, and
+that candidate, resume, and comment primary keys are remapped. Remaining
+correctness is protected by the command's fail-loud behaviour — unknown
+`employment_type`, missing `--user`, and the non-empty guard all abort — plus
+the printed summary (candidate / resume / comment counts, and skipped-file
+count) for a manual sanity check after the run. Do a trial run against a
+scratch Cream database before the real cutover.
 
 ## Out of scope
 

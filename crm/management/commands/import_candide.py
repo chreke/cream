@@ -1,16 +1,15 @@
 """One-time migration of candidate data from the old system, Candide.
 
 See specs/015-candide-migration.md. Loads a dumpdata JSON fixture exported
-from Candide plus a copy of Candide's media directory, and creates the
-corresponding Candidate / Resume / CandidateComment rows in Cream.
+from Candide after its media directory has been copied into Cream, and creates
+the corresponding Candidate / Resume / CandidateComment rows in Cream.
 
-This is throwaway, run-once code: no automated tests, fail loud on anything
-unexpected, and print a summary for a manual sanity check.
+This is throwaway, run-once code: keep its automated coverage focused, fail
+loud on anything unexpected, and print a summary for a manual sanity check.
 """
 
 import json
 import os
-import shutil
 from pathlib import Path
 
 from django.conf import settings
@@ -39,12 +38,6 @@ class Command(BaseCommand):
             help="Path to the dumpdata JSON exported from Candide.",
         )
         parser.add_argument(
-            "--media",
-            required=True,
-            help="Path to Candide's media directory (the tree containing "
-            "resumes/…). Used to copy CV files.",
-        )
-        parser.add_argument(
             "--user",
             required=True,
             help="Username of the Cream user to attribute all imported "
@@ -66,18 +59,12 @@ class Command(BaseCommand):
                 "import. Pass --allow-nonempty to override."
             )
 
-        media_root = Path(options["media"])
-        if not media_root.is_dir():
-            raise CommandError(f"--media path is not a directory: {media_root}")
-
         objects = self._load_fixture(options["fixture"])
         candidates, resumes, comments = self._group(objects)
 
         with transaction.atomic():
             id_map = self._import_candidates(candidates, import_user)
-            resumes_created, resumes_skipped = self._import_resumes(
-                resumes, id_map, media_root
-            )
+            resumes_created, resumes_skipped = self._import_resumes(resumes, id_map)
             comments_created = self._import_comments(comments, id_map, import_user)
 
         self.stdout.write(
@@ -159,7 +146,7 @@ class Command(BaseCommand):
             id_map[obj["pk"]] = candidate
         return id_map
 
-    def _import_resumes(self, resumes, id_map, media_root):
+    def _import_resumes(self, resumes, id_map):
         created = skipped = 0
         for obj in resumes:
             fields = obj["fields"]
@@ -172,20 +159,16 @@ class Command(BaseCommand):
                 continue
 
             rel_path = fields["file"]
-            src = media_root / rel_path
-            if not src.is_file():
+            file_path = Path(settings.MEDIA_ROOT) / rel_path
+            if not file_path.is_file():
                 self.stdout.write(
                     self.style.WARNING(
                         f"Skipping resume for {candidate.name}: file not "
-                        f"found: {src}"
+                        f"found: {file_path}"
                     )
                 )
                 skipped += 1
                 continue
-
-            dst = Path(settings.MEDIA_ROOT) / rel_path
-            os.makedirs(dst.parent, exist_ok=True)
-            shutil.copy2(src, dst)
 
             resume = Resume.objects.create(
                 candidate=candidate,
