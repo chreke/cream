@@ -16,23 +16,60 @@ fresh Cream candidate table. The command therefore **aborts if candidates
 already exist** (override with `--allow-nonempty`) so an accidental re-run
 can't silently duplicate everything.
 
-### On the Candide VPS
+### Export from Candide (Docker Compose)
+
+Candide and Cream run as separate Compose projects in sibling directories on
+the same VPS. Run the export from Candide's Compose directory:
 
 ```sh
 # App label is whatever Candide uses; dumping the whole app is fine.
-python manage.py dumpdata candidates --indent 2 > candide.json
+docker compose exec -T web \
+    python manage.py dumpdata candidates --indent 2 > candide.json
 ```
 
-Copy `candide.json` and Candide's media directory (the tree containing
-`resumes/…`) over to where the Cream command can read them.
+`-T` disables the pseudo-TTY so its formatting cannot leak into the redirected
+JSON. The shell redirection happens on the host, so this creates
+`candide.json` in Candide's Compose directory, not inside the container.
 
-### In Cream
+Candide's media is bind-mounted from a host directory. Find the media path
+inside the container and the corresponding host path with:
 
 ```sh
-python manage.py import_candide candide.json \
-    --media /path/to/candide/media \
+docker compose exec -T web python manage.py shell -c \
+    'from django.conf import settings; print(settings.MEDIA_ROOT)'
+
+docker inspect "$(docker compose ps -q web)" \
+    --format '{{range .Mounts}}{{println .Source "->" .Destination}}{{end}}'
+```
+
+In the second command's output, use the source (left-hand) path whose
+destination matches `MEDIA_ROOT`. That source is the Candide media directory
+used below; it must be the directory that directly contains `resumes/…`.
+
+Keep `candide.json` together with access to that media directory. They are the
+auditable source artifacts for the migration.
+
+### Import into Cream (Docker Compose)
+
+Run the import from Cream's Compose directory while its database is running.
+Replace both `/absolute/path/to/...` values with absolute **host** paths. The
+temporary one-off container mounts the Candide artifacts read-only, while
+Cream's normal media bind mount remains available at `/app/media` for the
+copied CV files.
+
+```sh
+docker compose run --rm --no-deps \
+    -v /absolute/path/to/candide/candide.json:/candide-import/candide.json:ro \
+    -v /absolute/path/to/candide/media:/candide-import/media:ro \
+    web python manage.py import_candide /candide-import/candide.json \
+    --media /candide-import/media \
     --user <username>
 ```
+
+`--no-deps` relies on Cream's existing `db` service; omit it if the Cream
+stack is not already running and Compose should start dependencies. `--rm`
+removes only the temporary command container when it finishes. It does not
+remove either application's persistent data.
 
 ## The two schemas
 
