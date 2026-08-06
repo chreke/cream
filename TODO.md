@@ -1,5 +1,7 @@
 # TODO
 
+- [x] Replace candidate location full-text search with an exact location
+      dropdown filter ([spec](specs/006-candidate-search.md))
 - [x] Simplify candidate exact-match ranking to score the whole query once
       ([spec](specs/006-candidate-search.md))
 - [x] Add prefix matching to candidate search, with exact-word matches ranked

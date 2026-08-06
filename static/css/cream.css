@@ -63,6 +63,12 @@ h1, h2, h3, h4, h5, h6,
   flex-shrink: 0;
 }
 
+.app-content {
+  /* Let wide tables scroll inside .table-responsive instead of expanding
+     this flex item beyond the viewport. */
+  min-width: 0;
+}
+
 .app-sidebar .app-brand {
   color: #fff;
   text-decoration: none;

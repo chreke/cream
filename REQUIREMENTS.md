@@ -192,11 +192,14 @@ the following attributes:
 - Skills (truncated if too long)
 
 It should be possible to filter candidates using free-text search. The
-free-text search should target the Name, Location and Skills fields.
+free-text search should target the Name and Skills fields.
 Search matches the beginning of words (all words in the query must match).
 Results matching every query word exactly rank ahead of results that require
 prefix matching, followed by relevance. See `specs/006-candidate-search.md`
 for details.
+
+Candidates can also be filtered by an exact Location using a drop-down of
+locations currently used by candidates.
 
 You should also be able to filter candidates based on their Kind. Note that you
 should only be able to filter by "Freelancer" or "Employee"; candidates that

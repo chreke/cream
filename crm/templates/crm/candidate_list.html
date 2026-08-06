@@ -13,63 +13,73 @@
   </div>
 
   <form method="get" class="row g-2 mb-4" data-auto-submit>
-    <div class="col-md-5">
+    <div class="col-md-4">
       <input type="search" name="q" value="{{ current_q }}" class="form-control"
              placeholder="Sök kandidater..." aria-label="Sök kandidater">
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
+      <select name="location" class="form-select" aria-label="Plats">
+        <option value="">Alla platser</option>
+        {% for location in candidate_location_options %}
+          <option value="{{ location }}" {% if current_location == location %}selected{% endif %}>{{ location }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
       <select name="kind" class="form-select" aria-label="Typ">
         <option value="">Alla typer</option>
         <option value="freelancer" {% if current_kind == "freelancer" %}selected{% endif %}>Frilansare</option>
         <option value="employee" {% if current_kind == "employee" %}selected{% endif %}>Anställd</option>
       </select>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
       <button type="submit" class="btn btn-outline-secondary">Filtrera</button>
     </div>
   </form>
 
-  <table class="table table-hover bg-white">
-    <thead>
-      <tr>
-        <th scope="col">Namn</th>
-        <th scope="col">Plats</th>
-        <th scope="col">Typ</th>
-        <th scope="col">LinkedIn</th>
-        <th scope="col">Kompetenser</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for candidate in candidates %}
+  <div class="table-responsive">
+    <table class="table table-hover bg-white">
+      <thead>
         <tr>
-          <td>
-            <a href="{% url 'candidate-detail' candidate.pk %}">{{ candidate.name }}</a>
-            {% if candidate.is_flagged %}
-              <span class="ms-1" title="Flaggad">🚩<span class="visually-hidden">Flaggad</span></span>
-            {% endif %}
-          </td>
-          <td>{{ candidate.location|default:"–" }}</td>
-          <td>{{ candidate.get_kind_display }}</td>
-          <td>
-            {% if candidate.linkedin_url %}
-              <a href="{{ candidate.linkedin_url }}" aria-label="LinkedIn: {{ candidate.name }}">
-                {% include "icons/linkedin.svg" %}
-              </a>
-            {% else %}
-              –
-            {% endif %}
-          </td>
-          <td>{{ candidate.skills|truncatewords:10|default:"–" }}</td>
+          <th scope="col">Namn</th>
+          <th scope="col">Plats</th>
+          <th scope="col">Typ</th>
+          <th scope="col">LinkedIn</th>
+          <th scope="col">Kompetenser</th>
         </tr>
-      {% empty %}
-        <tr>
-          <td colspan="5" class="text-secondary text-center py-4">
-            Inga kandidater att visa.
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {% for candidate in candidates %}
+          <tr>
+            <td>
+              <a href="{% url 'candidate-detail' candidate.pk %}">{{ candidate.name }}</a>
+              {% if candidate.is_flagged %}
+                <span class="ms-1" title="Flaggad">🚩<span class="visually-hidden">Flaggad</span></span>
+              {% endif %}
+            </td>
+            <td>{{ candidate.location|default:"–" }}</td>
+            <td>{{ candidate.get_kind_display }}</td>
+            <td>
+              {% if candidate.linkedin_url %}
+                <a href="{{ candidate.linkedin_url }}" aria-label="LinkedIn: {{ candidate.name }}">
+                  {% include "icons/linkedin.svg" %}
+                </a>
+              {% else %}
+                –
+              {% endif %}
+            </td>
+            <td>{{ candidate.skills|truncatewords:10|default:"–" }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5" class="text-secondary text-center py-4">
+              Inga kandidater att visa.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
   {% include "crm/_candidate_form_modal.html" with form=candidate_create_form %}
 

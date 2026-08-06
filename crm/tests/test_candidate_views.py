@@ -1,7 +1,7 @@
 import pytest
 from django.urls import reverse
 
-from crm.models import Candidate, CandidateComment
+from crm.models import Candidate, CandidateComment, Company
 
 
 @pytest.mark.django_db
@@ -56,16 +56,34 @@ def test_candidate_list_kind_filter_always_includes_both(
 
 
 @pytest.mark.django_db
-def test_candidate_list_search_combines_with_kind_filter(auth_client):
+def test_candidate_list_search_combines_with_kind_and_location_filters(auth_client):
     Candidate.objects.create(
-        name="Sara Lind", kind=Candidate.Kind.FREELANCER, skills="Java"
+        name="Sara Lind",
+        kind=Candidate.Kind.FREELANCER,
+        location="Stockholm",
+        skills="Java",
     )
-    Candidate.objects.create(name="Erik Ek", kind=Candidate.Kind.EMPLOYEE, skills="Java")
     Candidate.objects.create(
-        name="Maria Malm", kind=Candidate.Kind.EMPLOYEE, skills="JavaScript"
+        name="Erik Ek",
+        kind=Candidate.Kind.EMPLOYEE,
+        location="Stockholm",
+        skills="Java",
+    )
+    Candidate.objects.create(
+        name="Maria Malm",
+        kind=Candidate.Kind.EMPLOYEE,
+        location="Stockholm",
+        skills="JavaScript",
+    )
+    Candidate.objects.create(
+        name="Ove Olsson",
+        kind=Candidate.Kind.EMPLOYEE,
+        location="Göteborg",
+        skills="Java",
     )
     response = auth_client.get(
-        reverse("candidate-list"), {"q": "java", "kind": "employee"}
+        reverse("candidate-list"),
+        {"q": "java", "kind": "employee", "location": "Stockholm"},
     )
     assert [c.name for c in response.context["candidates"]] == [
         "Erik Ek",
@@ -74,7 +92,40 @@ def test_candidate_list_search_combines_with_kind_filter(auth_client):
 
     # Blank query is ignored.
     response = auth_client.get(reverse("candidate-list"), {"q": "   "})
-    assert len(response.context["candidates"]) == 3
+    assert len(response.context["candidates"]) == 4
+
+
+@pytest.mark.django_db
+def test_candidate_list_location_filter_is_exact_and_has_candidate_options(
+    auth_client,
+):
+    Candidate.objects.create(
+        name="Sara Lind", kind=Candidate.Kind.BOTH, location="Stockholm"
+    )
+    Candidate.objects.create(
+        name="Erik Ek", kind=Candidate.Kind.BOTH, location="Stockholms län"
+    )
+    Candidate.objects.create(
+        name="Anna Alm", kind=Candidate.Kind.BOTH, location="Göteborg"
+    )
+    Company.objects.create(name="Malmöbolaget", location="Malmö")
+
+    response = auth_client.get(
+        reverse("candidate-list"), {"location": "Stockholm"}
+    )
+
+    assert [candidate.name for candidate in response.context["candidates"]] == [
+        "Sara Lind"
+    ]
+    assert response.context["current_location"] == "Stockholm"
+    assert response.context["candidate_location_options"] == [
+        "Göteborg",
+        "Stockholm",
+        "Stockholms län",
+    ]
+    content = response.content.decode()
+    assert '<select name="location"' in content
+    assert '<option value="Stockholm" selected>' in content
 
 
 @pytest.mark.django_db

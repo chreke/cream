@@ -217,7 +217,7 @@ def test_search_ranks_exact_words_ahead_of_prefix_only_matches():
 
 
 @pytest.mark.django_db
-def test_search_matches_partially_typed_name_location_and_skills():
+def test_search_matches_partially_typed_name_and_skills_but_not_location():
     Candidate.objects.create(
         name="Kristoffer Andersson",
         kind=Candidate.Kind.BOTH,
@@ -226,12 +226,12 @@ def test_search_matches_partially_typed_name_location_and_skills():
     )
 
     assert Candidate.objects.search("kristo").exists()
-    assert Candidate.objects.search("stockh").exists()
     assert Candidate.objects.search("javas").exists()
+    assert not Candidate.objects.search("stockh").exists()
 
 
 @pytest.mark.django_db
-def test_search_targets_name_location_and_skills():
+def test_search_targets_name_and_skills_only():
     Candidate.objects.create(name="Maria Malm", kind=Candidate.Kind.BOTH)
     Candidate.objects.create(
         name="Erik Ek", kind=Candidate.Kind.BOTH, location="Malmö"
@@ -242,12 +242,9 @@ def test_search_targets_name_location_and_skills():
     Candidate.objects.create(
         name="Ali Amir", kind=Candidate.Kind.BOTH, description="Kan Python."
     )
-    assert [c.name for c in Candidate.objects.search("malm")] == [
-        "Maria Malm",
-        "Erik Ek",
-    ]
-    assert [c.name for c in Candidate.objects.search("malmö")] == ["Erik Ek"]
-    # Description is not searched.
+    assert [c.name for c in Candidate.objects.search("malm")] == ["Maria Malm"]
+    # Location and description are not searched.
+    assert not Candidate.objects.search("malmö").exists()
     assert [c.name for c in Candidate.objects.search("python")] == ["Sara Lind"]
 
 
@@ -262,7 +259,7 @@ def test_search_requires_all_words_to_match():
     Candidate.objects.create(
         name="Erik Ek", kind=Candidate.Kind.BOTH, location="Göteborg", skills="Python"
     )
-    results = Candidate.objects.search("python stockholm")
+    results = Candidate.objects.search("python sara")
     assert [c.name for c in results] == ["Sara Lind"]
 
 

@@ -56,6 +56,18 @@ def location_options():
     )
 
 
+def candidate_location_options():
+    """Distinct candidate locations for the candidate-list filter."""
+    return sorted(
+        set(
+            Candidate.objects.exclude(location="").values_list(
+                "location", flat=True
+            )
+        ),
+        key=str.casefold,
+    )
+
+
 def company_detail_context(company):
     """Context needed to render the company detail page and its modals.
 
@@ -389,6 +401,10 @@ class CandidateListView(ListView):
     def get_queryset(self):
         queryset = Candidate.objects.all()
 
+        location = self.request.GET.get("location", "")
+        if location:
+            queryset = queryset.filter(location=location)
+
         kind = self.request.GET.get("kind", "")
         if kind in (Candidate.Kind.FREELANCER, Candidate.Kind.EMPLOYEE):
             # "Both" candidates match either kind, so they always show.
@@ -403,7 +419,9 @@ class CandidateListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["current_kind"] = self.request.GET.get("kind", "")
+        context["current_location"] = self.request.GET.get("location", "")
         context["current_q"] = self.request.GET.get("q", "")
+        context["candidate_location_options"] = candidate_location_options()
 
         # Query string without "page", for pagination links.
         params = self.request.GET.copy()

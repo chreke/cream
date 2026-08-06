@@ -12,10 +12,10 @@ from django.db import models
 from django.db.models.functions import Lower
 from django.dispatch import receiver
 
-# "simple" config: no stemming or stop words; skills, names and places
-# should match literally. Must stay identical to the GinIndex expression
-# in Candidate.Meta for searches to use the index.
-CANDIDATE_SEARCH_VECTOR = SearchVector("name", "location", "skills", config="simple")
+# "simple" config: no stemming or stop words; skills and names should match
+# literally. Must stay identical to the GinIndex expression in Candidate.Meta
+# for searches to use the index.
+CANDIDATE_SEARCH_VECTOR = SearchVector("name", "skills", config="simple")
 
 
 class User(AbstractUser):
@@ -85,7 +85,7 @@ class Contact(models.Model):
 
 class CandidateQuerySet(models.QuerySet):
     def search(self, query):
-        """Word-prefix search over name/location/skills, most relevant first.
+        """Word-prefix search over name/skills, most relevant first.
 
         All query terms must match. Exact-word matches rank ahead of
         prefix-only matches, followed by full-text relevance and name.
