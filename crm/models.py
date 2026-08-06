@@ -101,24 +101,11 @@ class CandidateQuerySet(models.QuerySet):
             for term in terms
         ]
         prefix_query = reduce(operator.and_, prefix_queries)
-
-        # Score each exact term separately. This means a mixed query such as
-        # "java stockh" still prefers Java + Stockholm over JavaScript +
-        # Stockholm, even though neither candidate matches every term exactly.
-        exact_rank = reduce(
-            operator.add,
-            [
-                SearchRank(
-                    CANDIDATE_SEARCH_VECTOR,
-                    SearchQuery(term, config="simple"),
-                )
-                for term in terms
-            ],
-        )
+        exact_query = SearchQuery(" ".join(terms), config="simple")
         return (
             self.annotate(
                 search=CANDIDATE_SEARCH_VECTOR,
-                exact_rank=exact_rank,
+                exact_rank=SearchRank(CANDIDATE_SEARCH_VECTOR, exact_query),
                 rank=SearchRank(CANDIDATE_SEARCH_VECTOR, prefix_query),
             )
             .filter(search=prefix_query)

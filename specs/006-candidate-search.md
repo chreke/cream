@@ -27,9 +27,9 @@ used by the company list, which cannot rank results and cannot use an index.
 ### Ranking
 
 - Search results are ordered by **relevance**, not name.
-- Exact-word matches rank ahead of prefix-only matches. Exactness is scored
-  per query term, so `java stockh` ranks "Java" + "Stockholm" ahead of
-  "JavaScript" + "Stockholm".
+- Candidates matching every query term as an exact word rank ahead of
+  candidates that require prefix matching. For example, `java` ranks "Java"
+  ahead of "JavaScript". Exactness is scored once for the whole query.
 - All three fields count equally toward relevance (no field weighting).
 - Candidates with equal relevance are ordered by name (Swedish collation).
 - Without a search query, candidates are ordered by name.

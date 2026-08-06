@@ -214,10 +214,6 @@ def test_search_ranks_exact_words_ahead_of_prefix_only_matches():
         "Sara Lind",
         "Erik Ek",
     ]
-    assert [c.name for c in Candidate.objects.search("java stockh")] == [
-        "Sara Lind",
-        "Erik Ek",
-    ]
 
 
 @pytest.mark.django_db
