@@ -184,7 +184,7 @@ def test_lead_deletion_behaviors(company, user):
 
 
 @pytest.mark.django_db
-def test_search_matches_whole_words_case_insensitively():
+def test_search_matches_word_prefixes_case_insensitively():
     Candidate.objects.create(
         name="Sara Lind", kind=Candidate.Kind.BOTH, skills="Java, Spring"
     )
@@ -192,7 +192,46 @@ def test_search_matches_whole_words_case_insensitively():
         name="Erik Ek", kind=Candidate.Kind.BOTH, skills="JavaScript, React"
     )
     results = Candidate.objects.search("JAVA")
-    assert [c.name for c in results] == ["Sara Lind"]  # no JavaScript near-miss
+    assert [c.name for c in results] == ["Sara Lind", "Erik Ek"]
+
+
+@pytest.mark.django_db
+def test_search_ranks_exact_words_ahead_of_prefix_only_matches():
+    Candidate.objects.create(
+        name="Sara Lind",
+        kind=Candidate.Kind.BOTH,
+        location="Stockholm",
+        skills="Java",
+    )
+    Candidate.objects.create(
+        name="Erik Ek",
+        kind=Candidate.Kind.BOTH,
+        location="Stockholm",
+        skills="JavaScript, JavaScript, JavaScript",
+    )
+
+    assert [c.name for c in Candidate.objects.search("java")] == [
+        "Sara Lind",
+        "Erik Ek",
+    ]
+    assert [c.name for c in Candidate.objects.search("java stockh")] == [
+        "Sara Lind",
+        "Erik Ek",
+    ]
+
+
+@pytest.mark.django_db
+def test_search_matches_partially_typed_name_location_and_skills():
+    Candidate.objects.create(
+        name="Kristoffer Andersson",
+        kind=Candidate.Kind.BOTH,
+        location="Stockholm",
+        skills="JavaScript",
+    )
+
+    assert Candidate.objects.search("kristo").exists()
+    assert Candidate.objects.search("stockh").exists()
+    assert Candidate.objects.search("javas").exists()
 
 
 @pytest.mark.django_db
@@ -207,7 +246,10 @@ def test_search_targets_name_location_and_skills():
     Candidate.objects.create(
         name="Ali Amir", kind=Candidate.Kind.BOTH, description="Kan Python."
     )
-    assert [c.name for c in Candidate.objects.search("malm")] == ["Maria Malm"]
+    assert [c.name for c in Candidate.objects.search("malm")] == [
+        "Maria Malm",
+        "Erik Ek",
+    ]
     assert [c.name for c in Candidate.objects.search("malmö")] == ["Erik Ek"]
     # Description is not searched.
     assert [c.name for c in Candidate.objects.search("python")] == ["Sara Lind"]

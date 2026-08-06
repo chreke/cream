@@ -1,3 +1,7 @@
+import operator
+import re
+from functools import reduce
+
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.indexes import GinIndex
@@ -81,19 +85,44 @@ class Contact(models.Model):
 
 class CandidateQuerySet(models.QuerySet):
     def search(self, query):
-        """Whole-word search over name/location/skills, most relevant first.
+        """Word-prefix search over name/location/skills, most relevant first.
 
-        See specs/006-candidate-search.md: all words must match (AND),
-        no prefix/substring matching, ties broken by name.
+        All query terms must match. Exact-word matches rank ahead of
+        prefix-only matches, followed by full-text relevance and name.
         """
-        search_query = SearchQuery(query, config="simple")
+        # Using only letter/digit runs keeps the raw tsquery syntax below safe
+        # and mirrors how PostgreSQL tokenizes punctuation-separated input.
+        terms = re.findall(r"[^\W_]+", query, flags=re.UNICODE)
+        if not terms:
+            return self.none()
+
+        prefix_queries = [
+            SearchQuery(f"{term}:*", config="simple", search_type="raw")
+            for term in terms
+        ]
+        prefix_query = reduce(operator.and_, prefix_queries)
+
+        # Score each exact term separately. This means a mixed query such as
+        # "java stockh" still prefers Java + Stockholm over JavaScript +
+        # Stockholm, even though neither candidate matches every term exactly.
+        exact_rank = reduce(
+            operator.add,
+            [
+                SearchRank(
+                    CANDIDATE_SEARCH_VECTOR,
+                    SearchQuery(term, config="simple"),
+                )
+                for term in terms
+            ],
+        )
         return (
             self.annotate(
                 search=CANDIDATE_SEARCH_VECTOR,
-                rank=SearchRank(CANDIDATE_SEARCH_VECTOR, search_query),
+                exact_rank=exact_rank,
+                rank=SearchRank(CANDIDATE_SEARCH_VECTOR, prefix_query),
             )
-            .filter(search=search_query)
-            .order_by("-rank", "name")
+            .filter(search=prefix_query)
+            .order_by("-exact_rank", "-rank", "name")
         )
 
 

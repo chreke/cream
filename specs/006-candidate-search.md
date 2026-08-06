@@ -13,19 +13,23 @@ used by the company list, which cannot rank results and cannot use an index.
 - A single free-text query input (`q`) on the candidates list page.
 - The search targets **Name**, **Location** and **Skills**. Description is
   deliberately excluded.
-- Matching is **word-based and exact**: a query word matches whole words
-  (tokens) in the indexed fields. `java` matches "Java" but *not*
-  "JavaScript"; `stockh` matches nothing. No prefix or substring matching.
+- Matching is **word-prefix based**: a query word matches the beginning of
+  whole words (tokens) in the indexed fields. `java` matches both "Java" and
+  "JavaScript", and `stockh` matches "Stockholm". It does not provide
+  arbitrary substring matching: `script` does not match "JavaScript".
 - Matching is case-insensitive. No language stemming is applied (skills,
   names and places should match literally).
-- **All query words must match** (AND semantics). Each word may match in any
-  of the three fields: `python stockholm` finds candidates with "Python" in
-  skills and "Stockholm" in location.
+- **All query words must match** (AND semantics), either exactly or as a word
+  prefix. Each word may match in any of the three fields: `python stockh`
+  finds candidates with "Python" in skills and "Stockholm" in location.
 - An empty or blank query returns all candidates.
 
 ### Ranking
 
 - Search results are ordered by **relevance**, not name.
+- Exact-word matches rank ahead of prefix-only matches. Exactness is scored
+  per query term, so `java stockh` ranks "Java" + "Stockholm" ahead of
+  "JavaScript" + "Stockholm".
 - All three fields count equally toward relevance (no field weighting).
 - Candidates with equal relevance are ordered by name (Swedish collation).
 - Without a search query, candidates are ordered by name.
@@ -43,10 +47,9 @@ used by the company list, which cannot rank results and cannot use an index.
 
 ## Out of scope (considered and deferred)
 
-- **Prefix / near-miss matching**: including "JavaScript" (ranked lower)
-  in results for `java`, and matching partially typed words like `stockh`.
-  Decided against to keep the first version simple; revisit if exact-word
-  matching proves too strict in practice.
+- **Substring, fuzzy and typo-tolerant matching**: `script` does not match
+  "JavaScript", and misspellings are not corrected. These would require a
+  separate trigram-based search strategy and index.
 - **Upgrading company search**: the company list keeps its `icontains`
   search for now.
 - **Searching Description**: cheap to add later at a low weight if needed.

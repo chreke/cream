@@ -67,7 +67,10 @@ def test_candidate_list_search_combines_with_kind_filter(auth_client):
     response = auth_client.get(
         reverse("candidate-list"), {"q": "java", "kind": "employee"}
     )
-    assert [c.name for c in response.context["candidates"]] == ["Erik Ek"]
+    assert [c.name for c in response.context["candidates"]] == [
+        "Erik Ek",
+        "Maria Malm",
+    ]
 
     # Blank query is ignored.
     response = auth_client.get(reverse("candidate-list"), {"q": "   "})
