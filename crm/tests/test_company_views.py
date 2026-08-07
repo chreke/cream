@@ -479,21 +479,75 @@ def test_contact_edit_and_delete_on_post(auth_client, company):
 
 
 @pytest.mark.django_db
-def test_log_contact_sets_last_contacted(auth_client, company):
-    response = auth_client.post(
-        reverse("company-log-contact", args=[company.pk]), {"comment": ""}
+def test_log_contact_form_defaults_to_current_stockholm_datetime(
+    auth_client, company, monkeypatch
+):
+    frozen_utc = datetime.datetime(
+        2026, 8, 7, 7, 24, 37, tzinfo=datetime.UTC
     )
+    monkeypatch.setattr(timezone, "now", lambda: frozen_utc)
+
+    content = auth_client.get(
+        reverse("company-detail", args=[company.pk])
+    ).content.decode()
+
+    assert 'type="datetime-local"' in content
+    assert 'value="2026-08-07T09:24"' in content
+    assert 'max="2026-08-07T09:24"' in content
+
+
+@pytest.mark.django_db
+def test_log_contact_sets_last_contacted_to_selected_datetime(auth_client, company):
+    contacted_at = timezone.localtime(timezone.now() - datetime.timedelta(days=1))
+    contacted_at = contacted_at.replace(second=0, microsecond=0)
+
+    response = auth_client.post(
+        reverse("company-log-contact", args=[company.pk]),
+        {
+            "contacted_at": contacted_at.strftime("%Y-%m-%dT%H:%M"),
+            "comment": "",
+        },
+    )
+
     assert response.status_code == 302
     company.refresh_from_db()
-    assert company.last_contacted is not None
+    assert company.last_contacted == contacted_at
+    assert company.comments.count() == 0
+
+
+@pytest.mark.django_db
+def test_log_contact_rejects_future_datetime(auth_client, company):
+    previous_contact = timezone.now() - datetime.timedelta(days=2)
+    company.last_contacted = previous_contact
+    company.save(update_fields=["last_contacted"])
+    future_contact = timezone.localtime(
+        timezone.now() + datetime.timedelta(days=1)
+    ).replace(second=0, microsecond=0)
+
+    response = auth_client.post(
+        reverse("company-log-contact", args=[company.pk]),
+        {
+            "contacted_at": future_contact.strftime("%Y-%m-%dT%H:%M"),
+            "comment": "",
+        },
+        follow=True,
+    )
+
+    assert "Datum och tid kan inte vara i framtiden." in response.content.decode()
+    company.refresh_from_db()
+    assert company.last_contacted == previous_contact
     assert company.comments.count() == 0
 
 
 @pytest.mark.django_db
 def test_log_contact_with_comment_adds_comment(auth_client, user, company):
+    contacted_at = timezone.localtime(timezone.now() - datetime.timedelta(days=1))
     auth_client.post(
         reverse("company-log-contact", args=[company.pk]),
-        {"comment": "Ringde och bokade möte."},
+        {
+            "contacted_at": contacted_at.strftime("%Y-%m-%dT%H:%M"),
+            "comment": "Ringde och bokade möte.",
+        },
     )
     comment = company.comments.get()
     assert comment.content == "Ringde och bokade möte."

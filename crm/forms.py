@@ -1,5 +1,6 @@
 from django import forms
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from .models import (
     Candidate,
@@ -309,8 +310,34 @@ class ResumeForm(forms.Form):
 
 
 class LogContactForm(forms.Form):
+    DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
+
+    contacted_at = forms.DateTimeField(
+        label="Datum och tid",
+        input_formats=[DATETIME_FORMAT],
+        widget=forms.DateTimeInput(
+            format=DATETIME_FORMAT,
+            attrs={"class": "form-control", "type": "datetime-local"},
+        ),
+    )
     comment = forms.CharField(
         label="Kommentar (valfritt)",
         required=False,
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        current_local_time = timezone.localtime().replace(second=0, microsecond=0)
+        self.initial.setdefault("contacted_at", current_local_time)
+        self.fields["contacted_at"].widget.attrs["max"] = (
+            current_local_time.strftime(self.DATETIME_FORMAT)
+        )
+
+    def clean_contacted_at(self):
+        contacted_at = self.cleaned_data["contacted_at"]
+        if contacted_at > timezone.now():
+            raise forms.ValidationError(
+                "Datum och tid kan inte vara i framtiden."
+            )
+        return contacted_at

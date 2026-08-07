@@ -57,9 +57,11 @@ A Company has the following information:
 
 Required attributes are marked with an "\*"
 
-A User can log that a Company was contacted; this updates the "Last contacted"
-timestamp to the current time. The User may also leave a Comment as part of
-logging a contact.
+A User can log that a Company was contacted. The contact timestamp defaults to
+the current local date and time, may be changed to an earlier date and time, and
+must not be in the future. Logging the contact updates "Last contacted" to the
+selected timestamp. The User may also leave a Comment as part of logging a
+contact.
 
 It should be possible to create, edit and delete companies.
 
@@ -276,6 +278,7 @@ Comments can be made on both Companies, Leads and Candidates.
 A comment has the following attributes:
 
 - Content (Markdown)
+- Type (`Comment` or `Contact`)
 - User (who made the comment)
 - Created at (timestamp)
 - Edited at (timestamp)
@@ -284,4 +287,10 @@ A comment has the following attributes:
 Comments can be created, updated and deleted. A User can delete / edit comments
 made by other users.
 
-When displaying a comments, it should show who they were made / edited by.
+When displaying comments, it should show who they were made / edited by.
+
+Comments created through the ordinary comment form have type `Comment`.
+Logging contact with a Company always creates a comment of type `Contact`; its
+content begins with the selected contact timestamp and includes any optional
+text entered by the User. Contact comments are marked with a phone icon in the
+comment feed. See `specs/017-typed-contact-comments.md`.

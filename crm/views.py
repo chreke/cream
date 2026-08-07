@@ -297,8 +297,8 @@ class LogContactView(FlashFormErrorsMixin, FormView):
 
     def form_valid(self, form):
         company = get_object_or_404(Company, pk=self.kwargs["company_pk"])
-        company.last_contacted = timezone.now()
-        company.save()
+        company.last_contacted = form.cleaned_data["contacted_at"]
+        company.save(update_fields=["last_contacted"])
         if form.cleaned_data["comment"]:
             CompanyComment.objects.create(
                 company=company,
