@@ -24,6 +24,18 @@ def test_candidate_list_shows_candidates_in_table(auth_client):
 
 
 @pytest.mark.django_db
+def test_candidate_list_shows_total_candidate_count(auth_client):
+    Candidate.objects.create(name="Sara Lind", kind=Candidate.Kind.FREELANCER)
+    Candidate.objects.create(name="Erik Ek", kind=Candidate.Kind.EMPLOYEE)
+
+    content = auth_client.get(
+        reverse("candidate-list"), {"kind": "freelancer"}
+    ).content.decode()
+
+    assert "2 kandidater" in content
+
+
+@pytest.mark.django_db
 def test_candidate_list_truncates_long_skills(auth_client):
     Candidate.objects.create(
         name="Sara Lind",

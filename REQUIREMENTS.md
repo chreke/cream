@@ -74,6 +74,9 @@ should be displayed in the list:
 - Assignee (User)
 - Last contacted
 
+The page header shows the total number of Companies, independently of the active
+filters.
+
 It should be possible to sort the list by one of:
 
 - Name
@@ -190,6 +193,9 @@ the following attributes:
 - Kind
 - LinkedIn URL (as a LinkedIn icon with a hyperlink)
 - Skills (truncated if too long)
+
+The page header shows the total number of candidates, independently of the active
+filters.
 
 It should be possible to filter candidates using free-text search. The
 free-text search should target the Name and Skills fields.

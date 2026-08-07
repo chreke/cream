@@ -18,6 +18,18 @@ def test_company_list_shows_companies_in_table(auth_client):
 
 
 @pytest.mark.django_db
+def test_company_list_shows_total_company_count(auth_client):
+    Company.objects.create(name="Itancan Consulting", location="Stockholm")
+    Company.objects.create(name="Datakraft", location="Göteborg")
+
+    content = auth_client.get(
+        reverse("company-list"), {"q": "Itancan"}
+    ).content.decode()
+
+    assert "2 företag" in content
+
+
+@pytest.mark.django_db
 def test_company_search_matches_name_and_location(auth_client):
     Company.objects.create(name="Itancan Consulting", location="Stockholm")
     Company.objects.create(name="Datakraft", location="Göteborg")
