@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django import forms
 from django.db import IntegrityError, transaction
 from django.utils import timezone
@@ -326,18 +328,33 @@ class LogContactForm(forms.Form):
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, last_contacted=None, **kwargs):
+        self.last_contacted = last_contacted
         super().__init__(*args, **kwargs)
         current_local_time = timezone.localtime().replace(second=0, microsecond=0)
         self.initial.setdefault("contacted_at", current_local_time)
         self.fields["contacted_at"].widget.attrs["max"] = (
             current_local_time.strftime(self.DATETIME_FORMAT)
         )
+        if self.last_contacted:
+            earliest_local_time = timezone.localtime(self.last_contacted)
+            if earliest_local_time.second or earliest_local_time.microsecond:
+                earliest_local_time += timedelta(minutes=1)
+            earliest_local_time = earliest_local_time.replace(
+                second=0, microsecond=0
+            )
+            self.fields["contacted_at"].widget.attrs["min"] = (
+                earliest_local_time.strftime(self.DATETIME_FORMAT)
+            )
 
     def clean_contacted_at(self):
         contacted_at = self.cleaned_data["contacted_at"]
         if contacted_at > timezone.now():
             raise forms.ValidationError(
                 "Datum och tid kan inte vara i framtiden."
+            )
+        if self.last_contacted and contacted_at < self.last_contacted:
+            raise forms.ValidationError(
+                "Datum och tid kan inte vara tidigare än senaste kontakt."
             )
         return contacted_at

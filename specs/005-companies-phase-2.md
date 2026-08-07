@@ -14,9 +14,10 @@ Status: Done (2026-07-04)
   confirmation modal.
 - "Logga kontakt": button on the detail page opens a modal with an
   editable date/time field that defaults to the current Stockholm-local time,
-  plus an optional comment field. Future timestamps are rejected. Submitting
-  sets `last_contacted` to the selected timestamp and, if a comment was
-  written, adds it to the company's comment feed.
+  plus an optional comment field. Timestamps in the future or earlier than the
+  company's existing `last_contacted` are rejected. Submitting sets
+  `last_contacted` to the selected timestamp and, if a comment was written,
+  adds it to the company's comment feed.
 - Comments on companies: feed on the detail page (newest first), with
   inline forms (not modals): new-comment textarea above the feed; editing
   swaps the comment for an inline form. Deleting a comment

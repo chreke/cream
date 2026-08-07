@@ -78,7 +78,10 @@ def company_detail_context(company):
         "company": company,
         "location_options": location_options(),
         "company_form": CompanyForm(instance=company, auto_id="company-edit-%s"),
-        "log_contact_form": LogContactForm(auto_id="log-contact-%s"),
+        "log_contact_form": LogContactForm(
+            last_contacted=company.last_contacted,
+            auto_id="log-contact-%s",
+        ),
         "contact_create_form": ContactForm(auto_id="contact-new-%s"),
         "contact_items": [
             (contact, ContactForm(instance=contact, auto_id=f"contact-{contact.pk}-%s"))
@@ -295,8 +298,20 @@ class ContactDeleteView(FlashFormErrorsMixin, DeleteView):
 class LogContactView(FlashFormErrorsMixin, FormView):
     form_class = LogContactForm
 
+    def get_company(self):
+        if not hasattr(self, "company"):
+            self.company = get_object_or_404(
+                Company, pk=self.kwargs["company_pk"]
+            )
+        return self.company
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["last_contacted"] = self.get_company().last_contacted
+        return kwargs
+
     def form_valid(self, form):
-        company = get_object_or_404(Company, pk=self.kwargs["company_pk"])
+        company = self.get_company()
         company.last_contacted = form.cleaned_data["contacted_at"]
         company.save(update_fields=["last_contacted"])
         if form.cleaned_data["comment"]:

@@ -58,10 +58,10 @@ A Company has the following information:
 Required attributes are marked with an "\*"
 
 A User can log that a Company was contacted. The contact timestamp defaults to
-the current local date and time, may be changed to an earlier date and time, and
-must not be in the future. Logging the contact updates "Last contacted" to the
-selected timestamp. The User may also leave a Comment as part of logging a
-contact.
+the current local date and time and may be changed. It must not be in the future
+or earlier than the Company's existing "Last contacted" timestamp. Logging the
+contact updates "Last contacted" to the selected timestamp. The User may also
+leave a Comment as part of logging a contact.
 
 It should be possible to create, edit and delete companies.
 

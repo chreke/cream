@@ -497,6 +497,26 @@ def test_log_contact_form_defaults_to_current_stockholm_datetime(
 
 
 @pytest.mark.django_db
+def test_log_contact_form_uses_last_contacted_as_minimum(
+    auth_client, company
+):
+    last_contacted = timezone.localtime(
+        timezone.now() - datetime.timedelta(days=1)
+    ).replace(second=30, microsecond=0)
+    company.last_contacted = last_contacted
+    company.save(update_fields=["last_contacted"])
+    earliest_selectable = (last_contacted + datetime.timedelta(minutes=1)).replace(
+        second=0, microsecond=0
+    )
+
+    content = auth_client.get(
+        reverse("company-detail", args=[company.pk])
+    ).content.decode()
+
+    assert f'min="{earliest_selectable.strftime("%Y-%m-%dT%H:%M")}"' in content
+
+
+@pytest.mark.django_db
 def test_log_contact_sets_last_contacted_to_selected_datetime(auth_client, company):
     contacted_at = timezone.localtime(timezone.now() - datetime.timedelta(days=1))
     contacted_at = contacted_at.replace(second=0, microsecond=0)
@@ -513,6 +533,54 @@ def test_log_contact_sets_last_contacted_to_selected_datetime(auth_client, compa
     company.refresh_from_db()
     assert company.last_contacted == contacted_at
     assert company.comments.count() == 0
+
+
+@pytest.mark.django_db
+def test_log_contact_rejects_datetime_older_than_last_contact(auth_client, company):
+    last_contacted = timezone.localtime(
+        timezone.now() - datetime.timedelta(days=1)
+    ).replace(second=0, microsecond=0)
+    company.last_contacted = last_contacted
+    company.save(update_fields=["last_contacted"])
+    older_contact = last_contacted - datetime.timedelta(minutes=1)
+
+    response = auth_client.post(
+        reverse("company-log-contact", args=[company.pk]),
+        {
+            "contacted_at": older_contact.strftime("%Y-%m-%dT%H:%M"),
+            "comment": "Ska inte sparas.",
+        },
+        follow=True,
+    )
+
+    assert (
+        "Datum och tid kan inte vara tidigare än senaste kontakt."
+        in response.content.decode()
+    )
+    company.refresh_from_db()
+    assert company.last_contacted == last_contacted
+    assert company.comments.count() == 0
+
+
+@pytest.mark.django_db
+def test_log_contact_accepts_datetime_equal_to_last_contact(auth_client, company):
+    last_contacted = timezone.localtime(
+        timezone.now() - datetime.timedelta(days=1)
+    ).replace(second=0, microsecond=0)
+    company.last_contacted = last_contacted
+    company.save(update_fields=["last_contacted"])
+
+    response = auth_client.post(
+        reverse("company-log-contact", args=[company.pk]),
+        {
+            "contacted_at": last_contacted.strftime("%Y-%m-%dT%H:%M"),
+            "comment": "",
+        },
+    )
+
+    assert response.status_code == 302
+    company.refresh_from_db()
+    assert company.last_contacted == last_contacted
 
 
 @pytest.mark.django_db
