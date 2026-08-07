@@ -8,6 +8,16 @@ Comment feed with new-comment form and edit/delete modals. Expects:
 {% endcomment %}
 {% load markdown_extras %}
 <h2 class="h4 mb-3 pt-3">Kommentarer</h2>
+
+<form method="post" action="{{ comment_create_url }}" class="mb-4">
+  {% csrf_token %}
+  {{ comment_form.content }}
+  {% for error in comment_form.content.errors %}
+    <div class="text-danger small mt-1">{{ error }}</div>
+  {% endfor %}
+  <button type="submit" class="btn btn-primary mt-2">Kommentera</button>
+</form>
+
 {% for comment, comment_edit_form in comment_items %}
   <div class="card mb-3" id="comment-{{ comment.pk }}">
     <div class="card-body">
@@ -41,12 +51,3 @@ Comment feed with new-comment form and edit/delete modals. Expects:
 {% empty %}
   <p class="text-secondary">Inga kommentarer ännu.</p>
 {% endfor %}
-
-<form method="post" action="{{ comment_create_url }}" class="mt-3">
-  {% csrf_token %}
-  {{ comment_form.content }}
-  {% for error in comment_form.content.errors %}
-    <div class="text-danger small mt-1">{{ error }}</div>
-  {% endfor %}
-  <button type="submit" class="btn btn-primary mt-2">Kommentera</button>
-</form>

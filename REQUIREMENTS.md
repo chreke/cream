@@ -287,6 +287,8 @@ A comment has the following attributes:
 Comments can be created, updated and deleted. A User can delete / edit comments
 made by other users.
 
+The new-comment input is displayed above the existing comment feed.
+
 When displaying comments, it should show who they were made / edited by.
 
 Comments created through the ordinary comment form have type `Comment`.

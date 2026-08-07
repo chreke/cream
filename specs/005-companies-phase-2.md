@@ -18,8 +18,8 @@ Status: Done (2026-07-04)
   sets `last_contacted` to the selected timestamp and, if a comment was
   written, adds it to the company's comment feed.
 - Comments on companies: feed on the detail page (newest first), with
-  inline forms (not modals): new-comment textarea at the bottom of the
-  feed; editing swaps the comment for an inline form. Deleting a comment
+  inline forms (not modals): new-comment textarea above the feed; editing
+  swaps the comment for an inline form. Deleting a comment
   goes through a confirmation modal (the "always confirm deletion" rule).
   Any user may edit/delete any comment (per REQUIREMENTS.md); edits stamp
   `edited_at` and `last_edited_by`, shown in the feed.
