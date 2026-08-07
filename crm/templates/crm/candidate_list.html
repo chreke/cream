@@ -68,7 +68,7 @@
                 –
               {% endif %}
             </td>
-            <td>{{ candidate.skills|truncatewords:10|default:"–" }}</td>
+            <td>{{ candidate.skills|truncatechars:40|default:"–" }}</td>
           </tr>
         {% empty %}
           <tr>

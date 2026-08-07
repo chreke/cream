@@ -112,14 +112,13 @@ def test_candidate_search_returns_ranked_matches(auth_client, lead):
 
 
 @pytest.mark.django_db
-def test_lead_page_truncates_long_skills(auth_client, lead, candidate):
-    candidate.skills = ", ".join(f"Kompetens {i:02d}" for i in range(20))
+def test_lead_page_caps_skills_at_40_characters(auth_client, lead, candidate):
+    candidate.skills = "1234567890" * 4 + "EXTRA"
     candidate.save()
     lead.candidates.add(candidate)
     content = auth_client.get(reverse("lead-detail", args=[lead.pk])).content.decode()
-    assert "Kompetens 00" in content
-    assert "Kompetens 19" not in content
-    assert "…" in content
+    assert "123456789012345678901234567890123456789…" in content
+    assert candidate.skills not in content
 
 
 @pytest.mark.django_db
@@ -130,7 +129,7 @@ def test_candidate_search_truncates_long_skills(auth_client, lead, candidate):
         reverse("lead-candidate-search", args=[lead.pk]), {"q": "erik"}
     )
     (result,) = response.json()["results"]
-    # Truncated on whole words, like the skills columns (truncatewords:10).
+    # Autocomplete results keep their separate ten-word context limit.
     assert result["skills"].endswith("…")
     assert "Kompetens 04" in result["skills"]
     assert "Kompetens 19" not in result["skills"]

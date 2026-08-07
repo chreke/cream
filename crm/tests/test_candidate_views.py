@@ -36,15 +36,16 @@ def test_candidate_list_shows_total_candidate_count(auth_client):
 
 
 @pytest.mark.django_db
-def test_candidate_list_truncates_long_skills(auth_client):
+def test_candidate_list_caps_skills_at_40_characters(auth_client):
+    skills = "1234567890" * 4 + "EXTRA"
     Candidate.objects.create(
         name="Sara Lind",
         kind=Candidate.Kind.BOTH,
-        skills=", ".join(f"Kompetens {i}" for i in range(20)),
+        skills=skills,
     )
     content = auth_client.get(reverse("candidate-list")).content.decode()
-    assert "Kompetens 19" not in content
-    assert "…" in content
+    assert "123456789012345678901234567890123456789…" in content
+    assert skills not in content
 
 
 @pytest.mark.django_db

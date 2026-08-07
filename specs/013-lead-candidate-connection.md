@@ -28,7 +28,7 @@ one scroll away); **no flag icons** in these sections.
 
 - The lead detail page gets a candidate section listing attached
   candidates: name (linked to the candidate page), location and skills.
-  No flag icons.
+  Skills are truncated to at most 40 characters. No flag icons.
 - Each row has a "Ta bort" button that detaches the candidate (POST).
   Detaching never deletes the candidate itself.
 - Empty state text when no candidates are attached.
@@ -99,5 +99,3 @@ one scroll away); **no flag icons** in these sections.
   presence" proves too coarse).
 - Comments as part of the attach flow.
 - Soft-deleting anything other than leads.
-- Truncating long skills lists in candidate rows — tracked as its own
-  TODO item.

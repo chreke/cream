@@ -1,5 +1,6 @@
 # TODO
 
+- [x] Cap Skills table columns at 40 characters
 - [x] Reject contact timestamps older than the Company's last contact
 - [x] Move the new-comment input above the comment feed
 - [x] Show total candidate and company counts in their list-page headers

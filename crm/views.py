@@ -853,7 +853,8 @@ class LeadCandidateSearchView(View):
                         "id": candidate.pk,
                         "name": candidate.name,
                         "location": candidate.location,
-                        # Same cap as the skills columns (truncatewords:10).
+                        # Keep autocomplete context compact independently of
+                        # the table columns' character limit.
                         "skills": Truncator(candidate.skills).words(
                             10, truncate=" …"
                         ),

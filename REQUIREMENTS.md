@@ -194,7 +194,7 @@ the following attributes:
 - Location
 - Kind
 - LinkedIn URL (as a LinkedIn icon with a hyperlink)
-- Skills (truncated if too long)
+- Skills (truncated to at most 40 characters)
 
 The page header shows the total number of candidates, independently of the active
 filters.
@@ -240,11 +240,12 @@ only possible via the Django admin.
 
 ### Candidates on a lead
 
-The lead detail page lists the lead's candidates (name, location, skills)
-and allows detaching them. Candidates are attached via an autocomplete
-picker backed by the ranked candidate search; options show enough context
-(location, skills) to tell candidates with the same name apart, and
-already-attached candidates are excluded from the results.
+The lead detail page lists the lead's candidates (name, location, skills,
+with skills truncated to at most 40 characters) and allows detaching them.
+Candidates are attached via an autocomplete picker backed by the ranked
+candidate search; options show enough context (location, skills) to tell
+candidates with the same name apart, and already-attached candidates are
+excluded from the results.
 
 Conversely, the candidate detail page lists every lead the candidate is
 attached to — including soft-deleted ones, visibly marked — with the
