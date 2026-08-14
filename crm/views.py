@@ -430,7 +430,25 @@ class CandidateListView(ListView):
         if query:
             queryset = queryset.search(query)
 
+        sort = self.current_sort()
+        if sort == "name":
+            queryset = queryset.order_by("name")
+        elif sort == "-name":
+            queryset = queryset.order_by("-name")
+
         return queryset
+
+    def current_sort(self):
+        sort = self.selected_sort()
+        if sort:
+            return sort
+        if self.request.GET.get("q", "").strip():
+            return "relevance"
+        return "name"
+
+    def selected_sort(self):
+        sort = self.request.GET.get("sort", "")
+        return sort if sort in ("name", "-name") else ""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -439,11 +457,19 @@ class CandidateListView(ListView):
         context["current_location"] = self.request.GET.get("location", "")
         context["current_q"] = self.request.GET.get("q", "")
         context["candidate_location_options"] = candidate_location_options()
+        sort = self.current_sort()
+        context["current_sort"] = sort
+        context["selected_sort"] = self.selected_sort()
+        context["name_sort"] = "-name" if sort == "name" else "name"
 
         # Query string without "page", for pagination links.
         params = self.request.GET.copy()
         params.pop("page", None)
         context["querystring"] = params.urlencode()
+
+        # Query string without "page" and "sort", for sort header links.
+        params.pop("sort", None)
+        context["sort_querystring"] = params.urlencode()
 
         context["candidate_create_form"] = CandidateForm(auto_id="candidate-new-%s")
         context["location_options"] = location_options()

@@ -109,6 +109,55 @@ def test_candidate_list_search_combines_with_kind_and_location_filters(auth_clie
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "sort,expected",
+    [
+        ("name", ["Anna Andersson", "Zelda Zetterberg"]),
+        ("-name", ["Zelda Zetterberg", "Anna Andersson"]),
+    ],
+)
+def test_candidate_search_can_be_sorted_by_name(auth_client, sort, expected):
+    Candidate.objects.create(
+        name="Zelda Zetterberg", kind=Candidate.Kind.BOTH, skills="Python"
+    )
+    Candidate.objects.create(
+        name="Anna Andersson", kind=Candidate.Kind.BOTH, skills="Pythonista"
+    )
+
+    response = auth_client.get(
+        reverse("candidate-list"), {"q": "pyth", "sort": sort}
+    )
+
+    assert [candidate.name for candidate in response.context["candidates"]] == expected
+    assert response.context["current_sort"] == sort
+    assert f"sort={sort}" in response.context["querystring"]
+    assert f'name="sort" value="{sort}"' in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_candidate_list_does_not_carry_default_name_sort_into_new_search(auth_client):
+    response = auth_client.get(reverse("candidate-list"))
+
+    assert response.context["current_sort"] == "name"
+    assert 'type="hidden" name="sort"' not in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_candidate_name_sort_link_preserves_search_filters(auth_client):
+    response = auth_client.get(
+        reverse("candidate-list"),
+        {"q": "python", "kind": "employee", "location": "Stockholm"},
+    )
+
+    content = response.content.decode()
+    assert "q=python" in response.context["sort_querystring"]
+    assert "kind=employee" in response.context["sort_querystring"]
+    assert "location=Stockholm" in response.context["sort_querystring"]
+    assert "sort=" not in response.context["sort_querystring"]
+    assert "sort=name" in content
+
+
+@pytest.mark.django_db
 def test_candidate_list_location_filter_is_exact_and_has_candidate_options(
     auth_client,
 ):

@@ -1,5 +1,6 @@
 # TODO
 
+- [x] Allow candidate search results to be sorted by name
 - [x] Cap Skills table columns at 40 characters
 - [x] Reject contact timestamps older than the Company's last contact
 - [x] Move the new-comment input above the comment feed

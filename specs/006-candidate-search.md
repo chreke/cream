@@ -26,13 +26,16 @@ used by the company list, which cannot rank results and cannot use an index.
 
 ### Ranking
 
-- Search results are ordered by **relevance**, not name.
+- Search results are ordered by **relevance** by default.
 - Candidates matching every query term as an exact word rank ahead of
   candidates that require prefix matching. For example, `java` ranks "Java"
   ahead of "JavaScript". Exactness is scored once for the whole query.
 - Both fields count equally toward relevance (no field weighting).
 - Candidates with equal relevance are ordered by name (Swedish collation).
 - Without a search query, candidates are ordered by name.
+- The Name column can be used to sort candidates by name in ascending or
+  descending order, including while a search query is active. The selected
+  order survives changes to the filters and pagination.
 
 ### Interaction with filters
 

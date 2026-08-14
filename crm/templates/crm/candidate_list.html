@@ -13,6 +13,9 @@
   </div>
 
   <form method="get" class="row g-2 mb-4" data-auto-submit>
+    {% if selected_sort %}
+      <input type="hidden" name="sort" value="{{ selected_sort }}">
+    {% endif %}
     <div class="col-md-4">
       <input type="search" name="q" value="{{ current_q }}" class="form-control"
              placeholder="Sök kandidater..." aria-label="Sök kandidater">
@@ -41,7 +44,10 @@
     <table class="table table-hover bg-white">
       <thead>
         <tr>
-          <th scope="col">Namn</th>
+          <th scope="col">
+            <a class="text-decoration-none text-reset"
+               href="?{{ sort_querystring }}{% if sort_querystring %}&amp;{% endif %}sort={{ name_sort }}">Namn{% if current_sort == 'name' %} ↑{% elif current_sort == '-name' %} ↓{% endif %}</a>
+          </th>
           <th scope="col">Plats</th>
           <th scope="col">Typ</th>
           <th scope="col">LinkedIn</th>

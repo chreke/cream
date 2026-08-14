@@ -203,8 +203,9 @@ It should be possible to filter candidates using free-text search. The
 free-text search should target the Name and Skills fields.
 Search matches the beginning of words (all words in the query must match).
 Results matching every query word exactly rank ahead of results that require
-prefix matching, followed by relevance. See `specs/006-candidate-search.md`
-for details.
+prefix matching, followed by relevance. This relevance order is the default
+for searches, but users can instead sort the results by name in ascending or
+descending order. See `specs/006-candidate-search.md` for details.
 
 Candidates can also be filtered by an exact Location using a drop-down of
 locations currently used by candidates.
