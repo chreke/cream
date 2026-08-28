@@ -1,5 +1,6 @@
 # TODO
 
+- [x] Widen the company detail label column to prevent text overflow
 - [x] Move candidate and company detail actions below the name on mobile
 - [x] Allow candidate search results to be sorted by name
 - [x] Cap Skills table columns at 40 characters

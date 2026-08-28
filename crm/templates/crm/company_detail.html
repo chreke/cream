@@ -25,14 +25,14 @@
   </div>
 
   <dl class="row mb-4">
-    <dt class="col-sm-3">Hemsida</dt>
-    <dd class="col-sm-9">{% if company.homepage %}<a href="{{ company.homepage }}">{{ company.homepage }}</a>{% else %}–{% endif %}</dd>
-    <dt class="col-sm-3">Organisationsnummer</dt>
-    <dd class="col-sm-9">{{ company.organization_number|default:"–" }}</dd>
-    <dt class="col-sm-3">Ansvarig</dt>
-    <dd class="col-sm-9">{{ company.assignee.username|default:"–" }}</dd>
-    <dt class="col-sm-3">Senast kontaktad</dt>
-    <dd class="col-sm-9 mb-0">{{ company.last_contacted|date:"Y-m-d H:i"|default:"Aldrig" }}</dd>
+    <dt class="col-sm-5 col-md-4 col-xl-3">Hemsida</dt>
+    <dd class="col-sm-7 col-md-8 col-xl-9">{% if company.homepage %}<a href="{{ company.homepage }}">{{ company.homepage }}</a>{% else %}–{% endif %}</dd>
+    <dt class="col-sm-5 col-md-4 col-xl-3">Organisationsnummer</dt>
+    <dd class="col-sm-7 col-md-8 col-xl-9">{{ company.organization_number|default:"–" }}</dd>
+    <dt class="col-sm-5 col-md-4 col-xl-3">Ansvarig</dt>
+    <dd class="col-sm-7 col-md-8 col-xl-9">{{ company.assignee.username|default:"–" }}</dd>
+    <dt class="col-sm-5 col-md-4 col-xl-3">Senast kontaktad</dt>
+    <dd class="col-sm-7 col-md-8 col-xl-9 mb-0">{{ company.last_contacted|date:"Y-m-d H:i"|default:"Aldrig" }}</dd>
   </dl>
 
   <h2 class="h4 mb-3 pt-3">Beskrivning</h2>
