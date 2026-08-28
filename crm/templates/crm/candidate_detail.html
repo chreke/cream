@@ -4,7 +4,7 @@
 {% block title %}{{ candidate.name }}{% endblock %}
 
 {% block content %}
-  <div class="d-flex justify-content-between align-items-start mb-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
     <div>
       <h1>{{ candidate.name }}</h1>
       <p class="text-secondary mb-0">
@@ -12,7 +12,7 @@
         {% if candidate.location %} · {{ candidate.location }}{% endif %}
       </p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-wrap gap-2">
       <button type="button" class="btn btn-outline-danger"
               data-bs-toggle="modal" data-bs-target="#candidate-delete-modal">Ta bort</button>
       {% if not candidate.is_flagged %}

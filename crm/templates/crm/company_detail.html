@@ -4,7 +4,7 @@
 {% block title %}{{ company.name }}{% endblock %}
 
 {% block content %}
-  <div class="d-flex justify-content-between align-items-start mb-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
     <div>
       <h1>{{ company.name }}</h1>
       <p class="text-secondary mb-0">
@@ -14,7 +14,7 @@
       </p>
       {% include "crm/_tag_pills.html" with tags=company.tags.all extra_classes="mt-1" %}
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-wrap gap-2">
       <button type="button" class="btn btn-outline-danger"
               data-bs-toggle="modal" data-bs-target="#company-delete-modal">Ta bort</button>
       <button type="button" class="btn btn-outline-secondary"
