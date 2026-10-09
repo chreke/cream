@@ -18,7 +18,7 @@ def test_company_list_shows_companies_in_table(auth_client):
 
 
 @pytest.mark.django_db
-def test_company_list_shows_total_company_count(auth_client):
+def test_company_list_shows_filtered_company_count(auth_client):
     Company.objects.create(name="Itancan Consulting", location="Stockholm")
     Company.objects.create(name="Datakraft", location="Göteborg")
 
@@ -26,7 +26,27 @@ def test_company_list_shows_total_company_count(auth_client):
         reverse("company-list"), {"q": "Itancan"}
     ).content.decode()
 
-    assert "2 företag" in content
+    assert "1 företag" in content
+
+
+@pytest.mark.django_db
+def test_company_list_count_includes_all_pages(auth_client):
+    Company.objects.bulk_create(Company(name=f"Företag {i}") for i in range(51))
+
+    content = auth_client.get(reverse("company-list")).content.decode()
+
+    assert "51 företag" in content
+
+
+@pytest.mark.django_db
+def test_company_list_has_reset_link(auth_client):
+    content = auth_client.get(
+        reverse("company-list"), {"q": "Itancan", "sort": "-name"}
+    ).content.decode()
+
+    assert re.search(
+        rf'<a[^>]*href="{reverse("company-list")}"[^>]*>\s*Återställ', content
+    )
 
 
 @pytest.mark.django_db

@@ -6,7 +6,7 @@
   <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
       <h1>Företag</h1>
-      <p class="text-secondary mb-0">{{ total_company_count }} företag</p>
+      <p class="text-secondary mb-0">{{ paginator.count }} företag</p>
     </div>
     <button type="button" class="btn btn-primary"
             data-bs-toggle="modal" data-bs-target="#company-create-modal">Nytt företag</button>
@@ -16,7 +16,7 @@
     {% if current_sort != 'name' %}
       <input type="hidden" name="sort" value="{{ current_sort }}">
     {% endif %}
-    <div class="col-md-4">
+    <div class="col-md">
       <input type="search" name="q" value="{{ current_q }}" class="form-control"
              placeholder="Sök företag..." aria-label="Sök företag">
     </div>
@@ -40,8 +40,9 @@
         {% endfor %}
       </select>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-auto d-flex gap-2">
       <button type="submit" class="btn btn-outline-secondary">Filtrera</button>
+      <a href="{% url 'company-list' %}" class="btn btn-link">Återställ</a>
     </div>
   </form>
 

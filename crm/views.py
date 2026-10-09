@@ -182,7 +182,6 @@ class CompanyListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["total_company_count"] = Company.objects.count()
         context["users"] = get_user_model().objects.order_by("username")
         context["tags"] = Tag.objects.all()
         context["current_q"] = self.request.GET.get("q", "")
@@ -452,7 +451,6 @@ class CandidateListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["total_candidate_count"] = Candidate.objects.count()
         context["current_kind"] = self.request.GET.get("kind", "")
         context["current_location"] = self.request.GET.get("location", "")
         context["current_q"] = self.request.GET.get("q", "")

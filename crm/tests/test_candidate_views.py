@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from django.urls import reverse
 
@@ -24,7 +26,7 @@ def test_candidate_list_shows_candidates_in_table(auth_client):
 
 
 @pytest.mark.django_db
-def test_candidate_list_shows_total_candidate_count(auth_client):
+def test_candidate_list_shows_filtered_candidate_count(auth_client):
     Candidate.objects.create(name="Sara Lind", kind=Candidate.Kind.FREELANCER)
     Candidate.objects.create(name="Erik Ek", kind=Candidate.Kind.EMPLOYEE)
 
@@ -32,7 +34,30 @@ def test_candidate_list_shows_total_candidate_count(auth_client):
         reverse("candidate-list"), {"kind": "freelancer"}
     ).content.decode()
 
-    assert "2 kandidater" in content
+    assert "1 kandidater" in content
+
+
+@pytest.mark.django_db
+def test_candidate_list_count_includes_all_pages(auth_client):
+    Candidate.objects.bulk_create(
+        Candidate(name=f"Kandidat {i}", kind=Candidate.Kind.FREELANCER)
+        for i in range(51)
+    )
+
+    content = auth_client.get(reverse("candidate-list")).content.decode()
+
+    assert "51 kandidater" in content
+
+
+@pytest.mark.django_db
+def test_candidate_list_has_reset_link(auth_client):
+    content = auth_client.get(
+        reverse("candidate-list"), {"q": "Sara", "kind": "freelancer"}
+    ).content.decode()
+
+    assert re.search(
+        rf'<a[^>]*href="{reverse("candidate-list")}"[^>]*>\s*Återställ', content
+    )
 
 
 @pytest.mark.django_db

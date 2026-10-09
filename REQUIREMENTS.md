@@ -76,8 +76,8 @@ should be displayed in the list:
 - Assignee (User)
 - Last contacted
 
-The page header shows the total number of Companies, independently of the active
-filters.
+The page header shows the number of Companies matching the active filters
+(across all pages). A "Återställ" (reset) link clears all filters and sorting.
 
 It should be possible to sort the list by one of:
 
@@ -196,8 +196,8 @@ the following attributes:
 - LinkedIn URL (as a LinkedIn icon with a hyperlink)
 - Skills (truncated to at most 40 characters)
 
-The page header shows the total number of candidates, independently of the active
-filters.
+The page header shows the number of candidates matching the active filters
+(across all pages). A "Återställ" (reset) link clears all filters and sorting.
 
 It should be possible to filter candidates using free-text search. The
 free-text search should target the Name and Skills fields.
