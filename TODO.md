@@ -1,5 +1,7 @@
 # TODO
 
+- [x] Add opt-in Aient/OpenTelemetry server capture and release metadata
+      ([spec](specs/018-telemetry.md))
 - [x] Show filtered (not total) counts on candidate and company list pages
 - [x] Add an "Återställ" link that resets candidate and company list filters
 - [x] Widen the company detail label column to prevent text overflow

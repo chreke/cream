@@ -92,6 +92,44 @@ env-file support (`UV_ENV_FILE=.env` or `uv run --env-file .env`). See
 | `ALLOWED_HOSTS`       | Comma-separated hostnames. Required in production. |
 | `CSRF_TRUSTED_ORIGINS`| Comma-separated origins with scheme (`https://…`). Required in production. |
 | `PORT`                | Host port the app is published on behind nginx (production compose only, default `8000`). |
+| `AIENT_PUBLISHABLE_KEY` | Publishable Aient ingest key. Empty/unset disables telemetry. Runtime only. |
+| `OTEL_SERVICE_NAME` | Telemetry service name (default `cream`). |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP/HTTP base URL (default `https://ingest.aient.ai`; no `/v1/traces` suffix). |
+| `AIENT_ENV` | Deployment environment slug, e.g. `prod` (not an environment ID). |
+| `COMMIT_SHA` | Full 40-character lowercase Git SHA of the deployed source; required by production compose. |
+| `COMMIT_REF` | Branch of the deployed source. |
+| `OTEL_SDK_DISABLED` | `true` disables telemetry even with a key configured. |
+
+### Aient / OpenTelemetry
+
+Set the publishable ingest key in the VPS's `.env`, not in the Docker build.
+WSGI/ASGI bootstraps initialize the standard Python SDK before Django builds
+middleware, exporting batched request spans to `/v1/traces` and warning/error
+Python logs to `/v1/logs` with bearer auth. Logs emitted inside a request carry
+its trace/span IDs. Existing console logging is preserved. Resource attributes
+include both `release.*` and `deployment.*` commit, branch, and environment.
+Without a key, development, tests, migrations and `collectstatic` do not export.
+
+Keep Gunicorn's existing **non-preloaded** worker model: do not add `--preload`
+or initialize the SDK in the master. Normal worker termination invokes SDK
+flush/shutdown hooks; forced kills cannot flush. Console-only loggers that do
+not propagate to root (other than `django.server`) are not exported. Avoid
+sensitive data in log messages or URL query strings; HTTP headers and bodies
+are not explicitly captured by this integration.
+
+No browser SDK or source-map upload is added: this server-rendered Python app
+has no application JS bundle or transpiled server build. `collectstatic` copies
+plain JS and vendored assets, retaining their existing maps. Browser identity
+and persistence tests therefore do not apply. See [telemetry spec](specs/018-telemetry.md).
+
+Bounded offline exporter verification (no server or live key):
+
+```sh
+uv run --locked pytest cream/test_telemetry.py
+```
+
+Live Aient ingestion still needs the deployed key and must be verified after
+deployment; offline capture tests do not prove collector delivery.
 
 ## Deployment
 
@@ -117,7 +155,10 @@ In the deploy directory on the server:
 
 1. Copy `.env.example` to `.env` and fill in the production values
    (`SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `POSTGRES_*`;
-   leave `DEBUG` unset).
+   leave `DEBUG` unset). Set `COMMIT_SHA` and `COMMIT_REF` to the source
+   checkout's `git rev-parse HEAD` and `git branch --show-current`, respectively.
+   Add `AIENT_PUBLISHABLE_KEY` to enable capture and set `AIENT_ENV` to the
+   deployment's slug (the template uses `prod`).
 2. Start the stack:
 
    ```sh
@@ -152,11 +193,19 @@ In the deploy directory on the server:
 ### Deploying a new version
 
 rsync the repo tree to the deploy directory — excluding at least `.git/`,
-`.env`, `data/` and caches — then rebuild:
+`.env`, `data/` and caches — then rebuild. The external deployment script must
+resolve `git rev-parse HEAD` (full SHA) and `git branch --show-current` **in the
+source checkout** and update `COMMIT_SHA` / `COMMIT_REF` in the deploy `.env` on
+every deploy, or export those same values in the remote compose environment:
 
 ```sh
 docker compose up -d --build
 ```
+
+Compose passes these public values to the Docker build and runtime; Docker
+validates a supplied SHA and bakes it into the image. Since the external rsync
+script is not in this repo, wiring that per-deploy input is a manual step.
+Never derive the release from a short SHA or the VPS's stale/missing `.git`.
 
 The image installs dependencies with pip from `requirements.txt`, which is
 **generated** from `uv.lock` — after changing dependencies, regenerate it

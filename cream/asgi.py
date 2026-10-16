@@ -11,6 +11,10 @@ import os
 
 from django.core.asgi import get_asgi_application
 
+from cream.telemetry import configure_logging, configure_telemetry
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cream.settings')
 
+configure_telemetry()
 application = get_asgi_application()
+configure_logging()
