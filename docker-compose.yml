@@ -1,9 +1,15 @@
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        COMMIT_SHA: ${COMMIT_SHA:?Set COMMIT_SHA to the deployed full Git SHA}
+        COMMIT_REF: ${COMMIT_REF:-}
     restart: unless-stopped
     env_file: .env
     environment:
+      COMMIT_SHA: ${COMMIT_SHA:?Set COMMIT_SHA to the deployed full Git SHA}
+      COMMIT_REF: ${COMMIT_REF:-}
       # The database always lives in the db service; override whatever
       # the env file says.
       POSTGRES_HOST: db

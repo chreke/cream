@@ -13,6 +13,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Public release metadata is baked in; ingest credentials are runtime-only.
+ARG COMMIT_SHA
+ARG COMMIT_REF
+ENV COMMIT_SHA=$COMMIT_SHA COMMIT_REF=$COMMIT_REF
+RUN python -c 'import os, re; sha = os.environ["COMMIT_SHA"]; assert not sha or re.fullmatch(r"[0-9a-f]{40}", sha), "COMMIT_SHA must be a full Git SHA"'
+
 # collectstatic imports settings, so the required env vars need dummy
 # values at build time; no database is touched.
 RUN SECRET_KEY=build-only \
@@ -24,4 +30,5 @@ EXPOSE 8000
 
 # Migrations run on every start (idempotent); this is how deploys apply
 # schema changes (specs/014).
-CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn cream.wsgi:application --bind 0.0.0.0:8000 --workers 3"]
+# exec forwards container stop signals to Gunicorn for graceful SDK shutdown.
+CMD ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn cream.wsgi:application --bind 0.0.0.0:8000 --workers 3"]

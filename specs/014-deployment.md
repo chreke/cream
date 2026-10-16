@@ -46,6 +46,11 @@ registries, zero-downtime deploys, error alerting.
   repo, never in the image, never overwritten by deploys): `SECRET_KEY`,
   `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `POSTGRES_*`, and optional
   `DEBUG`.
+- Optional telemetry uses runtime `AIENT_PUBLISHABLE_KEY`, `OTEL_SERVICE_NAME`,
+  `OTEL_EXPORTER_OTLP_ENDPOINT`, and `AIENT_ENV`. Compose requires the deployed
+  full `COMMIT_SHA` and accepts `COMMIT_REF`, forwarding them as public build
+  arguments and runtime metadata. The external deploy script must refresh them
+  from the source checkout on each deploy; see `018-telemetry.md` and the README.
 - The hostname is configuration, not code: `ALLOWED_HOSTS` and
   `CSRF_TRUSTED_ORIGINS` come from the env file, and nothing in the repo
   (settings, compose, docs examples) hardcodes or assumes the real
