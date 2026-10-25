@@ -41,7 +41,11 @@
       {% endif %}
     </dd>
     <dt class="col-sm-3">Ansvarig</dt>
-    <dd class="col-sm-9 mb-0">{{ lead.assignee.username|default:"–" }}</dd>
+    <dd class="col-sm-9{% if lead.stage != 'won' %} mb-0{% endif %}">{{ lead.assignee.username|default:"–" }}</dd>
+    {% if lead.stage == 'won' %}
+      <dt class="col-sm-3">Vunnen den</dt>
+      <dd class="col-sm-9 mb-0">{{ lead.closed_at|date:"Y-m-d"|default:"–" }}</dd>
+    {% endif %}
   </dl>
 
   <h2 class="h4 mb-3 pt-3">Kandidater</h2>
@@ -99,4 +103,5 @@
 
 {% block scripts %}
   <script src="{% static 'js/lead_candidates.js' %}"></script>
+  <script src="{% static 'js/lead_won_date.js' %}"></script>
 {% endblock %}

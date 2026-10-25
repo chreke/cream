@@ -243,25 +243,52 @@ class LeadEditForm(forms.ModelForm):
 
     class Meta:
         model = Lead
-        fields = ["name", "expected_value", "contact", "assignee", "stage"]
+        fields = ["name", "expected_value", "contact", "assignee", "stage", "closed_at"]
         labels = {
             "name": "Namn",
             "expected_value": "Förväntat värde (kr)",
             "contact": "Kontakt",
             "assignee": "Ansvarig",
             "stage": "Fas",
+            "closed_at": "Vunnen den",
+        }
+        help_texts = {
+            "closed_at": "Sätts automatiskt när affären markeras som vunnen.",
         }
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control"}),
             "expected_value": forms.NumberInput(attrs={"class": "form-control"}),
             "contact": forms.Select(attrs={"class": "form-select"}),
             "assignee": forms.Select(attrs={"class": "form-select"}),
-            "stage": forms.Select(attrs={"class": "form-select"}),
+            "stage": forms.Select(
+                attrs={"class": "form-select", "data-lead-stage": ""}
+            ),
+            "closed_at": forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={
+                    "class": "form-control",
+                    "type": "date",
+                    "data-lead-closed-at": "",
+                },
+            ),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["contact"].queryset = self.instance.company.contacts.all()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Moving a lead away from Vunnen clears its won date (specs/019).
+        # The modal re-submits the old date, so only an explicitly changed
+        # date on a non-won lead is an error (caught by the model constraint).
+        if (
+            "stage" in self.changed_data
+            and "closed_at" not in self.changed_data
+            and cleaned_data.get("stage") != Lead.Stage.WON
+        ):
+            cleaned_data["closed_at"] = None
+        return cleaned_data
 
 
 class BaseCommentForm(forms.ModelForm):

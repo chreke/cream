@@ -35,6 +35,10 @@
                  href="{% url 'candidate-list' %}">Kandidater</a>
             </li>
             <li class="nav-item">
+              <a class="nav-link{% if section == 'leads' %} active{% endif %}"
+                 href="{% url 'lead-list' %}">Affärer</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link{% if section == 'pipeline' %} active{% endif %}"
                  href="{% url 'pipeline' %}">Pipeline</a>
             </li>

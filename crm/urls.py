@@ -117,6 +117,7 @@ urlpatterns = [
         name="candidate-comment-delete",
     ),
     path("pipeline/", views.PipelineView.as_view(), name="pipeline"),
+    path("leads/", views.LeadListView.as_view(), name="lead-list"),
     path("leads/new/", views.LeadCreateView.as_view(), name="lead-create"),
     path("leads/<int:pk>/", views.LeadDetailView.as_view(), name="lead-detail"),
     path("leads/<int:pk>/edit/", views.LeadUpdateView.as_view(), name="lead-edit"),

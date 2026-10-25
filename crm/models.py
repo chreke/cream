@@ -9,8 +9,10 @@ from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Q
 from django.db.models.functions import Lower
 from django.dispatch import receiver
+from django.utils import timezone
 
 # "simple" config: no stemming or stop words; skills and names should match
 # literally. Must stay identical to the GinIndex expression in Candidate.Meta
@@ -226,14 +228,36 @@ class Lead(models.Model):
     )
     candidates = models.ManyToManyField(Candidate, blank=True, related_name="leads")
     created_at = models.DateTimeField(auto_now_add=True)
+    # Won date (specs/019): set when the stage changes to Vunnen, cleared
+    # when it changes away. Only Vunnen leads may have one.
+    closed_at = models.DateField(null=True, blank=True)
     # Soft delete (specs/013): hidden from the pipeline but kept so that
     # candidate pages can still show which companies a candidate was sent to.
     deleted_at = models.DateTimeField(null=True, blank=True)
 
     objects = LeadQuerySet.as_manager()
 
+    # The stage as last loaded from or saved to the database; None for
+    # unsaved leads.
+    _saved_stage = None
+
     class Meta:
         ordering = ["name"]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(closed_at__isnull=True) | Q(stage="won"),
+                name="lead_closed_at_requires_won",
+                violation_error_message=(
+                    "Endast vunna affärer kan ha ett vunnet-datum."
+                ),
+            ),
+        ]
+
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        instance._saved_stage = instance.__dict__.get("stage")
+        return instance
 
     @property
     def is_deleted(self):
@@ -241,6 +265,16 @@ class Lead(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if self.stage != self._saved_stage:
+            if self.stage == self.Stage.WON:
+                if self.closed_at is None:
+                    self.closed_at = timezone.localdate()
+            elif self._saved_stage == self.Stage.WON:
+                self.closed_at = None
+        super().save(*args, **kwargs)
+        self._saved_stage = self.stage
 
     def clean(self):
         if self.contact and self.contact.company_id != self.company_id:

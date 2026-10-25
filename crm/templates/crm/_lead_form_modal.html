@@ -2,7 +2,7 @@
 Create/edit lead modal. Expects `form`: a LeadCreateForm (create mode)
 or a LeadEditForm bound to a saved lead (edit mode). Create mode picks
 a company but no contact or stage; edit mode shows the company as fixed
-text and offers contact (own company only) and stage.
+text and offers contact (own company only), stage and won date.
 {% endcomment %}
 {% if form.instance.pk %}
   {% url 'lead-edit' form.instance.pk as action %}
@@ -54,6 +54,11 @@ text and offers contact (own company only) and stage.
               <div class="col-md-6">
                 <label class="form-label" for="{{ form.stage.id_for_label }}">{{ form.stage.label }}</label>
                 {{ form.stage }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="{{ form.closed_at.id_for_label }}">{{ form.closed_at.label }}</label>
+                {{ form.closed_at }}
+                <div class="form-text">{{ form.closed_at.help_text }}</div>
               </div>
             {% endif %}
           </div>

@@ -698,6 +698,77 @@ class LeadCommentDeleteView(FlashFormErrorsMixin, DeleteView):
         return reverse("lead-detail", args=[self.get_object().lead_id])
 
 
+class LeadListView(ListView):
+    """Table of all deals (specs/019), e.g. to see what was won when.
+    Soft-deleted deals are hidden unless asked for."""
+
+    model = Lead
+    context_object_name = "leads"
+    paginate_by = 50
+    extra_context = {"section": "leads"}
+    sorts = ("name", "-name", "closed_at", "-closed_at")
+
+    def get_queryset(self):
+        queryset = Lead.objects.select_related("company")
+
+        if not self.show_deleted():
+            queryset = queryset.active()
+
+        stage = self.current_stage()
+        if stage:
+            queryset = queryset.filter(stage=stage)
+
+        sort = self.current_sort()
+        if sort == "closed_at":
+            queryset = queryset.order_by(
+                F("closed_at").asc(nulls_last=True), "name"
+            )
+        elif sort == "-closed_at":
+            queryset = queryset.order_by(
+                F("closed_at").desc(nulls_last=True), "name"
+            )
+        else:
+            queryset = queryset.order_by(sort)
+
+        return queryset
+
+    def show_deleted(self):
+        return self.request.GET.get("deleted") == "1"
+
+    def current_stage(self):
+        stage = self.request.GET.get("stage", "")
+        return stage if stage in Lead.Stage.values else ""
+
+    def current_sort(self):
+        sort = self.request.GET.get("sort", "name")
+        return sort if sort in self.sorts else "name"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["stages"] = Lead.Stage.choices
+        context["current_stage"] = self.current_stage()
+        context["show_deleted"] = self.show_deleted()
+        sort = self.current_sort()
+        context["current_sort"] = sort
+        # Header links: clicking the active column reverses it, clicking an
+        # inactive column applies its default direction (most recent first
+        # for the won date).
+        context["name_sort"] = "-name" if sort == "name" else "name"
+        context["closed_at_sort"] = (
+            "closed_at" if sort == "-closed_at" else "-closed_at"
+        )
+
+        # Query string without "page", for pagination links.
+        params = self.request.GET.copy()
+        params.pop("page", None)
+        context["querystring"] = params.urlencode()
+
+        # Query string without "page" and "sort", for sort header links.
+        params.pop("sort", None)
+        context["sort_querystring"] = params.urlencode()
+        return context
+
+
 def stage_summaries():
     """Column-header text per stage, "N · X kr" — used both when rendering
     the board and in the drag & drop endpoint's response, so the format

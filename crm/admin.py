@@ -57,7 +57,15 @@ class ResumeAdmin(admin.ModelAdmin):
 
 @admin.register(Lead)
 class LeadAdmin(admin.ModelAdmin):
-    list_display = ["name", "company", "stage", "expected_value", "assignee", "deleted_at"]
+    list_display = [
+        "name",
+        "company",
+        "stage",
+        "closed_at",
+        "expected_value",
+        "assignee",
+        "deleted_at",
+    ]
     list_filter = ["stage"]
     search_fields = ["name", "company__name"]
 

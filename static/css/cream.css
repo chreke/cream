@@ -128,6 +128,23 @@ h1, h2, h3, h4, h5, h6,
   font-weight: 600;
 }
 
+/* Column widths come from <colgroup> rather than the cell contents, so
+   they stay put as filtering changes the rows. The min-width makes narrow
+   screens scroll (inside .table-responsive) instead of squashing columns. */
+.table-fixed {
+  table-layout: fixed;
+  min-width: 36rem;
+}
+
+.table-fixed td {
+  overflow-wrap: anywhere;
+}
+
+/* Soft-deleted rows (e.g. deals) are shown greyed out. */
+.row-deleted > td {
+  opacity: 0.5;
+}
+
 .tag-pill {
   background-color: var(--cream-accent-hover);
   color: #fff;

@@ -23,8 +23,8 @@ document describes the functional requirements for Cream.
   submission fails server-side validation anyway, the user is redirected
   back with the errors shown as a flash message (the submitted values are
   not preserved).
-- Company and candidate list filters submit automatically when a select value
-  changes. Search text is submitted by pressing Enter; the filter button
+- Company, candidate and deal list filters submit automatically when a select
+  or checkbox value changes. Search text is submitted by pressing Enter; the filter button
   remains available for explicit submission and no-JavaScript use.
 - List items (comments, contacts) have anchor links; after adding or editing
   one, redirect to its anchor so it is scrolled into view. Comments are
@@ -230,14 +230,41 @@ attributes:
 - Assignee (User)
 - Stage (one of "In progress", "Quote", "Interview", "Closed–won",
   "Closed–lost")
+- Won date ("Vunnen den"; only Closed–won leads may have one)
 
 Each lead may also have multiple associated Candidates.
 
 It should be possible to create, edit and delete leads. Deleting a lead is
 a *soft delete*: the lead disappears from the pipeline and other listings,
 but its detail page remains reachable (marked as deleted, with a restore
-action) so that candidate pages can keep linking to it. Hard deletion is
-only possible via the Django admin.
+action) so that candidate pages can keep linking to it. Deleted leads can
+also be shown in the Deal List. Hard deletion is only possible via the
+Django admin.
+
+### Won date
+
+A lead's won date is set to the current local date when its stage changes to
+"Closed–won" (unless a date is given), and cleared when its stage changes away
+from "Closed–won". It can be edited in the lead edit modal; setting a won date
+on a lead that isn't "Closed–won" is a validation error. See
+`specs/019-deal-list.md`.
+
+### Deal List
+
+It should be possible to view a list of all leads ("Affärer"), e.g. to see
+which deals were won during a given period. The list displays:
+
+- Name (Titel)
+- Company
+- Stage (Status)
+- Won date
+
+Column widths are fixed and don't change with filtering. Soft-deleted leads
+are hidden by default; a "Visa borttagna" toggle shows them, greyed out. The
+list can be filtered by stage and sorted by name
+(default) or won date (most recent first, leads without one last); both
+sorts can be reversed. The page header shows the number of matching leads,
+and a "Återställ" link clears filters and sorting.
 
 ### Candidates on a lead
 

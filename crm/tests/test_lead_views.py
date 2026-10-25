@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from django.urls import reverse
 from django.utils import timezone
@@ -383,3 +385,71 @@ def test_lead_comment_get_urls_redirect(auth_client, lead):
         assert response.status_code == 302, url_name
         assert response.url == detail_url, url_name
     assert LeadComment.objects.filter(pk=comment.pk).exists()
+
+
+@pytest.mark.django_db
+def test_edit_won_lead_sets_won_date(auth_client, lead):
+    auth_client.post(
+        reverse("lead-edit", args=[lead.pk]),
+        {"name": lead.name, "stage": "won", "closed_at": "2026-03-31"},
+    )
+    lead.refresh_from_db()
+    assert lead.stage == Lead.Stage.WON
+    assert lead.closed_at == date(2026, 3, 31)
+
+
+@pytest.mark.django_db
+def test_edit_to_won_without_date_defaults_to_today(auth_client, lead):
+    auth_client.post(
+        reverse("lead-edit", args=[lead.pk]),
+        {"name": lead.name, "stage": "won", "closed_at": ""},
+    )
+    lead.refresh_from_db()
+    assert lead.closed_at == timezone.localdate()
+
+
+@pytest.mark.django_db
+def test_edit_won_date_on_non_won_lead_is_rejected(auth_client, lead):
+    response = auth_client.post(
+        reverse("lead-edit", args=[lead.pk]),
+        {"name": "Nytt namn", "stage": "quote", "closed_at": "2026-03-31"},
+        follow=True,
+    )
+    assert "alert-danger" in response.content.decode()
+    lead.refresh_from_db()
+    assert lead.name == "Java-utvecklare"
+    assert lead.closed_at is None
+
+
+@pytest.mark.django_db
+def test_edit_away_from_won_clears_unchanged_won_date(auth_client, lead):
+    lead.stage = Lead.Stage.WON
+    lead.closed_at = date(2026, 3, 31)
+    lead.save()
+    # The modal re-submits the existing won date along with the new stage.
+    auth_client.post(
+        reverse("lead-edit", args=[lead.pk]),
+        {"name": lead.name, "stage": "quote", "closed_at": "2026-03-31"},
+    )
+    lead.refresh_from_db()
+    assert lead.stage == Lead.Stage.QUOTE
+    assert lead.closed_at is None
+
+
+@pytest.mark.django_db
+def test_drag_away_from_won_clears_won_date(auth_client, lead):
+    lead.stage = Lead.Stage.WON
+    lead.save()
+    auth_client.post(reverse("lead-stage", args=[lead.pk]), {"stage": "quote"})
+    lead.refresh_from_db()
+    assert lead.closed_at is None
+
+
+@pytest.mark.django_db
+def test_lead_detail_shows_won_date(auth_client, lead):
+    lead.stage = Lead.Stage.WON
+    lead.closed_at = date(2026, 3, 31)
+    lead.save()
+    content = auth_client.get(reverse("lead-detail", args=[lead.pk])).content.decode()
+    assert "Vunnen den" in content
+    assert "2026-03-31" in content

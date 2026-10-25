@@ -1,5 +1,7 @@
 # TODO
 
+- [x] Add an "Affärer" deal list with won dates and deleted deals
+      ([spec](specs/019-deal-list.md))
 - [x] Add opt-in Aient/OpenTelemetry server capture and release metadata
       ([spec](specs/018-telemetry.md))
 - [x] Show filtered (not total) counts on candidate and company list pages

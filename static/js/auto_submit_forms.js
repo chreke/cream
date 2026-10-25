@@ -1,10 +1,15 @@
-/* Submit GET filter forms when one of their select controls changes.
- * Text inputs keep their native behavior: pressing Enter submits the form.
+/* Submit GET filter forms when one of their select or checkbox controls
+ * changes. Text inputs keep their native behavior: pressing Enter submits
+ * the form.
  */
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll("form[data-auto-submit]").forEach(function (form) {
     form.addEventListener("change", function (event) {
-      if (event.target instanceof HTMLSelectElement) {
+      var target = event.target;
+      if (
+        target instanceof HTMLSelectElement ||
+        (target instanceof HTMLInputElement && target.type === "checkbox")
+      ) {
         form.requestSubmit();
       }
     });

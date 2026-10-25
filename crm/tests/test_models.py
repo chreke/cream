@@ -1,9 +1,11 @@
+from datetime import date
 from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from crm.models import Candidate, Company, Contact, Lead, Tag
 
@@ -285,3 +287,85 @@ def test_search_ranks_by_relevance_then_name():
         "Adam Alm",
         "Bertil Berg",
     ]
+
+
+@pytest.mark.django_db
+def test_lead_gets_won_date_when_moved_to_won(company):
+    lead = Lead.objects.create(name="Java-utvecklare", company=company)
+    assert lead.closed_at is None
+
+    lead.stage = Lead.Stage.WON
+    lead.save()
+    lead.refresh_from_db()
+    assert lead.closed_at == timezone.localdate()
+
+
+@pytest.mark.django_db
+def test_lead_created_as_won_gets_won_date(company):
+    lead = Lead.objects.create(
+        name="Java-utvecklare", company=company, stage=Lead.Stage.WON
+    )
+    assert lead.closed_at == timezone.localdate()
+
+
+@pytest.mark.django_db
+def test_lead_moved_to_won_keeps_explicit_won_date(company):
+    lead = Lead.objects.create(name="Java-utvecklare", company=company)
+    lead.stage = Lead.Stage.WON
+    lead.closed_at = date(2026, 3, 31)
+    lead.save()
+    lead.refresh_from_db()
+    assert lead.closed_at == date(2026, 3, 31)
+
+
+@pytest.mark.django_db
+def test_saving_won_lead_does_not_change_won_date(company):
+    lead = Lead.objects.create(
+        name="Java-utvecklare",
+        company=company,
+        stage=Lead.Stage.WON,
+        closed_at=date(2026, 3, 31),
+    )
+    lead = Lead.objects.get(pk=lead.pk)
+    lead.name = ".NET-utvecklare"
+    lead.save()
+    lead.refresh_from_db()
+    assert lead.closed_at == date(2026, 3, 31)
+
+
+@pytest.mark.django_db
+def test_existing_won_lead_without_won_date_stays_empty(company):
+    lead = Lead.objects.create(
+        name="Java-utvecklare", company=company, stage=Lead.Stage.WON
+    )
+    Lead.objects.filter(pk=lead.pk).update(closed_at=None)  # e.g. pre-migration
+    lead = Lead.objects.get(pk=lead.pk)
+    lead.save()
+    lead.refresh_from_db()
+    assert lead.closed_at is None
+
+
+@pytest.mark.django_db
+def test_leaving_won_clears_won_date(company):
+    lead = Lead.objects.create(
+        name="Java-utvecklare", company=company, stage=Lead.Stage.WON
+    )
+    lead = Lead.objects.get(pk=lead.pk)
+    lead.stage = Lead.Stage.QUOTE
+    lead.save()
+    lead.refresh_from_db()
+    assert lead.closed_at is None
+
+
+@pytest.mark.django_db
+def test_won_date_requires_won_stage(company):
+    lead = Lead(
+        name="Java-utvecklare",
+        company=company,
+        stage=Lead.Stage.LOST,
+        closed_at=date(2026, 3, 31),
+    )
+    with pytest.raises(ValidationError):
+        lead.full_clean()
+    with pytest.raises(IntegrityError), transaction.atomic():
+        lead.save()

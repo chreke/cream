@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Affärer{% endblock %}
+
+{% block content %}
+  <div class="mb-4">
+    <h1>Affärer</h1>
+    <p class="text-secondary mb-0">{{ paginator.count }} affärer</p>
+  </div>
+
+  <form method="get" class="row g-2 mb-4 align-items-center" data-auto-submit>
+    {% if current_sort != 'name' %}
+      <input type="hidden" name="sort" value="{{ current_sort }}">
+    {% endif %}
+    <div class="col-md-3">
+      <select name="stage" class="form-select" aria-label="Status">
+        <option value="">Alla statusar</option>
+        {% for value, label in stages %}
+          <option value="{{ value }}" {% if current_stage == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-auto">
+      <div class="form-check mb-0">
+        <input class="form-check-input" type="checkbox" name="deleted" value="1"
+               id="lead-filter-deleted" {% if show_deleted %}checked{% endif %}>
+        <label class="form-check-label" for="lead-filter-deleted">Visa borttagna</label>
+      </div>
+    </div>
+    <div class="col-md-auto d-flex gap-2">
+      <button type="submit" class="btn btn-outline-secondary">Filtrera</button>
+      <a href="{% url 'lead-list' %}" class="btn btn-outline-secondary">Återställ</a>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-hover bg-white table-fixed">
+      <colgroup>
+        <col style="width: 40%">
+        <col style="width: 30%">
+        <col style="width: 15%">
+        <col style="width: 15%">
+      </colgroup>
+      <thead>
+        <tr>
+          <th scope="col">
+            <a class="text-decoration-none text-reset"
+               href="?{{ sort_querystring }}{% if sort_querystring %}&amp;{% endif %}sort={{ name_sort }}">Titel{% if current_sort == 'name' %} ↑{% elif current_sort == '-name' %} ↓{% endif %}</a>
+          </th>
+          <th scope="col">Företag</th>
+          <th scope="col">Status</th>
+          <th scope="col">
+            <a class="text-decoration-none text-reset"
+               href="?{{ sort_querystring }}{% if sort_querystring %}&amp;{% endif %}sort={{ closed_at_sort }}">Vunnen den{% if current_sort == 'closed_at' %} ↑{% elif current_sort == '-closed_at' %} ↓{% endif %}</a>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for lead in leads %}
+          <tr{% if lead.is_deleted %} class="row-deleted"{% endif %}>
+            <td>
+              <a href="{% url 'lead-detail' lead.pk %}">{{ lead.name }}</a>
+              {% if lead.is_deleted %}
+                <span class="visually-hidden">(borttagen)</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{% url 'company-detail' lead.company.pk %}">{{ lead.company.name }}</a>
+            </td>
+            <td>{{ lead.get_stage_display }}</td>
+            <td>{{ lead.closed_at|date:"Y-m-d"|default:"–" }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="4" class="text-secondary text-center py-4">
+              Inga affärer att visa.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+    <nav aria-label="Paginering">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?{{ querystring }}{% if querystring %}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Föregående</a>
+          </li>
+        {% endif %}
+        <li class="page-item disabled">
+          <span class="page-link">Sida {{ page_obj.number }} av {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?{{ querystring }}{% if querystring %}&amp;{% endif %}page={{ page_obj.next_page_number }}">Nästa</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+{% endblock %}
