@@ -116,6 +116,7 @@ contact has the following info:
 - LinkedIn URL
 - Email
 - Phone number
+- Note (a short free-text note, shown on the contact card)
 
 Required attributes are marked with an "\*"
 

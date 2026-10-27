@@ -736,3 +736,27 @@ def test_comment_feed_embeds_delete_confirmation_modal(auth_client, user, compan
     )
     assert response.status_code == 302
     assert not CompanyComment.objects.filter(pk=comment.pk).exists()
+
+
+@pytest.mark.django_db
+def test_contact_note_saved_and_shown_on_detail(auth_client, company):
+    auth_client.post(
+        reverse("contact-create", args=[company.pk]),
+        {"name": "Karin Berg", "note": "Föredrar mejl"},
+    )
+    contact = company.contacts.get()
+    assert contact.note == "Föredrar mejl"
+
+    content = auth_client.get(
+        reverse("company-detail", args=[company.pk])
+    ).content.decode()
+    assert "Föredrar mejl" in content
+
+
+@pytest.mark.django_db
+def test_contact_note_is_optional(auth_client, company):
+    response = auth_client.post(
+        reverse("contact-create", args=[company.pk]), {"name": "Karin Berg"}
+    )
+    assert response.status_code == 302
+    assert company.contacts.get().note == ""

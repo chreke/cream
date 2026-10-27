@@ -63,6 +63,9 @@
                 <li><a href="{{ contact.linkedin_url }}">LinkedIn</a></li>
               {% endif %}
             </ul>
+            {% if contact.note %}
+              <div class="text-secondary small fst-italic mt-2">{{ contact.note }}</div>
+            {% endif %}
           </div>
         </div>
       </div>

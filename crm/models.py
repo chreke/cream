@@ -77,6 +77,7 @@ class Contact(models.Model):
     linkedin_url = models.URLField(blank=True)
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=50, blank=True)
+    note = models.CharField(max_length=255, blank=True)
 
     class Meta:
         ordering = ["name"]

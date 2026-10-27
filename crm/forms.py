@@ -200,18 +200,20 @@ class ContactForm(forms.ModelForm):
 
     class Meta:
         model = Contact
-        fields = ["name", "role", "linkedin_url", "email", "phone"]
+        fields = ["name", "role", "linkedin_url", "email", "phone", "note"]
         labels = {
             "name": "Namn",
             "role": "Roll",
             "email": "E-post",
             "phone": "Telefon",
+            "note": "Anteckning",
         }
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control"}),
             "role": forms.TextInput(attrs={"class": "form-control"}),
             "email": forms.EmailInput(attrs={"class": "form-control"}),
             "phone": forms.TextInput(attrs={"class": "form-control"}),
+            "note": forms.TextInput(attrs={"class": "form-control"}),
         }
 
 

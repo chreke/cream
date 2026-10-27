@@ -19,6 +19,8 @@
       ([spec](specs/006-candidate-search.md))
 - [x] Add prefix matching to candidate search, with exact-word matches ranked
       ahead of prefix-only matches ([spec](specs/006-candidate-search.md))
+- [x] Add an optional short "Anteckning" (note) field to Contacts, shown on
+      the contact card
 - [ ] Differentiate contact-log comments from ordinary comments with a comment
       type and phone icon ([spec](specs/017-typed-contact-comments.md))
 - [ ] Transfer data from Candide ([spec](specs/015-candide-migration.md)):

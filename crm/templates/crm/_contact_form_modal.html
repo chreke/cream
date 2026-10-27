@@ -49,6 +49,13 @@
                 <div class="text-danger small mt-1">{{ error }}</div>
               {% endfor %}
             </div>
+            <div class="col-12">
+              <label class="form-label" for="{{ form.note.id_for_label }}">{{ form.note.label }}</label>
+              {{ form.note }}
+              {% for error in form.note.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
           </div>
         </div>
         <div class="modal-footer border-0">
