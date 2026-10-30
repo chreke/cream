@@ -12,7 +12,7 @@
             data-bs-toggle="modal" data-bs-target="#company-create-modal">Nytt företag</button>
   </div>
 
-  <form method="get" class="row g-2 mb-4" data-auto-submit>
+  <form method="get" class="row g-2 mb-4 align-items-center" data-auto-submit>
     {% if current_sort != 'name' %}
       <input type="hidden" name="sort" value="{{ current_sort }}">
     {% endif %}
@@ -39,7 +39,7 @@
         {% endfor %}
       </select>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
       <select name="tags" class="form-select" multiple data-tag-filter
               data-placeholder="Taggar" aria-label="Taggar">
         {% for tag in tags %}
@@ -47,6 +47,13 @@
                   {% if tag.pk|stringformat:"s" in current_tags %}selected{% endif %}>{{ tag.name }}</option>
         {% endfor %}
       </select>
+    </div>
+    <div class="col-md-auto">
+      <div class="form-check mb-0">
+        <input class="form-check-input" type="checkbox" name="deleted" value="1"
+               id="company-filter-deleted" {% if show_deleted %}checked{% endif %}>
+        <label class="form-check-label" for="company-filter-deleted">Visa borttagna</label>
+      </div>
     </div>
     <div class="col-md-auto d-flex gap-2">
       <button type="submit" class="btn btn-outline-secondary">Filtrera</button>
@@ -73,9 +80,12 @@
     </thead>
     <tbody>
       {% for company in companies %}
-        <tr>
+        <tr{% if company.is_deleted %} class="row-deleted"{% endif %}>
           <td>
             <a href="{% url 'company-detail' company.pk %}">{{ company.name }}</a>
+            {% if company.is_deleted %}
+              <span class="visually-hidden">(borttaget)</span>
+            {% endif %}
           </td>
           <td>{{ company.get_status_display }}</td>
           <td>{{ company.location|default:"–" }}</td>

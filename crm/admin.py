@@ -31,6 +31,7 @@ class CompanyAdmin(admin.ModelAdmin):
         "industry",
         "assignee",
         "last_contacted",
+        "deleted_at",
     ]
     list_filter = ["status", "tags"]
     search_fields = ["name", "location"]
@@ -51,7 +52,7 @@ class ContactAdmin(admin.ModelAdmin):
 
 @admin.register(Candidate)
 class CandidateAdmin(admin.ModelAdmin):
-    list_display = ["name", "kind", "location", "email", "flagged_by"]
+    list_display = ["name", "kind", "location", "email", "flagged_by", "deleted_at"]
     list_filter = ["kind"]
     search_fields = ["name", "location", "skills"]
 

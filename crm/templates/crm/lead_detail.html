@@ -19,6 +19,9 @@
       <p class="text-secondary mb-0">
         <span class="badge text-bg-secondary">{{ lead.get_stage_display }}</span>
         · <a href="{% url 'company-detail' lead.company.pk %}">{{ lead.company.name }}</a>
+        {% if lead.company.is_deleted %}
+          <span class="badge text-bg-warning">Borttaget</span>
+        {% endif %}
       </p>
     </div>
     <div class="d-flex gap-2">
@@ -62,7 +65,12 @@
       <tbody>
         {% for candidate in lead.candidates.all %}
           <tr>
-            <td><a href="{% url 'candidate-detail' candidate.pk %}">{{ candidate.name }}</a></td>
+            <td>
+              <a href="{% url 'candidate-detail' candidate.pk %}">{{ candidate.name }}</a>
+              {% if candidate.is_deleted %}
+                <span class="badge text-bg-warning">Borttagen</span>
+              {% endif %}
+            </td>
             <td>{{ candidate.location|default:"–" }}</td>
             <td>{{ candidate.skills|truncatechars:40|default:"–" }}</td>
             <td class="text-end">
@@ -98,7 +106,7 @@
   {# --- Modals hosted on this page --- #}
   {% include "crm/_lead_form_modal.html" with form=lead_form %}
   {% url 'lead-delete' lead.pk as lead_delete_url %}
-  {% include "crm/_confirm_delete_modal.html" with modal_id="lead-delete-modal" title="Ta bort affär" action=lead_delete_url object_label=lead.name %}
+  {% include "crm/_confirm_delete_modal.html" with modal_id="lead-delete-modal" title="Ta bort affär" action=lead_delete_url object_label=lead.name restorable=True %}
 {% endblock %}
 
 {% block scripts %}

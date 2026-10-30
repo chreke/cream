@@ -4,6 +4,15 @@
 {% block title %}{{ company.name }}{% endblock %}
 
 {% block content %}
+  {% if company.is_deleted %}
+    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+      <span>Det här företaget är borttaget och visas inte i företagslistan.</span>
+      <form method="post" action="{% url 'company-restore' company.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-secondary">Återställ</button>
+      </form>
+    </div>
+  {% endif %}
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
     <div>
       <h1>{{ company.name }}</h1>
@@ -86,7 +95,7 @@
   {# --- Modals hosted on this page --- #}
   {% include "crm/_company_form_modal.html" with form=company_form %}
   {% url 'company-delete' company.pk as company_delete_url %}
-  {% include "crm/_confirm_delete_modal.html" with modal_id="company-delete-modal" title="Ta bort företag" action=company_delete_url object_label=company.name %}
+  {% include "crm/_confirm_delete_modal.html" with modal_id="company-delete-modal" title="Ta bort företag" action=company_delete_url object_label=company.name restorable=True %}
 
   {% include "crm/_contact_form_modal.html" with form=contact_create_form %}
   {% for contact, contact_form in contact_items %}

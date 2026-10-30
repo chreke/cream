@@ -4,6 +4,15 @@
 {% block title %}{{ candidate.name }}{% endblock %}
 
 {% block content %}
+  {% if candidate.is_deleted %}
+    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+      <span>Den här kandidaten är borttagen och visas inte i kandidatlistan.</span>
+      <form method="post" action="{% url 'candidate-restore' candidate.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-secondary">Återställ</button>
+      </form>
+    </div>
+  {% endif %}
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
     <div>
       <h1>{{ candidate.name }}</h1>
@@ -119,7 +128,12 @@
       <tbody>
         {% for lead in candidate_leads %}
           <tr>
-            <td class="fw-semibold">{{ lead.company.name }}</td>
+            <td class="fw-semibold">
+              {{ lead.company.name }}
+              {% if lead.company.is_deleted %}
+                <span class="badge text-bg-warning">Borttaget</span>
+              {% endif %}
+            </td>
             <td>
               <a href="{% url 'lead-detail' lead.pk %}">{{ lead.name }}</a>
               {% if lead.is_deleted %}
@@ -153,5 +167,5 @@
     {% endwith %}
   {% endfor %}
   {% url 'candidate-delete' candidate.pk as candidate_delete_url %}
-  {% include "crm/_confirm_delete_modal.html" with modal_id="candidate-delete-modal" title="Ta bort kandidat" action=candidate_delete_url object_label=candidate.name %}
+  {% include "crm/_confirm_delete_modal.html" with modal_id="candidate-delete-modal" title="Ta bort kandidat" action=candidate_delete_url object_label=candidate.name restorable=True %}
 {% endblock %}

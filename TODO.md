@@ -3,8 +3,8 @@
 - [x] Add Company "status", which indicates our relationship with them: Prospekt,
   Kvalificerad or Kund (NULL is shown as Okänd).
 - [x] Filter companies by status; add a filter to the company list where you can search by status.
-- [ ] Support soft-delete for companies; use the same solution as for Leads
-- [ ] Support soft-delete for candidates; use the same solution as for Leads
+- [x] Support soft-delete for companies; use the same solution as for Leads
+- [x] Support soft-delete for candidates; use the same solution as for Leads
 - [ ] "Quick navigation", like Ctrl+P in VSCode. Add a generic search bar at
   the top of the navbar where you can search for both companies and candidates.
   As the user types, matches are fetched from the server as "autocomplete"

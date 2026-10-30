@@ -295,7 +295,8 @@ def test_delete_candidate_on_post(auth_client, candidate):
     response = auth_client.post(reverse("candidate-delete", args=[candidate.pk]))
     assert response.status_code == 302
     assert response.url == reverse("candidate-list")
-    assert not Candidate.objects.filter(pk=candidate.pk).exists()
+    candidate.refresh_from_db()
+    assert candidate.deleted_at is not None
 
 
 @pytest.mark.django_db

@@ -66,6 +66,9 @@
             </td>
             <td>
               <a href="{% url 'company-detail' lead.company.pk %}">{{ lead.company.name }}</a>
+              {% if lead.company.is_deleted %}
+                <span class="badge text-bg-warning">Borttaget</span>
+              {% endif %}
             </td>
             <td>{{ lead.get_stage_display }}</td>
             <td>{{ lead.closed_at|date:"Y-m-d"|default:"–" }}</td>

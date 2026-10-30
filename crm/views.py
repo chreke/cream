@@ -48,9 +48,15 @@ from .templatetags.format_extras import sek
 def location_options():
     """Existing locations, suggested by the location-input <datalist>."""
     return sorted(
-        set(Company.objects.exclude(location="").values_list("location", flat=True))
+        set(
+            Company.objects.active()
+            .exclude(location="")
+            .values_list("location", flat=True)
+        )
         | set(
-            Candidate.objects.exclude(location="").values_list("location", flat=True)
+            Candidate.objects.active()
+            .exclude(location="")
+            .values_list("location", flat=True)
         ),
         key=str.casefold,
     )
@@ -60,9 +66,9 @@ def candidate_location_options():
     """Distinct candidate locations for the candidate-list filter."""
     return sorted(
         set(
-            Candidate.objects.exclude(location="").values_list(
-                "location", flat=True
-            )
+            Candidate.objects.active()
+            .exclude(location="")
+            .values_list("location", flat=True)
         ),
         key=str.casefold,
     )
@@ -126,6 +132,9 @@ class CompanyListView(ListView):
             "tags"
         )
 
+        if not self.show_deleted():
+            queryset = queryset.active()
+
         query = self.request.GET.get("q", "").strip()
         if query:
             queryset = queryset.filter(
@@ -165,6 +174,9 @@ class CompanyListView(ListView):
             queryset = queryset.order_by("name")
 
         return queryset
+
+    def show_deleted(self):
+        return self.request.GET.get("deleted") == "1"
 
     def status_options(self):
         return [
@@ -209,6 +221,7 @@ class CompanyListView(ListView):
         context["statuses"] = self.status_options()
         context["current_status"] = self.current_status()
         context["current_tags"] = self.current_tag_ids()
+        context["show_deleted"] = self.show_deleted()
         sort = self.current_sort()
         context["current_sort"] = sort
         # Header links: clicking the active column reverses it, clicking an
@@ -268,13 +281,27 @@ class CompanyUpdateView(FlashFormErrorsMixin, UpdateView):
 
 
 class CompanyDeleteView(FlashFormErrorsMixin, DeleteView):
-    """POST target for the delete-confirmation modal on the detail page."""
+    """POST target for the delete-confirmation modal on the detail page.
+    Soft delete: the company leaves the list but its leads are untouched."""
 
     model = Company
     success_url = reverse_lazy("company-list")
 
+    def form_valid(self, form):
+        self.object.deleted_at = timezone.now()
+        self.object.save()
+        return redirect(self.success_url)
+
     def get_failure_url(self):
         return reverse("company-detail", args=[self.kwargs["pk"]])
+
+
+class CompanyRestoreView(View):
+    def post(self, request, pk):
+        company = get_object_or_404(Company, pk=pk)
+        company.deleted_at = None
+        company.save()
+        return redirect("company-detail", pk=pk)
 
 
 class ContactCreateView(FlashFormErrorsMixin, CreateView):
@@ -438,6 +465,9 @@ class CandidateListView(ListView):
     def get_queryset(self):
         queryset = Candidate.objects.all()
 
+        if not self.show_deleted():
+            queryset = queryset.active()
+
         location = self.request.GET.get("location", "")
         if location:
             queryset = queryset.filter(location=location)
@@ -471,8 +501,12 @@ class CandidateListView(ListView):
         sort = self.request.GET.get("sort", "")
         return sort if sort in ("name", "-name") else ""
 
+    def show_deleted(self):
+        return self.request.GET.get("deleted") == "1"
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["show_deleted"] = self.show_deleted()
         context["current_kind"] = self.request.GET.get("kind", "")
         context["current_location"] = self.request.GET.get("location", "")
         context["current_q"] = self.request.GET.get("q", "")
@@ -535,11 +569,27 @@ class CandidateUpdateView(FlashFormErrorsMixin, UpdateView):
 
 
 class CandidateDeleteView(FlashFormErrorsMixin, DeleteView):
+    """Soft delete: the candidate leaves the list and pickers but stays on
+    the leads they were attached to. Resumes and comments are kept."""
+
     model = Candidate
     success_url = reverse_lazy("candidate-list")
 
+    def form_valid(self, form):
+        self.object.deleted_at = timezone.now()
+        self.object.save()
+        return redirect(self.success_url)
+
     def get_failure_url(self):
         return reverse("candidate-detail", args=[self.kwargs["pk"]])
+
+
+class CandidateRestoreView(View):
+    def post(self, request, pk):
+        candidate = get_object_or_404(Candidate, pk=pk)
+        candidate.deleted_at = None
+        candidate.save()
+        return redirect("candidate-detail", pk=pk)
 
 
 class CandidateFlagView(FlashFormErrorsMixin, UpdateView):
@@ -931,17 +981,18 @@ class LeadRestoreView(View):
         return redirect("lead-detail", pk=pk)
 
 
-def _posted_candidate(request):
+def _posted_candidate(request, queryset=Candidate.objects):
     candidate_id = request.POST.get("candidate", "")
     if not candidate_id.isdigit():
         raise Http404
-    return get_object_or_404(Candidate, pk=candidate_id)
+    return get_object_or_404(queryset, pk=candidate_id)
 
 
 class LeadCandidateAttachView(View):
     def post(self, request, pk):
         lead = get_object_or_404(Lead, pk=pk)
-        lead.candidates.add(_posted_candidate(request))  # add() is idempotent
+        # add() is idempotent
+        lead.candidates.add(_posted_candidate(request, Candidate.objects.active()))
         return redirect("lead-detail", pk=pk)
 
 
@@ -962,7 +1013,7 @@ class LeadCandidateSearchView(View):
         query = request.GET.get("q", "").strip()
         if not query:
             return JsonResponse({"results": []})
-        candidates = Candidate.objects.search(query).exclude(leads=lead)[:10]
+        candidates = Candidate.objects.active().search(query).exclude(leads=lead)[:10]
         return JsonResponse(
             {
                 "results": [

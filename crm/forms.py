@@ -252,6 +252,10 @@ class LeadCreateForm(forms.ModelForm):
             "assignee": forms.Select(attrs={"class": "form-select"}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["company"].queryset = Company.objects.active()
+
 
 class LeadEditForm(forms.ModelForm):
     """The company is fixed after creation; the contact dropdown only

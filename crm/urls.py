@@ -21,6 +21,11 @@ urlpatterns = [
         name="company-delete",
     ),
     path(
+        "companies/<int:pk>/restore/",
+        views.CompanyRestoreView.as_view(),
+        name="company-restore",
+    ),
+    path(
         "companies/<int:company_pk>/log-contact/",
         views.LogContactView.as_view(),
         name="company-log-contact",
@@ -75,6 +80,11 @@ urlpatterns = [
         "candidates/<int:pk>/delete/",
         views.CandidateDeleteView.as_view(),
         name="candidate-delete",
+    ),
+    path(
+        "candidates/<int:pk>/restore/",
+        views.CandidateRestoreView.as_view(),
+        name="candidate-restore",
     ),
     path(
         "candidates/<int:pk>/flag/",

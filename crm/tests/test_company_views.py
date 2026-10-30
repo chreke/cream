@@ -536,7 +536,9 @@ def test_invalid_create_flashes_errors_and_redirects(auth_client):
 def test_delete_company_on_post(auth_client, company):
     response = auth_client.post(reverse("company-delete", args=[company.pk]))
     assert response.status_code == 302
-    assert not Company.objects.filter(pk=company.pk).exists()
+    assert response.url == reverse("company-list")
+    company.refresh_from_db()
+    assert company.deleted_at is not None
 
 
 @pytest.mark.django_db

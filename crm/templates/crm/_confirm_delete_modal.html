@@ -1,6 +1,7 @@
 {% comment %}
 Delete-confirmation modal. Expects modal_id, title, action, and
-object_label (falls back to "kommentaren" when empty).
+object_label (falls back to "kommentaren" when empty). Pass restorable=True
+for soft-deleted objects.
 {% endcomment %}
 <div class="modal fade" id="{{ modal_id }}" tabindex="-1" aria-hidden="true"
      aria-labelledby="{{ modal_id }}-title">
@@ -14,7 +15,7 @@ object_label (falls back to "kommentaren" when empty).
         <p class="mb-0">
           Är du säker på att du vill ta bort
           {% if object_label %}<strong>{{ object_label }}</strong>{% else %}kommentaren{% endif %}?
-          Detta går inte att ångra.
+          {% if restorable %}Det går att återställa i efterhand.{% else %}Detta går inte att ångra.{% endif %}
         </p>
       </div>
       <div class="modal-footer border-0">

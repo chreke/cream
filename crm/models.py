@@ -43,6 +43,11 @@ class Tag(models.Model):
         return self.name
 
 
+class CompanyQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(deleted_at__isnull=True)
+
+
 class Company(models.Model):
     class Status(models.TextChoices):
         __empty__ = "Okänd"
@@ -69,10 +74,19 @@ class Company(models.Model):
     )
     last_contacted = models.DateTimeField(null=True, blank=True)
     tags = models.ManyToManyField(Tag, blank=True, related_name="companies")
+    # Soft delete: hidden from the company list and pickers, but kept so that
+    # its leads and their history stay intact.
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    objects = CompanyQuerySet.as_manager()
 
     class Meta:
         ordering = ["name"]
         verbose_name_plural = "companies"
+
+    @property
+    def is_deleted(self):
+        return self.deleted_at is not None
 
     def __str__(self):
         return self.name
@@ -97,6 +111,9 @@ class Contact(models.Model):
 
 
 class CandidateQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(deleted_at__isnull=True)
+
     def search(self, query):
         """Word-prefix search over name/skills, most relevant first.
 
@@ -148,6 +165,9 @@ class Candidate(models.Model):
         related_name="flagged_candidates",
     )
     flag_reason = models.TextField(blank=True)
+    # Soft delete: hidden from the candidate list and pickers, but kept so that
+    # lead pages can still show who was sent to a company.
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     objects = CandidateQuerySet.as_manager()
 
@@ -169,6 +189,10 @@ class Candidate(models.Model):
         # The reason keeps the flag alive if the flagger is deleted
         # (flagged_by is SET_NULL).
         return self.flagged_by_id is not None or bool(self.flag_reason)
+
+    @property
+    def is_deleted(self):
+        return self.deleted_at is not None
 
 
 class Resume(models.Model):
