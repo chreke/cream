@@ -57,6 +57,7 @@ class Company(models.Model):
     location = models.CharField(max_length=255, blank=True, db_index=True)
     industry = models.CharField(max_length=255, blank=True)
     homepage = models.URLField(blank=True)
+    careers_page = models.URLField(blank=True)
     organization_number = models.CharField(max_length=20, blank=True)
     description = models.TextField(blank=True)  # Markdown
     assignee = models.ForeignKey(

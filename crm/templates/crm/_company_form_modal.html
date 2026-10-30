@@ -61,6 +61,13 @@
               {% endfor %}
             </div>
             <div class="col-md-6">
+              <label class="form-label" for="{{ form.careers_page.id_for_label }}">{{ form.careers_page.label }}</label>
+              {{ form.careers_page }}
+              {% for error in form.careers_page.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6">
               <label class="form-label" for="{{ form.organization_number.id_for_label }}">{{ form.organization_number.label }}</label>
               {{ form.organization_number }}
             </div>

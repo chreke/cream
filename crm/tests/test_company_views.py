@@ -181,6 +181,44 @@ def test_company_edit_can_clear_status(auth_client):
 
 
 @pytest.mark.django_db
+def test_company_create_saves_careers_page_and_assumes_https(auth_client):
+    auth_client.post(
+        reverse("company-create"),
+        {"name": "Nytt bolag", "careers_page": "example.com/jobb"},
+    )
+    company = Company.objects.get(name="Nytt bolag")
+    assert company.careers_page == "https://example.com/jobb"
+
+
+@pytest.mark.django_db
+def test_company_careers_page_is_optional(auth_client):
+    auth_client.post(reverse("company-create"), {"name": "Nytt bolag"})
+    assert Company.objects.get(name="Nytt bolag").careers_page == ""
+
+
+@pytest.mark.django_db
+def test_company_detail_links_careers_page(auth_client):
+    company = Company.objects.create(
+        name="Bolaget", careers_page="https://example.com/jobb"
+    )
+    content = auth_client.get(
+        reverse("company-detail", args=[company.pk])
+    ).content.decode()
+    assert re.search(
+        r'Jobbsida</dt>\s*<dd[^>]*><a href="https://example.com/jobb">', content
+    )
+
+
+@pytest.mark.django_db
+def test_company_detail_without_careers_page_shows_placeholder(auth_client):
+    company = Company.objects.create(name="Bolaget")
+    content = auth_client.get(
+        reverse("company-detail", args=[company.pk])
+    ).content.decode()
+    assert re.search(r"Jobbsida</dt>\s*<dd[^>]*>–</dd>", content)
+
+
+@pytest.mark.django_db
 def test_company_filter_by_multiple_tags_uses_and_semantics(auth_client):
     python = Tag.objects.create(name="Python")
     aws = Tag.objects.create(name="AWS")

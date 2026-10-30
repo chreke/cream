@@ -41,6 +41,12 @@ class CompanyForm(forms.ModelForm):
         assume_scheme="https",  # pyright: ignore[reportCallIssue]  (missing from django-types)
         widget=forms.URLInput(attrs={"class": "form-control"}),
     )
+    careers_page = forms.URLField(
+        label="Jobbsida",
+        required=False,
+        assume_scheme="https",  # pyright: ignore[reportCallIssue]  (missing from django-types)
+        widget=forms.URLInput(attrs={"class": "form-control"}),
+    )
 
     class Meta:
         model = Company
@@ -50,6 +56,7 @@ class CompanyForm(forms.ModelForm):
             "location",
             "industry",
             "homepage",
+            "careers_page",
             "organization_number",
             "description",
             "assignee",

@@ -29,6 +29,8 @@
     <dd class="col-sm-7 col-md-8 col-xl-9">{{ company.get_status_display }}</dd>
     <dt class="col-sm-5 col-md-4 col-xl-3">Hemsida</dt>
     <dd class="col-sm-7 col-md-8 col-xl-9">{% if company.homepage %}<a href="{{ company.homepage }}">{{ company.homepage }}</a>{% else %}–{% endif %}</dd>
+    <dt class="col-sm-5 col-md-4 col-xl-3">Jobbsida</dt>
+    <dd class="col-sm-7 col-md-8 col-xl-9">{% if company.careers_page %}<a href="{{ company.careers_page }}">{{ company.careers_page }}</a>{% else %}–{% endif %}</dd>
     <dt class="col-sm-5 col-md-4 col-xl-3">Organisationsnummer</dt>
     <dd class="col-sm-7 col-md-8 col-xl-9">{{ company.organization_number|default:"–" }}</dd>
     <dt class="col-sm-5 col-md-4 col-xl-3">Ansvarig</dt>
