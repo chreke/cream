@@ -9,7 +9,7 @@ In additional to tracking customers and leads, it also tracks candidates.
 - Commit your work after you have finished a task.
 - Run tests and verify that they all pass before committing.
 - `uv` is used for local development. Environment variables are sourced from an
-  `.env` fileö you may need to invoke `uv` with `uv run --env-file .env`
+  `.env` file you may need to invoke `uv` with `uv run --env-file .env`
 
 ## Testing
 
