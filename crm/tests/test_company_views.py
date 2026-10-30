@@ -79,6 +79,7 @@ def test_company_filter_by_assignee(auth_client, user, django_user_model):
 @pytest.fixture
 def companies_by_status():
     Company.objects.create(name="Prospektbolaget", status=Company.Status.PROSPECT)
+    Company.objects.create(name="Kvalificerat bolag", status=Company.Status.QUALIFIED)
     Company.objects.create(name="Kundbolaget", status=Company.Status.CUSTOMER)
     Company.objects.create(name="Okänt bolag")
 
@@ -88,6 +89,7 @@ def companies_by_status():
     "status, expected",
     [
         ("prospect", ["Prospektbolaget"]),
+        ("qualified", ["Kvalificerat bolag"]),
         ("customer", ["Kundbolaget"]),
         ("unknown", ["Okänt bolag"]),
     ],
@@ -103,7 +105,24 @@ def test_company_status_filter_ignores_missing_or_invalid_values(
     auth_client, companies_by_status, params
 ):
     response = auth_client.get(reverse("company-list"), params)
-    assert len(response.context["companies"]) == 3
+    assert len(response.context["companies"]) == 4
+
+
+@pytest.mark.django_db
+def test_company_status_options_run_from_prospect_to_customer(auth_client):
+    response = auth_client.get(reverse("company-list"))
+    assert response.context["statuses"] == [
+        ("prospect", "Prospekt"),
+        ("qualified", "Kvalificerad"),
+        ("customer", "Kund"),
+        ("unknown", "Okänd"),
+    ]
+    assert list(response.context["company_create_form"].fields["status"].choices) == [
+        (None, "Okänd"),
+        ("prospect", "Prospekt"),
+        ("qualified", "Kvalificerad"),
+        ("customer", "Kund"),
+    ]
 
 
 @pytest.mark.django_db

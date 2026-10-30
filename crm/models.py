@@ -47,6 +47,7 @@ class Company(models.Model):
     class Status(models.TextChoices):
         __empty__ = "Okänd"
         PROSPECT = "prospect", "Prospekt"
+        QUALIFIED = "qualified", "Kvalificerad"
         CUSTOMER = "customer", "Kund"
 
     name = models.CharField(max_length=255, db_collation="sv-SE-x-icu")

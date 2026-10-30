@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='company',
             name='status',
-            field=models.CharField(blank=True, choices=[(None, 'Okänd'), ('prospect', 'Prospekt'), ('customer', 'Kund')], max_length=20, null=True),
+            field=models.CharField(blank=True, choices=[(None, 'Okänd'), ('prospect', 'Prospekt'), ('qualified', 'Kvalificerad'), ('customer', 'Kund')], max_length=20, null=True),
         ),
     ]
