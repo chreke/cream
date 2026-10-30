@@ -46,6 +46,7 @@ class CompanyForm(forms.ModelForm):
         model = Company
         fields = [
             "name",
+            "status",
             "location",
             "industry",
             "homepage",
@@ -55,6 +56,7 @@ class CompanyForm(forms.ModelForm):
         ]
         labels = {
             "name": "Namn",
+            "status": "Status",
             "location": "Plats",
             "industry": "Bransch",
             "homepage": "Hemsida",
@@ -64,6 +66,7 @@ class CompanyForm(forms.ModelForm):
         }
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control"}),
+            "status": forms.Select(attrs={"class": "form-select"}),
             "location": forms.TextInput(
                 attrs={"class": "form-control", "data-location-input": ""}
             ),
@@ -83,6 +86,10 @@ class CompanyForm(forms.ModelForm):
             self.initial["tag_names"] = list(
                 self.instance.tags.values_list("name", flat=True)
             )
+        else:
+            # Only the UI defaults to Prospekt; the column itself stays NULL
+            # (Okänd) for companies created any other way, e.g. imports.
+            self.initial.setdefault("status", Company.Status.PROSPECT)
 
     def clean_tag_names(self):
         names = []

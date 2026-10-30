@@ -76,6 +76,91 @@ def test_company_filter_by_assignee(auth_client, user, django_user_model):
     assert [c.name for c in companies] == ["Annas bolag"]
 
 
+@pytest.fixture
+def companies_by_status():
+    Company.objects.create(name="Prospektbolaget", status=Company.Status.PROSPECT)
+    Company.objects.create(name="Kundbolaget", status=Company.Status.CUSTOMER)
+    Company.objects.create(name="Okänt bolag")
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "status, expected",
+    [
+        ("prospect", ["Prospektbolaget"]),
+        ("customer", ["Kundbolaget"]),
+        ("unknown", ["Okänt bolag"]),
+    ],
+)
+def test_company_filter_by_status(auth_client, companies_by_status, status, expected):
+    response = auth_client.get(reverse("company-list"), {"status": status})
+    assert [c.name for c in response.context["companies"]] == expected
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("params", [{}, {"status": ""}, {"status": "bogus"}])
+def test_company_status_filter_ignores_missing_or_invalid_values(
+    auth_client, companies_by_status, params
+):
+    response = auth_client.get(reverse("company-list"), params)
+    assert len(response.context["companies"]) == 3
+
+
+@pytest.mark.django_db
+def test_company_status_filter_stays_selected(auth_client):
+    content = auth_client.get(
+        reverse("company-list"), {"status": "customer"}
+    ).content.decode()
+    assert re.search(r'<option value="customer"\s+selected>\s*Kund', content)
+
+
+@pytest.mark.django_db
+def test_company_list_and_detail_show_status_labels(auth_client):
+    customer = Company.objects.create(name="Kundbolaget", status=Company.Status.CUSTOMER)
+    unknown = Company.objects.create(name="Okänt bolag")
+
+    list_content = auth_client.get(reverse("company-list")).content.decode()
+    assert "<td>Kund</td>" in list_content
+    assert "<td>Okänd</td>" in list_content
+
+    for company, label in [(customer, "Kund"), (unknown, "Okänd")]:
+        content = auth_client.get(
+            reverse("company-detail", args=[company.pk])
+        ).content.decode()
+        assert re.search(rf"Status</dt>\s*<dd[^>]*>{label}</dd>", content)
+
+
+@pytest.mark.django_db
+def test_company_create_form_defaults_to_prospect(auth_client):
+    response = auth_client.get(reverse("company-list"))
+    assert response.context["company_create_form"]["status"].value() == "prospect"
+
+
+@pytest.mark.django_db
+def test_company_edit_form_keeps_unknown_status(auth_client):
+    company = Company.objects.create(name="Okänt bolag")
+    response = auth_client.get(reverse("company-detail", args=[company.pk]))
+    assert response.context["company_form"]["status"].value() is None
+
+
+@pytest.mark.django_db
+def test_company_create_saves_status(auth_client):
+    auth_client.post(
+        reverse("company-create"), {"name": "Nytt bolag", "status": "customer"}
+    )
+    assert Company.objects.get(name="Nytt bolag").status == Company.Status.CUSTOMER
+
+
+@pytest.mark.django_db
+def test_company_edit_can_clear_status(auth_client):
+    company = Company.objects.create(name="Bolaget", status=Company.Status.CUSTOMER)
+    auth_client.post(
+        reverse("company-edit", args=[company.pk]), {"name": "Bolaget", "status": ""}
+    )
+    company.refresh_from_db()
+    assert company.status is None
+
+
 @pytest.mark.django_db
 def test_company_filter_by_multiple_tags_uses_and_semantics(auth_client):
     python = Tag.objects.create(name="Python")

@@ -24,8 +24,15 @@ class ContactInline(admin.TabularInline):
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ["name", "location", "industry", "assignee", "last_contacted"]
-    list_filter = ["tags"]
+    list_display = [
+        "name",
+        "status",
+        "location",
+        "industry",
+        "assignee",
+        "last_contacted",
+    ]
+    list_filter = ["status", "tags"]
     search_fields = ["name", "location"]
     filter_horizontal = ["tags"]
     inlines = [ContactInline]

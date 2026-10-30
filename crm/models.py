@@ -44,7 +44,15 @@ class Tag(models.Model):
 
 
 class Company(models.Model):
+    class Status(models.TextChoices):
+        __empty__ = "Okänd"
+        PROSPECT = "prospect", "Prospekt"
+        CUSTOMER = "customer", "Kund"
+
     name = models.CharField(max_length=255, db_collation="sv-SE-x-icu")
+    status = models.CharField(
+        max_length=20, choices=Status.choices, null=True, blank=True
+    )
     location = models.CharField(max_length=255, blank=True, db_index=True)
     industry = models.CharField(max_length=255, blank=True)
     homepage = models.URLField(blank=True)

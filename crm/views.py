@@ -118,6 +118,8 @@ class CompanyListView(ListView):
     context_object_name = "companies"
     paginate_by = 50
     extra_context = {"section": "companies"}
+    # Filter value for companies without a status (NULL in the database).
+    UNKNOWN_STATUS = "unknown"
 
     def get_queryset(self):
         queryset = Company.objects.select_related("assignee").prefetch_related(
@@ -133,6 +135,12 @@ class CompanyListView(ListView):
         assignee = self.request.GET.get("assignee", "")
         if assignee.isdigit():
             queryset = queryset.filter(assignee=assignee)
+
+        status = self.current_status()
+        if status == self.UNKNOWN_STATUS:
+            queryset = queryset.filter(status__isnull=True)
+        elif status:
+            queryset = queryset.filter(status=status)
 
         for tag_id in self.current_tag_ids():
             # Successive filters intentionally create separate joins: the
@@ -157,6 +165,18 @@ class CompanyListView(ListView):
             queryset = queryset.order_by("name")
 
         return queryset
+
+    def status_options(self):
+        return [
+            *((status.value, status.label) for status in Company.Status),
+            (self.UNKNOWN_STATUS, Company.Status.__empty__),
+        ]
+
+    def current_status(self):
+        status = self.request.GET.get("status", "")
+        if status not in dict(self.status_options()):
+            return ""
+        return status
 
     def current_tag_ids(self):
         if hasattr(self, "_current_tag_ids"):
@@ -186,6 +206,8 @@ class CompanyListView(ListView):
         context["tags"] = Tag.objects.all()
         context["current_q"] = self.request.GET.get("q", "")
         context["current_assignee"] = self.request.GET.get("assignee", "")
+        context["statuses"] = self.status_options()
+        context["current_status"] = self.current_status()
         context["current_tags"] = self.current_tag_ids()
         sort = self.current_sort()
         context["current_sort"] = sort

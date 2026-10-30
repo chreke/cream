@@ -20,7 +20,15 @@
       <input type="search" name="q" value="{{ current_q }}" class="form-control"
              placeholder="Sök företag..." aria-label="Sök företag">
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
+      <select name="status" class="form-select" aria-label="Status">
+        <option value="">Alla statusar</option>
+        {% for value, label in statuses %}
+          <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
       <select name="assignee" class="form-select" aria-label="Ansvarig">
         <option value="">Alla ansvariga</option>
         {% for u in users %}
@@ -53,6 +61,7 @@
           <a class="text-decoration-none text-reset"
              href="?{{ sort_querystring }}{% if sort_querystring %}&amp;{% endif %}sort={{ name_sort }}">Namn{% if current_sort == 'name' %} ↑{% elif current_sort == '-name' %} ↓{% endif %}</a>
         </th>
+        <th scope="col">Status</th>
         <th scope="col">Plats</th>
         <th scope="col">Taggar</th>
         <th scope="col">Ansvarig</th>
@@ -68,6 +77,7 @@
           <td>
             <a href="{% url 'company-detail' company.pk %}">{{ company.name }}</a>
           </td>
+          <td>{{ company.get_status_display }}</td>
           <td>{{ company.location|default:"–" }}</td>
           <td>{% include "crm/_tag_pills.html" with tags=company.tags.all %}</td>
           <td>{{ company.assignee.username|default:"–" }}</td>
@@ -75,7 +85,7 @@
         </tr>
       {% empty %}
         <tr>
-          <td colspan="5" class="text-secondary text-center py-4">
+          <td colspan="6" class="text-secondary text-center py-4">
             Inga företag att visa.
           </td>
         </tr>

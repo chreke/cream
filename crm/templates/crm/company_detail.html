@@ -25,6 +25,8 @@
   </div>
 
   <dl class="row mb-4">
+    <dt class="col-sm-5 col-md-4 col-xl-3">Status</dt>
+    <dd class="col-sm-7 col-md-8 col-xl-9">{{ company.get_status_display }}</dd>
     <dt class="col-sm-5 col-md-4 col-xl-3">Hemsida</dt>
     <dd class="col-sm-7 col-md-8 col-xl-9">{% if company.homepage %}<a href="{{ company.homepage }}">{{ company.homepage }}</a>{% else %}–{% endif %}</dd>
     <dt class="col-sm-5 col-md-4 col-xl-3">Organisationsnummer</dt>
