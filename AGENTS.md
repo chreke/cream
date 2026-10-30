@@ -8,13 +8,11 @@ In additional to tracking customers and leads, it also tracks candidates.
 
 - Commit your work after you have finished a task.
 - Run tests and verify that they all pass before committing.
-- `uv` is used for local development. Environment variables are
-  sourced from an `.env` file, but they should be picked up automatically. If
-  not, you may need to invoke `uv` with `uv run --env-file .env`
+- `uv` is used for local development. Environment variables are sourced from an
+  `.env` fileö you may need to invoke `uv` with `uv run --env-file .env`
 
 ## Testing
 
-- Use test-driven development.
 - Tests are written with pytest (+ pytest-django); run them with `uv run pytest`.
 - Don't write tests for frontend functionality; prefer doing a one-off browser
   test instead to verify the implementation.
